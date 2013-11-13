@@ -347,7 +347,7 @@ def ConfigureCommandLineInterface(jobs_done_application):
     @jobs_done_application
     def jenkins(console_, url, username=None, password=None):
         '''
-        Creates jobs for jenkins
+        Creates jobs for jenkins and push them to a Jenkins instance
         
         :param url: Jenkins instance URL where jobs will be uploaded to.
      
@@ -361,9 +361,9 @@ def ConfigureCommandLineInterface(jobs_done_application):
 
 
     @jobs_done_application
-    def jenkins_test(console_, output_directory='jobs'):
+    def jenkins_test(console_, output_directory):
         '''
-        Creates jobs for jenkins
+        Creates jobs for jenkins and save the resulting .xml's in a directory
         
         :param output_directory: Directory to output job xmls instead of uploading to `url`.
         '''
