@@ -1,6 +1,6 @@
 from ben10.foundation.string import Dedent
 from jobs_done10.builders.jenkins import JenkinsJobBuilder
-from jobs_done10.ci_file import CIFile
+from jobs_done10.jobs_done_file import JobsDoneFile
 from jobs_done10.job_builder import JobBuilderConfigurator
 from jobs_done10.repository import Repository
 import pytest
@@ -250,16 +250,16 @@ class Test(object):
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
-            Contents of CIFile used for this test
+            Contents of JobsDoneFile used for this test
         
         :param str expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_YAML.
         '''
         repository = Repository(url='http://fake.git')
-        ci_file = CIFile.CreateFromYAML(ci_contents)
+        jobs_done_file = JobsDoneFile.CreateFromYAML(ci_contents)
 
         builder = JenkinsJobBuilder()
-        JobBuilderConfigurator.Configure(builder, ci_file, repository)
+        JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
         obtained_yaml = builder.Build()
 
         import difflib

@@ -6,7 +6,7 @@
 #===================================================================================================
 def BuildJobsInDirectory(builder, directory='.', progress_callback=None):
     '''
-    Using the given builder, extract repository information and look for CIFiles in the given
+    Using the given builder, extract repository information and look for JobsDoneFiles in the given
     `directory`.
     
     :param IJobBuilder builder:
@@ -16,9 +16,9 @@ def BuildJobsInDirectory(builder, directory='.', progress_callback=None):
         Base directory of a git repository containing jobs_done files.
     
     :param callable progress_callback:
-        Function called for each CIFile found in `directory` before it is processed.
+        Function called for each JobsDoneFile found in `directory` before it is processed.
     '''
-    from jobs_done10.ci_file import CIFile
+    from jobs_done10.jobs_done_file import JobsDoneFile
     from jobs_done10.job_builder import JobBuilderConfigurator
     from jobs_done10.repository import Repository
     from sharedscripts10.shared_scripts.git_ import Git
@@ -30,19 +30,19 @@ def BuildJobsInDirectory(builder, directory='.', progress_callback=None):
     )
 
     from ben10.filesystem import FindFiles
-    ci_files = FindFiles(
+    jobs_done_files = FindFiles(
         directory,
         in_filters=['*.jd.yaml'],
         recursive=False,
         standard_paths=True,
     )
-    if not ci_files:
+    if not jobs_done_files:
         raise RuntimeError('Found no files in cwd that match "*.jd.yaml"')
 
-    for ci_filename in ci_files:
+    for jobs_done_filename in jobs_done_files:
         if progress_callback:
-            progress_callback(ci_filename)
+            progress_callback(jobs_done_filename)
 
-        ci_file = CIFile.CreateFromFile(ci_filename)
-        JobBuilderConfigurator.Configure(builder, ci_file, repository)
+        jobs_done_file = JobsDoneFile.CreateFromFile(jobs_done_filename)
+        JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
         builder.Build()

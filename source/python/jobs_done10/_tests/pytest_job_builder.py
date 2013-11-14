@@ -1,5 +1,5 @@
 from jobs_done10.repository import Repository
-from jobs_done10.ci_file import CIFile
+from jobs_done10.jobs_done_file import JobsDoneFile
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_builder import IJobBuilder, JobBuilderConfigurator, JobBuilderAttributeError
 import pytest
@@ -7,12 +7,10 @@ import contextlib
 
 
 
-
 #===================================================================================================
 # Test
 #===================================================================================================
 class Test(object):
-
 
     def testJobBuilderConfigurator(self, monkeypatch):
         class MyBuilder():
@@ -33,25 +31,25 @@ class Test(object):
             def Reset(self):
                 pass
 
-        ci_file = CIFile()
-        ci_file.variables = {1:2}
+        jobs_done_file = JobsDoneFile()
+        jobs_done_file.variables = {1:2}
         repository = Repository(url='http://repo.git')
 
         builder = MyBuilder()
 
         # Test basic calls
         with ExpectedCalls(builder, Reset=1, AddRepository=1, AddVariables=1, AddBuildBatchCommand=0):
-            JobBuilderConfigurator.Configure(builder, ci_file, repository)
+            JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 
-        # Add some more values to ci_file, and make sure it is called
-        ci_file.build_batch_command = 'command'
+        # Add some more values to jobs_done_file, and make sure it is called
+        jobs_done_file.build_batch_command = 'command'
         with ExpectedCalls(builder, Reset=1, AddRepository=1, AddVariables=1, AddBuildBatchCommand=1):
-            JobBuilderConfigurator.Configure(builder, ci_file, repository)
+            JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 
         # Try calling a missing option
-        ci_file.cpptest_patterns = 'patterns'
+        jobs_done_file.cpptest_patterns = 'patterns'
         with pytest.raises(JobBuilderAttributeError):
-            JobBuilderConfigurator.Configure(builder, ci_file, repository)
+            JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 
 
 

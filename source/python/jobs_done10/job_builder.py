@@ -14,9 +14,9 @@ class IJobBuilder(Interface):
     
     Builders must implement this interface, which represents the bare minimum of options available,
     but this is more than likely not enough to build a complete job. Configurations set in a
-    builder come from a `JobBuilderConfigurator`, which itself extracts them from a `CIFile`.
+    builder come from a `JobBuilderConfigurator`, which itself extracts them from a `JobsDoneFile`.
 
-    As new options can be easily added to `CIFile`, and some options might not make sense for
+    As new options can be easily added to `JobsDoneFile`, and some options might not make sense for
     different tools, not all of them are defined in this interface, but helpful error messages
     were added to guide development of builders.
     
@@ -54,15 +54,15 @@ class IJobBuilder(Interface):
         '''
         Adds variable information to a job.
         
-        Variables are any option unknown to a CIFile, and are used to represent possible variations
+        Variables are any option unknown to a JobsDoneFile, and are used to represent possible variations
         of a job. They can be used, for example, to create jobs for multiple platforms from a single
-        CIFile.
+        JobsDoneFile.
         
         :param dict(str,list(str)) variables:
             Dictionary mapping 'variable_name' to a list of values.
         
         .. seealso::
-            CIFile
+            JobsDoneFile
         '''
 
 
@@ -71,22 +71,22 @@ class IJobBuilder(Interface):
 #===================================================================================================
 class JobBuilderConfigurator(object):
     '''
-    Class used to configure `IJobBuilder`s using `CIFile` and `Repository` information.
+    Class used to configure `IJobBuilder`s using `JobsDoneFile` and `Repository` information.
     
     .. seealso:: IJobBuilder
     '''
 
     @classmethod
-    def Configure(cls, builder, ci_file, repository):
+    def Configure(cls, builder, jobs_done_file, repository):
         '''
         This simply iterates over data and calls a series of functions in a Builder. Functions
-        called are determined by options in `ci_file` by converting the option names to camel case.
+        called are determined by options in `jobs_done_file` by converting the option names to camel case.
             e.g.: option 'junit_patterns' will trigger a call to builder.AddJunitPatterns
         
         :param IJobBuilder builder:
             Builder being configured.
         
-        :param CIFile ci_file:
+        :param JobsDoneFile jobs_done_file:
             Will be used to extract options that must be configured in `builder`
         
         :param Repository repository:
@@ -95,10 +95,10 @@ class JobBuilderConfigurator(object):
         '''
         builder.Reset()
         builder.AddRepository(repository)
-        builder.AddVariables(ci_file.variables)
+        builder.AddVariables(jobs_done_file.variables)
 
-        for option in ci_file.GetKnownOptions():
-            option_value = getattr(ci_file, option)
+        for option in jobs_done_file.GetKnownOptions():
+            option_value = getattr(jobs_done_file, option)
             if option_value is None:
                 continue # Skip unset options
             
@@ -126,8 +126,8 @@ class JobBuilderAttributeError(AttributeError):
     '''
     Raised when trying to access a builder function that is not implemented.
     '''
-    def __init__(self, builder, attribute, ci_file_option):
+    def __init__(self, builder, attribute, jobs_done_file_option):
         message = '%s "%s" cannot handle option "%s" (could not find function "%s").' % \
-            (IJobBuilder.__name__, builder.__class__.__name__, ci_file_option, attribute)
+            (IJobBuilder.__name__, builder.__class__.__name__, jobs_done_file_option, attribute)
 
         AttributeError.__init__(self, message)

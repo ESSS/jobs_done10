@@ -80,7 +80,7 @@ class JenkinsJobBuilder(object):
 
 
     #===============================================================================================
-    # Configurator functions (..seealso:: CIFile ivars for docs)
+    # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
     #===============================================================================================
     def AddParameters(self, parameters):
         import yaml
@@ -270,7 +270,7 @@ class _JenkinsYaml(object):
             List of templates to be included
             
         :param variables:
-            .. seealso:: CIFile.variables
+            .. seealso:: JobsDoneFile.variables
         '''
         self.name = name
         self.node = node
