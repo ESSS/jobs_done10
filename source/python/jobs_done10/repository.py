@@ -8,15 +8,15 @@ from ben10.foundation.bunch import Bunch
 class Repository(Bunch):
     '''
     Represents a source control repository used in a continuous integration job.
-    
+
     :cvar str url:
-    
+
     :cvar str branch:
         Branch used in a particular job
-        
+
     :cvar str name:
         Repository name, determined from URL.
-        
+
         e.g.
             url = 'https://server/repo.git'
             name = 'repo'

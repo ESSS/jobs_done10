@@ -28,6 +28,7 @@ class Test(object):
             - git:
                 url: "http://fake.git"
                 basedir: "fake"
+                wipe-workspace: false
                 branches:
                 - "master"
             logrotate:
@@ -35,13 +36,13 @@ class Test(object):
                 numToKeep: 16
                 artifactDaysToKeep: -1
                 artifactNumToKeep: -1
-        
+
         - project:
             name: fake-master
             jobs:
             - "fake-master"
-        
-        
+
+
         '''
     )
 
@@ -49,8 +50,8 @@ class Test(object):
     def testEmpty(self):
         '''
         Tests the most basic YAML possible (created from no ci_contents at all)
-        
-        If this test fails, tests marked with @_SkipIfFailTestEmpty will be skipped. 
+
+        If this test fails, tests marked with @_SkipIfFailTestEmpty will be skipped.
         '''
         self._DoTest(ci_contents='', expected_diff='')
 
@@ -58,11 +59,11 @@ class Test(object):
     def _SkipIfFailTestEmpty(original_test):  # @NoSelf
         '''
         Decorator that skips tests if self.testEmpty fails.
-        
+
         This is useful because if a change is made to the most basic YAML possible (created from
         no ci_contents at all), all tests would fail, polluting the output.
-        
-        Fixing testEmpty should make other tests run again. 
+
+        Fixing testEmpty should make other tests run again.
         '''
         @functools.wraps(original_test)
         def testFunc(self, *args, **kwargs):
@@ -103,7 +104,6 @@ class Test(object):
                 +        - choice_2
                 +        description: Description
                 +        name: PARAM
-                +    
                 '''
             ),
         )
@@ -144,7 +144,7 @@ class Test(object):
                 '''
                 junit_patterns:
                 - "junit*.xml"
-                  
+
                 boosttest_patterns:
                 - "boosttest*.xml"
                 '''
@@ -220,7 +220,7 @@ class Test(object):
                 planet:
                 - earth
                 - mars
-                  
+
                 moon:
                 - europa
                 '''
@@ -251,7 +251,7 @@ class Test(object):
         '''
         :param str ci_contents:
             Contents of JobsDoneFile used for this test
-        
+
         :param str expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_YAML.
         '''

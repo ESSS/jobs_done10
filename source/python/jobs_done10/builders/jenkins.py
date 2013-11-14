@@ -12,7 +12,7 @@ from jobs_done10.job_builder import IJobBuilder
 class JenkinsJobBuilder(object):
     '''
     Base class for Jenkins builders.
-    
+
     `self.Build` simply returns a jenkins-job-builder format yaml to be used by subclasses.
     '''
     ImplementsInterface(IJobBuilder)
@@ -72,6 +72,7 @@ class JenkinsJobBuilder(object):
                 - git:
                     url: "%(url)s"
                     basedir: "%(basedir)s"
+                    wipe-workspace: false
                     branches:
                     - "%(branch)s"
                 ''' % locals()
@@ -84,7 +85,7 @@ class JenkinsJobBuilder(object):
     #===============================================================================================
     def AddParameters(self, parameters):
         import yaml
-        self.templates.append(yaml.dump({'parameters': parameters}, default_flow_style=False))
+        self.templates.append(yaml.dump({'parameters': parameters}, default_flow_style=False)[:-1])
 
 
     def AddJunitPatterns(self, junit_patterns):
@@ -148,7 +149,7 @@ class JenkinsJobBuilder(object):
             - xunit:
                 thresholds:
                 - failed:
-                    unstable: '0' 
+                    unstable: '0'
                     unstablenew: '0'
                 types:
                 - junit:
@@ -265,10 +266,10 @@ class _JenkinsYaml(object):
 
         :param node:
             Node where job will run
-            
+
         :param list(str) templates:
             List of templates to be included
-            
+
         :param variables:
             .. seealso:: JobsDoneFile.variables
         '''
@@ -307,12 +308,12 @@ class _JenkinsYaml(object):
         contents += Indented(template_contents)
         contents += Dedent(
             '''
-            
+
             - project:
                 name: %(name)s
                 jobs:
                 - "%(template_name)s"
-            
+
             '''
         )
         contents += Indented(variable_contents)
@@ -322,7 +323,7 @@ class _JenkinsYaml(object):
     def Parse(self, output_directory):
         '''
         Processes this yaml using jenkins-jobs, and save the resulting files in `output_directory`
-        
+
         :param str output_directory:
         '''
         from ben10.filesystem import CreateDirectory, DeleteFile, CreateFile
@@ -348,11 +349,11 @@ def ConfigureCommandLineInterface(jobs_done_application):
     def jenkins(console_, url, username=None, password=None):
         '''
         Creates jobs for jenkins and push them to a Jenkins instance
-        
+
         :param url: Jenkins instance URL where jobs will be uploaded to.
-     
+
         :param username: Jenkins username.
-     
+
         :param password: Jenkins password.
         '''
         from jobs_done10.actions import BuildJobsInDirectory
@@ -364,7 +365,7 @@ def ConfigureCommandLineInterface(jobs_done_application):
     def jenkins_test(console_, output_directory):
         '''
         Creates jobs for jenkins and save the resulting .xml's in a directory
-        
+
         :param output_directory: Directory to output job xmls instead of uploading to `url`.
         '''
         from jobs_done10.actions import BuildJobsInDirectory
