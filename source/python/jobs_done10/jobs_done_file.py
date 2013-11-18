@@ -20,7 +20,7 @@ class JobsDoneFile(object):
         A shell script command used to build a project
 
     :ivar str description_regex:
-        Regex pattern to be matched from a job output and used as job descirption.
+        Regex pattern to be matched from a job output and used as job description.
         Used by Jenkins.
 
     :ivar list(str) junit_patterns:

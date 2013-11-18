@@ -10,6 +10,7 @@ class Repository(Bunch):
     Represents a source control repository used in a continuous integration job.
 
     :cvar str url:
+        Repository clone URL
 
     :cvar str branch:
         Branch used in a particular job

@@ -122,6 +122,15 @@ class JenkinsJobBuilder(object):
     # Privates
     #===============================================================================================
     def _AddLogrotate(self, days_to_keep=7, num_to_keep=16):
+        '''
+        Adds log rotation to Job (indicates how long we want to keep console logs for builds).
+        
+        After a certain number of days or builds, old logs are deleted.
+
+        :param int days_to_keep:
+
+        :param int num_to_keep:
+        '''
         self.templates.append(Dedent(
             '''
             logrotate:
