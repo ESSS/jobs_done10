@@ -133,7 +133,7 @@ class JobsDoneFile(object):
         :param str filename:
             Path to a jobs_done file
 
-        .. seealso:: CreateJobsDoneFileFromYAML
+        .. seealso:: CreateFromYAML
         '''
         from ben10.filesystem import GetFileContents
         return cls.CreateFromYAML(GetFileContents(filename))
