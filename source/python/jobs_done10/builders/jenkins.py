@@ -337,7 +337,6 @@ class _JenkinsYaml(object):
         :param str output_directory:
         '''
         from ben10.filesystem import CreateDirectory, DeleteFile, CreateFile
-        from sharedscripts10.shared_scripts.jenkins_job_builder_ import JenkinsJobBuilder
         import tempfile
 
         temp_filename = tempfile.mktemp(suffix='jobs_done', prefix='.yaml')
@@ -345,13 +344,15 @@ class _JenkinsYaml(object):
         CreateFile(temp_filename, str(self))
         try:
             CreateDirectory(output_directory)
-            JenkinsJobBuilder().Execute([
-                '--ignore-cache',
-                'test',
-                temp_filename,
-                '-o',
-                output_directory,
-            ])
+
+            import jenkins_jobs.builder
+            builder = jenkins_jobs.builder.Builder(
+                jenkins_url='fake_url',  # API requires this even if it's not used
+                jenkins_user=None,
+                jenkins_password=None,
+                ignore_cache=True,
+            )
+            builder.update_job(temp_filename, output_dir=output_directory)
         finally:
             DeleteFile(temp_filename)
 
