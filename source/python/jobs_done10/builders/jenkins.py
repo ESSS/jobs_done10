@@ -220,8 +220,7 @@ class JenkinsJobBuilderToUrl(JenkinsJobBuilder):
 
     @Implements(IJobBuilder.Build)
     def Build(self):
-        from ben10.filesystem import ListFiles, GetFileContents
-        from coilib50.filesystem import CreateTemporaryDirectory
+        from ben10.filesystem import ListFiles, GetFileContents, CreateTemporaryDirectory
         import jenkins
         import os
 
