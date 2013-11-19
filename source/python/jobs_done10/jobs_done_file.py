@@ -9,6 +9,7 @@ JOBS_DONE_FILE_PATTERN = '*.jobs_done.yaml'
 class JobsDoneFile(object):
     '''
     Represents a jobs_done file with descriptions used to create jobs.
+    This is a generic representation, not related to any specific continuous integration tool.
 
     :ivar list(str) boosttest_patterns:
         List of patterns to match when looking for boosttest results.

@@ -50,7 +50,7 @@ class IJobBuilder(Interface):
         '''
 
 
-    def AddVariables(self, variables):
+    def AddVariable(self, name, values):
         '''
         Adds variable information to a job.
 
@@ -58,8 +58,11 @@ class IJobBuilder(Interface):
         of a job. They can be used, for example, to create jobs for multiple platforms from a single
         JobsDoneFile.
 
-        :param dict(str,list(str)) variables:
-            Dictionary mapping 'variable_name' to a list of values.
+        :param str name:
+            Variable name
+            
+        :param list(str) values:
+            Variable values
 
         .. seealso::
             JobsDoneFile
@@ -95,7 +98,9 @@ class JobBuilderConfigurator(object):
         '''
         builder.Reset()
         builder.AddRepository(repository)
-        builder.AddVariables(jobs_done_file.variables)
+        
+        for name, values in sorted(jobs_done_file.variables.iteritems()):
+            builder.AddVariable(name, values)
 
         for option in jobs_done_file.GetKnownOptions():
             option_value = getattr(jobs_done_file, option)

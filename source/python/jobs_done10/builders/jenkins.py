@@ -1,3 +1,9 @@
+'''
+Module containing everything related to Jenkins in jobs_done10.
+
+This includes builders (and any implementation details of them), constants and command line
+interfaces
+'''
 from __future__ import absolute_import, with_statement
 from ben10.foundation.decorators import Implements
 from ben10.foundation.string import Dedent
@@ -28,6 +34,7 @@ class JenkinsJobBuilder(object):
         self._junit_pattern = None
         self._boosttest_pattern = None
         self._description_regex = None
+        self._variables = {}
 
 
     @Implements(IJobBuilder.Build)
@@ -47,14 +54,14 @@ class JenkinsJobBuilder(object):
             name=self.repository.name + '-' + self.repository.branch,
             node=self.repository.name,
             templates=self.templates[:],
-            variables=self.variables,
+            variables=self._variables,
         )
         return jenkins_yaml
 
 
-    @Implements(IJobBuilder.AddVariables)
-    def AddVariables(self, variables):
-        self.variables = variables
+    @Implements(IJobBuilder.AddVariable)
+    def AddVariable(self, name, values):
+        self._variables[name] = values
 
 
     @Implements(IJobBuilder.AddRepository)
@@ -269,6 +276,12 @@ class JenkinsJobBuilderToOutputDirectory(JenkinsJobBuilder):
 # _JenkinsYaml
 #===================================================================================================
 class _JenkinsYaml(object):
+    '''
+    Representation of a jenkins yaml file that can be parsed by jenkins-job-builder.
+    
+    This is basically a helper class for constructing those yaml files from a series of templates.
+    '''
+    
     def __init__(self, name, node, templates=[], variables={}):
         '''
         :param name:
@@ -280,13 +293,13 @@ class _JenkinsYaml(object):
         :param list(str) templates:
             List of templates to be included
 
-        :param variables:
-            .. seealso:: JobsDoneFile.variables
+        :param _variables:
+            .. seealso:: JobsDoneFile._variables
         '''
         self.name = name
         self.node = node
         self.templates = templates
-        self.variables = variables
+        self._variables = variables
 
 
     def __str__(self):
@@ -295,14 +308,14 @@ class _JenkinsYaml(object):
 
         name = self.name
 
-        template_parts = ['{%s}' % key for key in sorted(self.variables.keys())]
+        template_parts = ['{%s}' % key for key in sorted(self._variables.keys())]
         template_name = '-'.join([name] + template_parts)
         node = '-'.join([self.node] + template_parts)
 
         template_contents = '\n'.join(map(str, self.templates))
         variable_contents = ''
 
-        for variable_name, values in sorted(self.variables.iteritems()):
+        for variable_name, values in sorted(self._variables.iteritems()):
             variable_contents += variable_name + ':\n'
             for value in values:
                 variable_contents += '- "%s"\n' % str(value)
@@ -362,6 +375,13 @@ class _JenkinsYaml(object):
 # ConfigureCommandLineInterface
 #===================================================================================================
 def ConfigureCommandLineInterface(jobs_done_application):
+    '''
+    Configures additional command line commands to the jobs_done application.
+    
+    :param App jobs_done_application:
+        Command line application we are registering commands to.
+    '''
+    
     @jobs_done_application
     def jenkins(console_, url, username=None, password=None):
         '''
