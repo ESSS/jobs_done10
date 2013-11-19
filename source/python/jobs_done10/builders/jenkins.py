@@ -346,7 +346,13 @@ class _JenkinsYaml(object):
         CreateFile(temp_filename, str(self))
         try:
             CreateDirectory(output_directory)
-            JenkinsJobBuilder().Execute(['test', temp_filename, '-o', output_directory])
+            JenkinsJobBuilder().Execute([
+                '--ignore-cache',
+                'test',
+                temp_filename,
+                '-o',
+                output_directory,
+            ])
         finally:
             DeleteFile(temp_filename)
 
