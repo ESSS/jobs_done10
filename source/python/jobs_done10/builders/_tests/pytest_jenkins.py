@@ -178,15 +178,35 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_batch_command: "my_command"
+                build_batch_command: my_command
                 '''
             ),
             expected_diff=Dedent(
                 '''
                 @@ @@
                 +    builders:
-                +    - batch: "my_command"
+                +    - batch: my_command
                 '''
+            ),
+
+        )
+
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_batch_command: |
+                  multi_line
+                  command
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +    builders:
+                +    - batch: 'multi_line
+                +%s
+                +        command'
+                ''' % '    '
             ),
 
         )
@@ -273,6 +293,5 @@ class Test(object):
         import re
         diff = re.sub('@@.*@@', '@@ @@', diff, flags=re.MULTILINE)
 
-        print diff
         assert expected_diff == diff
 

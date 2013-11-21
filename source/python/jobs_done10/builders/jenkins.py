@@ -108,21 +108,17 @@ class JenkinsJobBuilder(object):
 
 
     def AddBuildBatchCommand(self, build_batch_command):
-        self.templates.append(Dedent(
-            '''
-            builders:
-            - batch: "%(build_batch_command)s"
-            ''' % locals()
-        ))
+        import yaml
+        self.templates.append(
+            yaml.dump({'builders': [{'batch':build_batch_command}]}, default_flow_style=False)[:-1]
+        )
 
 
     def AddBuildShellCommand(self, build_shell_command):
-        self.templates.append(Dedent(
-            '''
-            builders:
-            - shell: "%(build_shell_command)s"
-            ''' % locals()
-        ))
+        import yaml
+        self.templates.append(
+            yaml.dump({'builders': [{'shell':build_shell_command}]}, default_flow_style=False)[:-1]
+        )
 
 
     #===============================================================================================
@@ -278,10 +274,10 @@ class JenkinsJobBuilderToOutputDirectory(JenkinsJobBuilder):
 class _JenkinsYaml(object):
     '''
     Representation of a jenkins yaml file that can be parsed by jenkins-job-builder.
-    
+
     This is basically a helper class for constructing those yaml files from a series of templates.
     '''
-    
+
     def __init__(self, name, node, templates=[], variables={}):
         '''
         :param name:
@@ -352,7 +348,7 @@ class _JenkinsYaml(object):
         from ben10.filesystem import CreateDirectory, DeleteFile, CreateFile
         import tempfile
 
-        temp_filename = tempfile.mktemp(suffix='jobs_done', prefix='.yaml')
+        temp_filename = tempfile.mktemp(suffix='.yaml', prefix='jobs_done_')
 
         CreateFile(temp_filename, str(self))
         try:
@@ -366,6 +362,9 @@ class _JenkinsYaml(object):
                 ignore_cache=True,
             )
             builder.update_job(temp_filename, output_dir=output_directory)
+        except Exception, e:
+            from ben10.foundation.reraise import Reraise
+            Reraise(e, 'Handling YAML:\n\n' + str(self))
         finally:
             DeleteFile(temp_filename)
 
@@ -377,11 +376,11 @@ class _JenkinsYaml(object):
 def ConfigureCommandLineInterface(jobs_done_application):
     '''
     Configures additional command line commands to the jobs_done application.
-    
+
     :param App jobs_done_application:
         Command line application we are registering commands to.
     '''
-    
+
     @jobs_done_application
     def jenkins(console_, url, username=None, password=None):
         '''
