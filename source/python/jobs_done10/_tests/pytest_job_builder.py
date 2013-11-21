@@ -16,14 +16,13 @@ class Test(object):
         class MyBuilder():
             ImplementsInterface(IJobBuilder)
 
-            def AddRepository(self, repository):
+            def SetRepository(self, repository):
                 assert repository.url == 'http://repo.git'
 
-            def AddVariable(self, name, values):
-                assert name == 'name'
-                assert values == [1]
+            def SetVariation(self, variation):
+                assert variation == {'id':1}
 
-            def AddBuildBatchCommand(self, command):
+            def SetBuildBatchCommand(self, command):
                 assert command == 'command'
 
             def Build(self):
@@ -33,22 +32,22 @@ class Test(object):
                 pass
 
         jobs_done_file = JobsDoneFile()
-        jobs_done_file.variables = {'name':[1]}
+        jobs_done_file.variation = {'id':1}
         repository = Repository(url='http://repo.git')
 
         builder = MyBuilder()
 
         # Test basic calls
-        with ExpectedCalls(builder, Reset=1, AddRepository=1, AddVariable=1, AddBuildBatchCommand=0):
+        with ExpectedCalls(builder, Reset=1, SetRepository=1, SetVariation=1, SetBuildBatchCommand=0):
             JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 
-        # Add some more values to jobs_done_file, and make sure it is called
+        # Set some more values to jobs_done_file, and make sure it is called
         jobs_done_file.build_batch_command = 'command'
-        with ExpectedCalls(builder, Reset=1, AddRepository=1, AddVariable=1, AddBuildBatchCommand=1):
+        with ExpectedCalls(builder, Reset=1, SetRepository=1, SetVariation=1, SetBuildBatchCommand=1):
             JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 
         # Try calling a missing option
-        jobs_done_file.cpptest_patterns = 'patterns'
+        jobs_done_file.boosttest_patterns = 'patterns'
         with pytest.raises(JobBuilderAttributeError):
             JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
 

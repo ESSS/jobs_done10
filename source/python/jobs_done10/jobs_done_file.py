@@ -1,5 +1,6 @@
-# Used to match jobs_done filenames (fnmatch)
-JOBS_DONE_FILE_PATTERN = '*.jobs_done.yaml'
+# Name of jobs_done file, repositories must contain this file in their root dir to be able to
+# create jobs.
+JOBS_DONE_FILENAME = '.jobs_done.yaml'
 
 
 
@@ -35,50 +36,50 @@ class JobsDoneFile(object):
         e.g.
             parameters = {'choices' : ['1', '2'], 'name' : 'my_param'}
 
-    :ivar dict variables:
-        A dict that stores all other variables, that are not known options.
+    :ivar dict variation:
+        A dict that stores the current variation for this file.
 
-        Variables that contain multiple values (are lists) indicate variations of jobs described
-        by this file, and one job will be generated for each possible combination of these
-        variables. They can be used, for example, to create jobs for multiple platforms from a
-        single JobsDoneFile.
+        When a jobs_done file is parsed, it can contain 'variables':
+
+            Variables are unknown options that contain multiple values (lists), which indicate
+            variations of possible jobs described by this file. For each possible combination of
+            these variables, a JobsDoneFile class is created. They can be used, for example, to
+            create jobs for multiple platforms from a single JobsDoneFile.
+
+        `variation` represents one of those variations.
+
+        For example, if our file describes these variables:
+            planet:
+            - earth
+            - mars
+
+            moon:
+            - europa
+            - ganymede
+
+        This variation will have one of these values (one for each JobsDoneFile created from it):
+            {'planet' : 'earth', 'moon' : 'europa'}
+            {'planet' : 'earth', 'moon' : 'ganymede'}
+            {'planet' : 'mars', 'moon' : 'europa'}
+            {'planet' : 'mars', 'moon' : 'ganymede'}
     '''
+
+    KNOWN_OPTIONS = [
+        'boosttest_patterns',
+        'build_shell_command',
+        'build_batch_command',
+        'description_regex',
+        'junit_patterns',
+        'parameters',
+    ]
+
     def __init__(self):
-        # Known options (always default to None to indicate that no value was set)
-        self.boosttest_patterns = None
-        self.build_shell_command = None
-        self.build_batch_command = None
-        self.description_regex = None
-        self.junit_patterns = None
-        self.parameters = None
+        # Initialize known options with None
+        for option_name in self.KNOWN_OPTIONS:
+            setattr(self, option_name, None)
 
         # All other variable options (store job variations)
-        self.variables = {}
-
-
-    def GetKnownOptions(self):
-        '''
-        :return list(str):
-            A list of all known options in a CI file.
-
-            These options are determined from public members of this class.
-
-            .. seealso:: JobsDoneFile.__init__
-                For the definition of known options
-        '''
-        known_options = []
-        for member in self.__dict__.keys():
-            # 'variables' is a special member for all unknown options
-            if member == 'variables':
-                continue
-
-            # Ignore private member of this class
-            if member.startswith('_'):
-                continue
-
-            known_options.append(member)
-
-        return known_options
+        self.variation = {}
 
 
     @classmethod
@@ -108,24 +109,86 @@ class JobsDoneFile(object):
             resulting JobsDoneFile:
                 JobsDoneFile(
                     junit_patterns="*.xml",
-                    variables={'custom_variable': ['value_1', 'value_2']}
+                    variation={'custom_variable': ['value_1', 'value_2']}
                 )
         '''
         import yaml
-        ci_data = yaml.load(yaml_contents) or {}
 
-        jobs_done_file = JobsDoneFile()
-        known_options = jobs_done_file.GetKnownOptions()
+        # User custom loader that treats everything as strings
+        class MyLoader(yaml.loader.BaseLoader):
+            def construct_scalar(self, *args, **kwargs):
+                value = yaml.loader.BaseLoader.construct_scalar(self, *args, **kwargs)
+                try:
+                    return value.encode('ascii')
+                except:
+                    return value
 
-        for option_name, option_value in ci_data.iteritems():
-            if option_name in known_options:
+        # Load yaml
+        jd_data = yaml.load(yaml_contents, Loader=MyLoader) or {}
+
+        # Search for unknown options
+        parseable_options = JobsDoneFile.KNOWN_OPTIONS
+        for option_name, option_value in jd_data.iteritems():
+            option_name = option_name.rsplit(':', 1)[-1]
+            if option_name not in parseable_options and not isinstance(option_value, list):
+                raise UnknownJobsDoneFileOption(option_name)
+
+        # List and possible variations, and remove then from jd_data
+        variables = {}
+        for option_name, option_value in jd_data.items():
+            option_name = option_name.rsplit(':', 1)[-1]
+            if option_name not in parseable_options:
+                variables[option_name] = option_value
+                del jd_data[option_name]
+
+        if variables:
+            # Write up all possible variations of those variations
+            # Stolen from http://stackoverflow.com/a/3873734/1209622
+            import itertools as it
+            variations = [
+                dict(zip(variables, p)) for p in it.product(*(variables[v] for v in variables))
+            ]
+        else:
+            # If there are no variation, we have one possible variation, with no values
+            variations = [{}]
+
+        # Finally, create all jobs_done files (only known options remain in jd_data)
+        def ConditionMatch(variation, conditions):
+            variable_name, variable_value = condition.split('-')
+            return variation[variable_name] == variable_value
+
+        jobs_done_files = []
+
+        for variation in variations:
+            jobs_done_file = JobsDoneFile()
+            jobs_done_files.append(jobs_done_file)
+
+            jobs_done_file.variation = variation.copy()
+
+            if not jd_data:
+                # Handling for empty jobs, they still are valid since we don't know what builder
+                # will do with them, maybe fill it with defaults
+                continue
+
+            # Re-read jd_data replacing all variation with their values in the current variation
+            jd_string = (yaml.dump(jd_data, default_flow_style=False)[:-1])
+            jd_string = jd_string.format(**variation)
+            jd_formatted_data = yaml.load(jd_string)
+
+            for option_name, option_value in jd_formatted_data.iteritems():
+                # Check for option conditions
+                if ':' in option_name:
+                    conditions = option_name.split(':')[:-1]
+                    option_name = option_name.split(':')[-1]
+
+                    # Skip this option if any condition is not met
+                    if not all([ConditionMatch(variation, condition) for condition in conditions]):
+                        continue
+
                 setattr(jobs_done_file, option_name, option_value)
-            else:
-                if isinstance(option_value, list):
-                    jobs_done_file.variables[option_name] = option_value
-                else:
-                    raise UnknownJobsDoneFileOption(option_name)
-        return jobs_done_file
+
+
+        return jobs_done_files
 
 
     @classmethod

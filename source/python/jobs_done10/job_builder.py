@@ -40,9 +40,9 @@ class IJobBuilder(Interface):
         '''
 
 
-    def AddRepository(self, repository):
+    def SetRepository(self, repository):
         '''
-        Adds repository information to a build. This usually indicates what repository/url/branch
+        Sets repository information to a build. This usually indicates what repository/url/branch
         should be used in a build/job.
 
         :param Repository repository:
@@ -50,19 +50,21 @@ class IJobBuilder(Interface):
         '''
 
 
-    def AddVariable(self, name, values):
+    def SetVariation(self, variation):
         '''
-        Adds variable information to a job.
+        Sets variation information to a job.
 
-        Variables are any option unknown to a JobsDoneFile, and are used to represent possible variations
-        of a job. They can be used, for example, to create jobs for multiple platforms from a single
-        JobsDoneFile.
+        Variations are any option unknown to a JobsDoneFile, and are used to represent possible
+        variations of a job. They can be used, for example, to create jobs for multiple platforms
+        from a single JobsDoneFile.
 
-        :param str name:
-            Variable name
-            
-        :param list(str) values:
-            Variable values
+        This will set a single build variation, with the values for the current variation being
+        built.
+
+        :param dict(str,str) variations:
+            Dictionary mapping variation name to value.
+            e.g.
+                variation = {'planet' : 'earth'}
 
         .. seealso::
             JobsDoneFile
@@ -97,17 +99,15 @@ class JobBuilderConfigurator(object):
 
         '''
         builder.Reset()
-        builder.AddRepository(repository)
-        
-        for name, values in sorted(jobs_done_file.variables.iteritems()):
-            builder.AddVariable(name, values)
+        builder.SetRepository(repository)
+        builder.SetVariation(jobs_done_file.variation)
 
-        for option in jobs_done_file.GetKnownOptions():
+        for option in jobs_done_file.KNOWN_OPTIONS:
             option_value = getattr(jobs_done_file, option)
             if option_value is None:
                 continue  # Skip unset options
 
-            builder_function_name = 'Add' + option.title().replace('_', '')
+            builder_function_name = 'Set' + option.title().replace('_', '')
 
             try:
                 builder_function = getattr(builder, builder_function_name)

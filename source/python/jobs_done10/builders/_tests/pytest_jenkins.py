@@ -234,37 +234,58 @@ class Test(object):
 
     @_SkipIfFailTestEmpty
     def testVariables(self):
-        self._DoTest(
-            ci_contents=Dedent(
-                '''
-                planet:
-                - earth
-                - mars
+        ci_contents = Dedent(
+            '''
+            planet:
+            - earth
+            - mars
 
-                moon:
-                - europa
-                '''
-            ),
-            expected_diff=Dedent(
-                '''
-                @@ @@
-                -    name: "fake-master"
-                -    node: "fake"
-                +    name: "fake-master-{moon}-{planet}"
-                +    node: "fake-{moon}-{planet}"
-                @@ @@
-                -    - "fake-master"
-                -
-                +    - "fake-master-{moon}-{planet}"
-                +    moon:
-                +    - "europa"
-                +    planet:
-                +    - "earth"
-                +    - "mars"
-                '''
-            ),
-
+            moon:
+            - europa
+            '''
         )
+        repository = Repository(url='http://fake.git')
+
+        # This test should create two jobs_done_files from their variations
+        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
+
+        builder = JenkinsJobBuilder()
+        for jd_file in jobs_done_files:
+            JobBuilderConfigurator.Configure(builder, jd_file, repository)
+            obtained_yaml = builder.Build()
+
+            if jd_file.variation['planet'] == 'earth':
+                self._AssertDiff(
+                    obtained_yaml,
+                    Dedent(
+                        '''
+                        @@ @@
+                        -    name: "fake-master"
+                        -    node: "fake"
+                        +    name: "fake-master-europa-earth"
+                        +    node: "fake-europa-earth"
+                        @@ @@
+                        -    - "fake-master"
+                        +    - "fake-master-europa-earth"
+                        '''
+                    )
+                )
+            else:
+                self._AssertDiff(
+                    obtained_yaml,
+                    Dedent(
+                        '''
+                        @@ @@
+                        -    name: "fake-master"
+                        -    node: "fake"
+                        +    name: "fake-master-europa-mars"
+                        +    node: "fake-europa-mars"
+                        @@ @@
+                        -    - "fake-master"
+                        +    - "fake-master-europa-mars"
+                        '''
+                    )
+                )
 
 
     def _DoTest(self, ci_contents, expected_diff):
@@ -276,12 +297,16 @@ class Test(object):
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_YAML.
         '''
         repository = Repository(url='http://fake.git')
-        jobs_done_file = JobsDoneFile.CreateFromYAML(ci_contents)
+        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
 
         builder = JenkinsJobBuilder()
-        JobBuilderConfigurator.Configure(builder, jobs_done_file, repository)
+        JobBuilderConfigurator.Configure(builder, jobs_done_files[0], repository)
         obtained_yaml = builder.Build()
 
+        self._AssertDiff(obtained_yaml, expected_diff)
+
+
+    def _AssertDiff(self, obtained_yaml, expected_diff):
         import difflib
 
         diff = ''.join(difflib.unified_diff(
@@ -294,4 +319,3 @@ class Test(object):
         diff = re.sub('@@.*@@', '@@ @@', diff, flags=re.MULTILINE)
 
         assert expected_diff == diff
-

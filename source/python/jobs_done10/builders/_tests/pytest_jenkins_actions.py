@@ -1,6 +1,6 @@
 from ben10.filesystem import ListFiles
 from ben10.foundation.string import Dedent
-from jobs_done10.actions import BuildJobsFromFiles
+from jobs_done10.actions import BuildJobsFromFile
 from jobs_done10.builders.jenkins import JenkinsJobBuilderToOutputDirectory
 from jobs_done10.repository import Repository
 
@@ -46,11 +46,7 @@ class Test(object):
         repository = Repository(url='http://project.git', branch='branch')
         builder = JenkinsJobBuilderToOutputDirectory(embed_data['.'])
 
-        BuildJobsFromFiles(
-            builder,
-            repository,
-            [jobs_done_file_contents]
-        )
+        BuildJobsFromFile(builder, repository, jobs_done_file_contents)
 
         assert ListFiles(embed_data['.']) == \
             ['project-branch-europa-mercury', 'project-branch-europa-venus']

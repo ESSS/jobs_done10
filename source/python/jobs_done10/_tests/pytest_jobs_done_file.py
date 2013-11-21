@@ -36,23 +36,48 @@ class Test(object):
             - europa
             '''
         )
-        jobs_done_file = JobsDoneFile.CreateFromYAML(ci_contents)
+        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
 
-        assert jobs_done_file.junit_patterns == ['junit*.xml']
-        assert jobs_done_file.boosttest_patterns == ['cpptest*.xml']
-        assert jobs_done_file.build_batch_command == 'command'
-        assert jobs_done_file.parameters == [{
-            'choice' : {
-                'name': 'PARAM',
-                'choices': ['choice_1', 'choice_2'],
-                'description': 'Description',
-            }
-        }]
+        # Two possible variations (mercury-europa and venus-europa)
+        assert len(jobs_done_files) == 2
 
-        assert jobs_done_file.variables == {
-            'planets' : ['mercury', 'venus'],
-            'moons' : ['europa']
-        }
+        # In this case, they are both the same
+        for jobs_done_file in jobs_done_files:
+            assert jobs_done_file.junit_patterns == ['junit*.xml']
+            assert jobs_done_file.boosttest_patterns == ['cpptest*.xml']
+            assert jobs_done_file.build_batch_command == 'command'
+            assert jobs_done_file.parameters == [{
+                'choice' : {
+                    'name': 'PARAM',
+                    'choices': ['choice_1', 'choice_2'],
+                    'description': 'Description',
+                }
+            }]
+
+
+    def testCreateJobsDoneFileFromYAMLWithConditions(self):
+        ci_contents = Dedent(
+            '''
+            platform-windows:junit_patterns:
+            - "junit*.xml"
+
+            platform-linux:build_shell_command: "{platform} command"
+            platform-windows:build_batch_command: "{platform} command"
+
+            platform:
+            - linux
+            - windows
+            '''
+        )
+        for jd_file in JobsDoneFile.CreateFromYAML(ci_contents):
+            if jd_file.variation['platform'] == 'linux':
+                assert jd_file.junit_patterns == None
+                assert jd_file.build_batch_command == None
+                assert jd_file.build_shell_command == 'linux command'
+            else:
+                assert jd_file.junit_patterns == ['junit*.xml']
+                assert jd_file.build_batch_command == 'windows command'
+                assert jd_file.build_shell_command == None
 
 
     def testUnknownOption(self):

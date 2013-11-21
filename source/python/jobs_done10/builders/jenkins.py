@@ -34,7 +34,7 @@ class JenkinsJobBuilder(object):
         self._junit_pattern = None
         self._boosttest_pattern = None
         self._description_regex = None
-        self._variables = {}
+        self._variation = {}
 
 
     @Implements(IJobBuilder.Build)
@@ -44,28 +44,28 @@ class JenkinsJobBuilder(object):
             yaml contents used by jenkins-jobs
         '''
         # Common templates
-        self._AddLogrotate()
+        self._SetLogrotate()
 
         # Handle Publisher
-        self._AddPulibshers()
+        self._SetPulibshers()
 
         # Create and parse _JenkinsYaml
         jenkins_yaml = _JenkinsYaml(
             name=self.repository.name + '-' + self.repository.branch,
             node=self.repository.name,
             templates=self.templates[:],
-            variables=self._variables,
+            variation=self._variation,
         )
         return jenkins_yaml
 
 
-    @Implements(IJobBuilder.AddVariable)
-    def AddVariable(self, name, values):
-        self._variables[name] = values
+    @Implements(IJobBuilder.SetVariation)
+    def SetVariation(self, variation):
+        self._variation = variation
 
 
-    @Implements(IJobBuilder.AddRepository)
-    def AddRepository(self, repository):
+    @Implements(IJobBuilder.SetRepository)
+    def SetRepository(self, repository):
         self.repository = repository
 
         url = repository.url
@@ -90,31 +90,37 @@ class JenkinsJobBuilder(object):
     #===============================================================================================
     # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
     #===============================================================================================
-    def AddParameters(self, parameters):
+    def SetParameters(self, parameters):
         import yaml
-        self.templates.append(yaml.dump({'parameters': parameters}, default_flow_style=False)[:-1])
+        self.templates.append(
+            yaml.dump(
+                {'parameters': parameters},
+                allow_unicode=False,
+                default_flow_style=False,
+            )[:-1]
+        )
 
 
-    def AddJunitPatterns(self, junit_patterns):
+    def SetJunitPatterns(self, junit_patterns):
         self._junit_pattern = ' '.join(junit_patterns)
 
 
-    def AddBoosttestPatterns(self, boosttest_patterns):
+    def SetBoosttestPatterns(self, boosttest_patterns):
         self._boosttest_pattern = ' '.join(boosttest_patterns)
 
 
-    def AddDescriptionRegex(self, description_regex):
+    def SetDescriptionRegex(self, description_regex):
         self._description_regex = description_regex
 
 
-    def AddBuildBatchCommand(self, build_batch_command):
+    def SetBuildBatchCommand(self, build_batch_command):
         import yaml
         self.templates.append(
             yaml.dump({'builders': [{'batch':build_batch_command}]}, default_flow_style=False)[:-1]
         )
 
 
-    def AddBuildShellCommand(self, build_shell_command):
+    def SetBuildShellCommand(self, build_shell_command):
         import yaml
         self.templates.append(
             yaml.dump({'builders': [{'shell':build_shell_command}]}, default_flow_style=False)[:-1]
@@ -124,9 +130,9 @@ class JenkinsJobBuilder(object):
     #===============================================================================================
     # Privates
     #===============================================================================================
-    def _AddLogrotate(self, days_to_keep=7, num_to_keep=16):
+    def _SetLogrotate(self, days_to_keep=7, num_to_keep=16):
         '''
-        Adds log rotation to Job (indicates how long we want to keep console logs for builds).
+        Sets log rotation to Job (indicates how long we want to keep console logs for builds).
 
         After a certain number of days or builds, old logs are deleted.
 
@@ -147,7 +153,7 @@ class JenkinsJobBuilder(object):
         ))
 
 
-    def _AddPulibshers(self):
+    def _SetPulibshers(self):
         junit_pattern = self._junit_pattern
         boosttest_pattern = self._boosttest_pattern
         description_regex = self._description_regex
@@ -278,7 +284,7 @@ class _JenkinsYaml(object):
     This is basically a helper class for constructing those yaml files from a series of templates.
     '''
 
-    def __init__(self, name, node, templates=[], variables={}):
+    def __init__(self, name, node, templates=[], variation={}):
         '''
         :param name:
             Job name
@@ -289,13 +295,13 @@ class _JenkinsYaml(object):
         :param list(str) templates:
             List of templates to be included
 
-        :param _variables:
-            .. seealso:: JobsDoneFile._variables
+        :param variation:
+            .. seealso:: JobsDoneFile
         '''
         self.name = name
         self.node = node
         self.templates = templates
-        self._variables = variables
+        self._variation = variation
 
 
     def __str__(self):
@@ -304,17 +310,13 @@ class _JenkinsYaml(object):
 
         name = self.name
 
-        template_parts = ['{%s}' % key for key in sorted(self._variables.keys())]
+        template_parts = [value for (key, value) in sorted(self._variation.items())]
         template_name = '-'.join([name] + template_parts)
         node = '-'.join([self.node] + template_parts)
 
         template_contents = '\n'.join(map(str, self.templates))
         variable_contents = ''
 
-        for variable_name, values in sorted(self._variables.iteritems()):
-            variable_contents += variable_name + ':\n'
-            for value in values:
-                variable_contents += '- "%s"\n' % str(value)
 
         contents = Dedent(
             '''
@@ -394,7 +396,8 @@ def ConfigureCommandLineInterface(jobs_done_application):
         '''
         from jobs_done10.actions import BuildJobsInDirectory
         builder = JenkinsJobBuilderToUrl(url=url, username=username, password=password)
-        BuildJobsInDirectory(builder, progress_callback=console_.Print)
+        BuildJobsInDirectory(builder)
+        console_.ProgressOk()
 
 
     @jobs_done_application
@@ -406,4 +409,5 @@ def ConfigureCommandLineInterface(jobs_done_application):
         '''
         from jobs_done10.actions import BuildJobsInDirectory
         builder = JenkinsJobBuilderToOutputDirectory(output_directory=output_directory)
-        BuildJobsInDirectory(builder, progress_callback=console_.Print)
+        BuildJobsInDirectory(builder)
+        console_.ProgressOk()
