@@ -287,6 +287,32 @@ class Test(object):
                     )
                 )
 
+    def testCreateFromConfigFile(self):
+        from jobs_done10.builders.jenkins import JenkinsJobBuilderToUrl
+        builder = JenkinsJobBuilderToUrl.CreateFromConfigFile(config_file_contents=Dedent(
+            '''
+            jenkins_url: my_url
+            '''
+        ))
+
+        assert builder.url == 'my_url'
+        assert builder.username == None
+        assert builder.password == None
+
+
+        builder = JenkinsJobBuilderToUrl.CreateFromConfigFile(config_file_contents=Dedent(
+            '''
+            jenkins_url: my_url
+            jenkins_username: my_username
+            jenkins_password: my_password
+            '''
+        ))
+
+        assert builder.url == 'my_url'
+        assert builder.username == 'my_username'
+        assert builder.password == 'my_password'
+
+
 
     def _DoTest(self, ci_contents, expected_diff):
         '''
