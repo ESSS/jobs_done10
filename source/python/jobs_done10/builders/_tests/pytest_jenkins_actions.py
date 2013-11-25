@@ -48,5 +48,5 @@ class Test(object):
 
         BuildJobsFromFile(builder, repository, jobs_done_file_contents)
 
-        assert ListFiles(embed_data['.']) == \
-            ['project-branch-europa-mercury', 'project-branch-europa-venus']
+        assert set(ListFiles(embed_data['.'])) == \
+            set(['project-branch-europa-mercury', 'project-branch-europa-venus'])
