@@ -227,18 +227,6 @@ class JenkinsJobBuilderToUrl(JenkinsJobBuilder):
         self.password = password
 
 
-    @classmethod
-    def CreateFromConfigFile(cls, config_file_contents):
-        import yaml
-        config = yaml.load(config_file_contents)
-
-        return JenkinsJobBuilderToUrl(
-            url=config['jenkins_url'],
-            username=config.get('jenkins_username', None),
-            password=config.get('jenkins_password', None),
-        )
-
-
     @Implements(IJobBuilder.Build)
     def Build(self):
         from ben10.filesystem import ListFiles, GetFileContents, CreateTemporaryDirectory
@@ -396,7 +384,7 @@ def ConfigureCommandLineInterface(jobs_done_application):
     '''
 
     @jobs_done_application
-    def jenkins(console_, url=None, username=None, password=None):
+    def jenkins(console_, url, username=None, password=None):
         '''
         Creates jobs for Jenkins and push them to a Jenkins instance.
 
@@ -409,24 +397,8 @@ def ConfigureCommandLineInterface(jobs_done_application):
 
         :param password: Jenkins password.
         '''
-        if url is not None:
-            # Create builder from command line args
-            builder = JenkinsJobBuilderToUrl(url=url, username=username, password=password)
+        builder = JenkinsJobBuilderToUrl(url=url, username=username, password=password)
 
-        else:
-            # Create builder from config file
-            from ben10.filesystem import IsFile, GetFileContents
-
-            from jobs_done10.config_file import JOBS_DONE_CONFIG_FILENAME
-            if not IsFile(JOBS_DONE_CONFIG_FILENAME):
-                raise RuntimeError(
-                    'No Jenkins URL was given, and no configuration file was found ("%s")' % \
-                    JOBS_DONE_CONFIG_FILENAME
-                )
-            config_file_contents = GetFileContents(JOBS_DONE_CONFIG_FILENAME)
-            builder = JenkinsJobBuilderToUrl.CreateFromConfigFile(config_file_contents)
-
-        
         console_.Print('Pushing jobs to ' + builder.url)
         from jobs_done10.actions import BuildJobsInDirectory
         BuildJobsInDirectory(builder)
