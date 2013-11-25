@@ -216,16 +216,16 @@ class Test(object):
     def testDescriptionSetter(self):
         self._DoTest(
             ci_contents=Dedent(
-                '''
-                description_regex: "JENKINS DESCRIPTION: (.*)"
+                r'''
+                description_regex: "JENKINS DESCRIPTION\\: (.*)"
                 '''
             ),
             expected_diff=Dedent(
-                '''
+                r'''
                 @@ @@
                 +    publishers:
                 +    - descriptionsetter:
-                +        regexp: 'JENKINS DESCRIPTION: (.*)'
+                +        regexp: 'JENKINS DESCRIPTION\: (.*)'
                 '''
             ),
 

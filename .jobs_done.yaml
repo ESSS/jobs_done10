@@ -13,7 +13,7 @@ platform-redhat64:build_shell_command: |
   $AA_AASIMAR_AA -t project.update jobs_done10 --projects-dir=$WORKSPACE --dependencies-only --sources=head --binaries=none
   $AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}
 
-description_regex: "HUDSON DESCRIPTION: (.*)"
+description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
 dist:
 - 12.0

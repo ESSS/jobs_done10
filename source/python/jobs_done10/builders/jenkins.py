@@ -161,43 +161,33 @@ class JenkinsJobBuilder(object):
         if not any((junit_pattern, boosttest_pattern, description_regex)):
             return  # Need at least one publisher to do something
 
-        # Write basic contents
+        parsed_contents = {'publishers' : []}
+
+        if junit_pattern or boosttest_pattern:
+            xunit = {
+                'thresholds' : [{'failed' : {'unstable' : '0', 'unstablenew' : '0'}}],
+                'types' : []
+            }
+
+            if junit_pattern:
+                xunit['types'].append({'junit': {
+                    'pattern' : junit_pattern,
+                    'requireupdate' : 'false',
+                    'stoponerror' : 'false',
+                }})
+            if boosttest_pattern:
+                xunit['types'].append({'boosttest': {
+                    'pattern' : boosttest_pattern,
+                    'requireupdate' : 'false',
+                    'stoponerror' : 'false',
+                }})
+
+            parsed_contents['publishers'].append({'xunit' : xunit})
+
+        if description_regex:
+            parsed_contents['publishers'].append({'descriptionsetter' : {'regexp' : description_regex}})
+
         import yaml
-        parsed_contents = yaml.load(Dedent(
-            '''
-            publishers:
-            - xunit:
-                thresholds:
-                - failed:
-                    unstable: '0'
-                    unstablenew: '0'
-                types:
-                - junit:
-                    pattern: "%(junit_pattern)s"
-                    requireupdate: 'false'
-                    stoponerror: 'false'
-                - boosttest:
-                    pattern: "%(boosttest_pattern)s"
-                    requireupdate: 'false'
-                    stoponerror: 'false'
-            - descriptionsetter:
-                regexp: "%(description_regex)s"
-            ''' % locals()
-        ))
-
-        # Remove description_regex if not given
-        if not description_regex:
-            del parsed_contents['publishers'][1]
-
-        # Remove some types if no patterns were given
-        if not junit_pattern and not boosttest_pattern:
-            del parsed_contents['publishers'][0]
-        else:
-            if not boosttest_pattern:
-                del parsed_contents['publishers'][0]['xunit']['types'][1]
-            if not junit_pattern:
-                del parsed_contents['publishers'][0]['xunit']['types'][0]
-
         template = yaml.dump(parsed_contents, default_flow_style=False)
         self.templates.append(template)
 
