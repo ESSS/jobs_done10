@@ -185,7 +185,10 @@ class JenkinsJobBuilder(object):
             parsed_contents['publishers'].append({'xunit' : xunit})
 
         if description_regex:
-            parsed_contents['publishers'].append({'descriptionsetter' : {'regexp' : description_regex}})
+            parsed_contents['publishers'].append({'descriptionsetter' : {
+                'regexp' : description_regex,
+                'regexp-for-failed' : description_regex,
+            }})
 
         import yaml
         template = yaml.dump(parsed_contents, default_flow_style=False)

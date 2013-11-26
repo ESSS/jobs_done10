@@ -19,5 +19,8 @@ class JobsDone10(EsssProject):
 
 
     NAMESPACE_VARIABLES = {
-        '$PATH' : PATHLIST('`self.scripts_dir`')
+        '$PATH' : PATHLIST('`self.scripts_dir`'),
+        
+        '>jd_eden' : 'jobs_done jenkins http://eden.fln.esss.com.br:9090/ --username=dev --password=***REMOVED***',
+        '>jd_yoda' : 'jobs_done jenkins http://hub.esss.com.br:9090/ --username=dev --password=***REMOVED***',
     }

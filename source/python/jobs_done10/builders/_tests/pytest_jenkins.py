@@ -226,6 +226,7 @@ class Test(object):
                 +    publishers:
                 +    - descriptionsetter:
                 +        regexp: 'JENKINS DESCRIPTION\: (.*)'
+                +        regexp-for-failed: 'JENKINS DESCRIPTION\: (.*)'
                 '''
             ),
 
