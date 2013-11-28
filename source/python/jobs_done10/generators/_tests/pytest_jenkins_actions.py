@@ -158,8 +158,8 @@ class Test(object):
 
             def get_jobs(self):
                 return [
-                    {'name' : 'space-branch-mercury'},
-                    {'name' : 'space-branch-saturn'},
+                    {'name' : u'space-branch-mercury'},
+                    {'name' : u'space-branch-saturn'},
                 ]
 
             def create_job(self, name, xml):

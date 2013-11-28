@@ -261,7 +261,7 @@ class JenkinsJobPublisher(object):
 
         job_names = set(self.jobs.keys())
 
-        all_jobs = set([job['name'] for job in jenkins.get_jobs()])
+        all_jobs = set([str(job['name']) for job in jenkins.get_jobs()])
         matching_jobs = set([job for job in all_jobs if job.startswith(self.job_group)])
 
         new_jobs = job_names.difference(matching_jobs)
