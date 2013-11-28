@@ -1,5 +1,5 @@
 from ben10.clikit.app import App
-from jobs_done10.builders.jenkins import ConfigureCommandLineInterface
+from jobs_done10.generators.jenkins import ConfigureCommandLineInterface
 
 
 # Create command line application

@@ -63,8 +63,8 @@ class JobsDoneFile(object):
             {'planet' : 'mars', 'moon' : 'europa'}
             {'planet' : 'mars', 'moon' : 'ganymede'}
     '''
-
-    KNOWN_OPTIONS = [
+    # Option that will be set in generators
+    GENERATOR_OPTIONS = [
         'boosttest_patterns',
         'build_shell_command',
         'build_batch_command',
@@ -73,9 +73,14 @@ class JobsDoneFile(object):
         'parameters',
     ]
 
+    # All options that are parsed
+    PARSED_OPTIONS = GENERATOR_OPTIONS + [
+        'branch_patterns',
+    ]
+
     def __init__(self):
         # Initialize known options with None
-        for option_name in self.KNOWN_OPTIONS:
+        for option_name in self.PARSED_OPTIONS:
             setattr(self, option_name, None)
 
         # All other variable options (store job variations)
@@ -87,7 +92,7 @@ class JobsDoneFile(object):
         '''
         :param str yaml_contents:
 
-        :return JobsDoneFile:
+        :return list(JobsDoneFile):
 
         .. seealso:: JobsDoneFile
             For known options accepted in yaml_contents
@@ -106,15 +111,15 @@ class JobsDoneFile(object):
                     - value_2
                 """
 
-            resulting JobsDoneFile:
-                JobsDoneFile(
-                    junit_patterns="*.xml",
-                    variation={'custom_variable': ['value_1', 'value_2']}
-                )
+            resulting JobsDoneFiles:
+                JobsDoneFile(junit_patterns="*.xml", variation={'custom_variable': 'value_1'}),
+                JobsDoneFile(junit_patterns="*.xml", variation={'custom_variable': 'value_2'}),
         '''
-        import yaml
+        if yaml_contents is None:
+            return []
 
         # User custom loader that treats everything as strings
+        import yaml
         class MyLoader(yaml.loader.BaseLoader):
             def construct_scalar(self, *args, **kwargs):
                 value = yaml.loader.BaseLoader.construct_scalar(self, *args, **kwargs)
@@ -127,7 +132,7 @@ class JobsDoneFile(object):
         jd_data = yaml.load(yaml_contents, Loader=MyLoader) or {}
 
         # Search for unknown options
-        parseable_options = JobsDoneFile.KNOWN_OPTIONS
+        parseable_options = JobsDoneFile.PARSED_OPTIONS
         for option_name, option_value in jd_data.iteritems():
             option_name = option_name.rsplit(':', 1)[-1]
             if option_name not in parseable_options and not isinstance(option_value, list):
@@ -142,7 +147,7 @@ class JobsDoneFile(object):
                 del jd_data[option_name]
 
         if variables:
-            # Write up all possible variations of those variations
+            # Write up all possible variations of those variables
             # Stolen from http://stackoverflow.com/a/3873734/1209622
             import itertools as it
             variations = [
@@ -186,7 +191,6 @@ class JobsDoneFile(object):
                         continue
 
                 setattr(jobs_done_file, option_name, option_value)
-
 
         return jobs_done_files
 
