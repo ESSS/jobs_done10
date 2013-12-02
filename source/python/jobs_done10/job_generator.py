@@ -55,7 +55,7 @@ class IJobGenerator(Interface):
         This will set a single build variation, with the values for the current variation being
         built.
 
-        :param dict(str,str) variations:
+        :param dict(str,str) variation:
             Dictionary mapping variation name to value.
             e.g.
                 variation = {'planet' : 'earth'}
