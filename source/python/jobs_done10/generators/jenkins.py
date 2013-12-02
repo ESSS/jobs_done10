@@ -168,6 +168,9 @@ class JenkinsJobGenerator(object):
 
 
     def _SetPulibshers(self):
+        '''
+        Sets "publisher" information in job (includes test results and build description)
+        '''
         junit_pattern = self._junit_pattern
         boosttest_pattern = self._boosttest_pattern
         description_regex = self._description_regex
