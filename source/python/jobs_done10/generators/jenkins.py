@@ -285,6 +285,8 @@ class JenkinsJobPublisher(object):
 
     def PublishToDirectory(self, output_directory):
         '''
+        Publishes jobs to a directory. Each job creates a file with its name and xml contents.
+        
         :param str output_directory:
              Target directory for outputting job .xmls
         '''
