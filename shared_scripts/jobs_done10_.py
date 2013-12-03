@@ -14,7 +14,7 @@ class JobsDone10(EsssProject):
         'jenkins_job_builder',
         'python_jenkins',
 
-        'git', # Used whencreating jobs from local repository
+        'git', # Used when creating jobs from local repository
 
         'ben10',
         'sharedscripts10',
