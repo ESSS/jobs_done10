@@ -15,11 +15,11 @@ class JobsDoneFile(object):
     :ivar list(str) boosttest_patterns:
         List of patterns to match when looking for boosttest results.
 
-    :ivar str build_batch_command:
-        A batch script command used to build a project
+    :ivar str|list(str) build_batch_command:
+        A batch script command (or list of commands) used to build a project.
 
-    :ivar str build_shell_command:
-        A shell script command used to build a project
+    :ivar str|list(str) build_shell_command:
+        A shell script command (or list of commands) used to build a project.
 
     :ivar str description_regex:
         Regex pattern to be matched from a job output and used as job description.

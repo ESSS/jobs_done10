@@ -154,17 +154,27 @@ class JenkinsJobGenerator(object):
 
 
     def SetBuildBatchCommand(self, build_batch_command):
+        from ben10.foundation.types_ import AsList
+
+        # We accept either a single command, or a list of commands
+        batch_builders = [
+            {'batch':command} for command in AsList(build_batch_command)
+        ]
+
         import yaml
-        self.templates.append(
-            yaml.dump({'builders': [{'batch':build_batch_command}]}, default_flow_style=False)[:-1]
-        )
+        self.templates.append(yaml.dump({'builders': batch_builders}, default_flow_style=False)[:-1])
 
 
     def SetBuildShellCommand(self, build_shell_command):
+        from ben10.foundation.types_ import AsList
+
+        # We accept either a single command, or a list of commands
+        shell_builders = [
+            {'shell':command} for command in AsList(build_shell_command)
+        ]
+
         import yaml
-        self.templates.append(
-            yaml.dump({'builders': [{'shell':build_shell_command}]}, default_flow_style=False)[:-1]
-        )
+        self.templates.append(yaml.dump({'builders': shell_builders}, default_flow_style=False)[:-1])
 
 
     def _SetPulibshers(self):
@@ -286,7 +296,7 @@ class JenkinsJobPublisher(object):
     def PublishToDirectory(self, output_directory):
         '''
         Publishes jobs to a directory. Each job creates a file with its name and xml contents.
-        
+
         :param str output_directory:
              Target directory for outputting job .xmls
         '''

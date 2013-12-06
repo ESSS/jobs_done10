@@ -240,6 +240,7 @@ class Test(object):
 
     @_SkipIfFailTestEmpty
     def testBuildBatchCommand(self):
+        # works with a single command
         self._DoTest(
             ci_contents=Dedent(
                 '''
@@ -260,6 +261,7 @@ class Test(object):
 
         )
 
+        # Works with multi line commands
         self._DoTest(
             ci_contents=Dedent(
                 '''
@@ -277,6 +279,106 @@ class Test(object):
                 +      <command>multi_line
                 +command</command>
                 +    </hudson.tasks.BatchFile>
+                +  </builders>
+                '''
+            ),
+
+        )
+
+        # Works with multiple commands
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_batch_command:
+                - command_1
+                - command_2
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <builders/>
+                +  <builders>
+                +    <hudson.tasks.BatchFile>
+                +      <command>command_1</command>
+                +    </hudson.tasks.BatchFile>
+                +    <hudson.tasks.BatchFile>
+                +      <command>command_2</command>
+                +    </hudson.tasks.BatchFile>
+                +  </builders>
+                '''
+            ),
+
+        )
+
+
+    @_SkipIfFailTestEmpty
+    def testBuildShellCommand(self):
+        # works with a single command
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_shell_command: my_command
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <builders/>
+                +  <builders>
+                +    <hudson.tasks.Shell>
+                +      <command>my_command</command>
+                +    </hudson.tasks.Shell>
+                +  </builders>
+                '''
+            ),
+
+        )
+
+        # Works with multi line commands
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_shell_command: |
+                  multi_line
+                  command
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <builders/>
+                +  <builders>
+                +    <hudson.tasks.Shell>
+                +      <command>multi_line
+                +command</command>
+                +    </hudson.tasks.Shell>
+                +  </builders>
+                '''
+            ),
+
+        )
+
+        # Works with multiple commands
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_shell_command:
+                - command_1
+                - command_2
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <builders/>
+                +  <builders>
+                +    <hudson.tasks.Shell>
+                +      <command>command_1</command>
+                +    </hudson.tasks.Shell>
+                +    <hudson.tasks.Shell>
+                +      <command>command_2</command>
+                +    </hudson.tasks.Shell>
                 +  </builders>
                 '''
             ),
