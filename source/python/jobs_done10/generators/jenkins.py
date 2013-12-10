@@ -353,7 +353,7 @@ def GetJobsFromDirectory(directory='.'):
     from ben10.filesystem import GetFileContents, FileNotFoundError
     from jobs_done10.jobs_done_file import JOBS_DONE_FILENAME
     from jobs_done10.repository import Repository
-    from sharedscripts10.shared_scripts.git_ import Git
+    from jobs_done10.git import Git
     import os
 
     git = Git()

@@ -1,9 +1,9 @@
 from ben10.filesystem import CreateDirectory, CreateFile
 from ben10.foundation.string import Dedent
 from jobs_done10.generators.jenkins import GetJobsFromFile, GetJobsFromDirectory, UploadJobsFromFile
+from jobs_done10.git import Git
 from jobs_done10.jobs_done_file import JOBS_DONE_FILENAME
 from jobs_done10.repository import Repository
-from sharedscripts10.shared_scripts.git_ import Git
 import os
 
 
@@ -104,7 +104,7 @@ class Test(object):
         job_group, jobs = GetJobsFromDirectory(repo_path)
         assert job_group == self._REPOSITORY.name + '-' + self._REPOSITORY.branch
         assert len(jobs) == 0
-        
+
         # Create jobs_done file
         CreateFile(os.path.join(repo_path, JOBS_DONE_FILENAME), self._JOBS_DONE_FILE_CONTENTS)
         git.Add(repo_path, '.')
