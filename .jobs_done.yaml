@@ -1,15 +1,15 @@
 junit_patterns:
 - "**/build/{dist}-{platform}-tests/*.xml"
 
-platform-win32:build_batch_command:
+platform-win32:build_batch_commands:
 - "%%AA_AASIMAR_AA%% -t project.update jobs_done10 --projects-dir=%%WORKSPACE%% --dependencies-only --sources=head --binaries=none"
 - "%%AA_AASIMAR_AA%% -t project.build jobs_done10 --projects-dir=%%WORKSPACE%% --dist={dist} --platform={platform}"
 
-platform-win64:build_batch_command:
+platform-win64:build_batch_commands:
 - "%%AA_AASIMAR_AA%% -t project.update jobs_done10 --projects-dir=%%WORKSPACE%% --dependencies-only --sources=head --binaries=none"
 - "%%AA_AASIMAR_AA%% -t project.build jobs_done10 --projects-dir=%%WORKSPACE%% --dist={dist} --platform={platform}"
 
-platform-redhat64:build_shell_command:
+platform-redhat64:build_shell_commands:
 - "$AA_AASIMAR_AA -t project.update jobs_done10 --projects-dir=$WORKSPACE --dependencies-only --sources=head --binaries=none"
 - "$AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
 

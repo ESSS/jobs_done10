@@ -32,7 +32,8 @@ class Test(object):
               - "choice_2"
               description: "Description"
 
-        build_batch_command: "command"
+        build_batch_commands:
+        - "command"
 
         planets:
         - mercury

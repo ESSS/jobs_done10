@@ -1,5 +1,6 @@
 # Name of jobs_done file, repositories must contain this file in their root dir to be able to
 # create jobs.
+import itertools
 JOBS_DONE_FILENAME = '.jobs_done.yaml'
 
 
@@ -15,10 +16,10 @@ class JobsDoneFile(object):
     :ivar list(str) boosttest_patterns:
         List of patterns to match when looking for boosttest results.
 
-    :ivar str|list(str) build_batch_command:
+    :ivar str|list(str) build_batch_commands:
         A batch script command (or list of commands) used to build a project.
 
-    :ivar str|list(str) build_shell_command:
+    :ivar str|list(str) build_shell_commands:
         A shell script command (or list of commands) used to build a project.
 
     :ivar str description_regex:
@@ -63,20 +64,22 @@ class JobsDoneFile(object):
             {'planet' : 'mars', 'moon' : 'europa'}
             {'planet' : 'mars', 'moon' : 'ganymede'}
     '''
-    # Option that will be set in generators
-    GENERATOR_OPTIONS = [
-        'boosttest_patterns',
-        'build_shell_command',
-        'build_batch_command',
-        'description_regex',
-        'junit_patterns',
-        'parameters',
-    ]
+    # Options that will be set in generators
+    GENERATOR_OPTIONS = {
+        'boosttest_patterns':list,
+        'build_shell_commands':list,
+        'build_batch_commands':list,
+        'description_regex':str,
+        'junit_patterns':list,
+        'parameters':list,
+    }
 
     # All options that are parsed
-    PARSED_OPTIONS = GENERATOR_OPTIONS + [
-        'branch_patterns',
-    ]
+    PARSED_OPTIONS = {
+        'branch_patterns':list,
+    }
+    PARSED_OPTIONS.update(GENERATOR_OPTIONS)
+
 
     def __init__(self):
         # Initialize known options with None
@@ -104,11 +107,11 @@ class JobsDoneFile(object):
             yaml_contents =
                 """
                 junit_patterns:
-                    - "*.xml"
+                - "*.xml"
 
                 custom_variable:
-                    - value_1
-                    - value_2
+                - value_1
+                - value_2
                 """
 
             resulting JobsDoneFiles:
@@ -132,13 +135,13 @@ class JobsDoneFile(object):
         jd_data = yaml.load(yaml_contents, Loader=MyLoader) or {}
 
         # Search for unknown options
-        parseable_options = JobsDoneFile.PARSED_OPTIONS
+        parseable_options = JobsDoneFile.PARSED_OPTIONS.keys()
         for option_name, option_value in jd_data.iteritems():
             option_name = option_name.rsplit(':', 1)[-1]
             if option_name not in parseable_options and not isinstance(option_value, list):
                 raise UnknownJobsDoneFileOption(option_name)
 
-        # List and possible variations, and remove then from jd_data
+        # List any possible variations, and remove then from jd_data
         variables = {}
         for option_name, option_value in jd_data.items():
             option_name = option_name.rsplit(':', 1)[-1]
@@ -181,6 +184,7 @@ class JobsDoneFile(object):
             jd_formatted_data = yaml.load(jd_string)
 
             for option_name, option_value in jd_formatted_data.iteritems():
+
                 # Check for option conditions
                 if ':' in option_name:
                     conditions = option_name.split(':')[:-1]
@@ -189,6 +193,13 @@ class JobsDoneFile(object):
                     # Skip this option if any condition is not met
                     if not all([ConditionMatch(variation, condition) for condition in conditions]):
                         continue
+
+                # Check for type errors
+                obtained_type = type(option_value)
+                expected_type = cls.PARSED_OPTIONS[option_name]
+
+                if obtained_type != expected_type:
+                    raise JobsDoneFileTypeError(option_name, obtained_type, expected_type)
 
                 setattr(jobs_done_file, option_name, option_value)
 
@@ -218,3 +229,24 @@ class UnknownJobsDoneFileOption(RuntimeError):
     def __init__(self, option_name):
         self.option_name = option_name
         RuntimeError.__init__(self, option_name)
+
+
+
+#===================================================================================================
+# JobsDoneFileTypeError
+#===================================================================================================
+class JobsDoneFileTypeError(TypeError):
+    '''
+    Raised when parsing an option with a bad type.
+    '''
+    def __init__(self, option_name, obtained_type, expected_type):
+        self.option_name = option_name
+        self.obtained_type = obtained_type
+        self.expected_type = expected_type
+        self.option_name = option_name
+
+        TypeError.__init__(
+            self,
+            'On option "%s". Expected "%s" but got "%s".' % \
+            (option_name, expected_type, obtained_type)
+        )

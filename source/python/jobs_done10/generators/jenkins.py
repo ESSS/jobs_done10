@@ -6,7 +6,6 @@ This includes a generator, job publishers, constants and command line interface 
 from __future__ import absolute_import, with_statement
 from ben10.foundation.bunch import Bunch
 from ben10.foundation.decorators import Implements
-from ben10.foundation.types_ import AsList
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_generator import IJobGenerator
 
@@ -154,25 +153,17 @@ class JenkinsYamlJobGenerator(object):
         self._description_regex = description_regex
 
 
-    def SetBuildBatchCommand(self, build_batch_command):
-        # We accept either a single command, or a list of commands
-        batch_builders = [
-            {'batch':command} for command in AsList(build_batch_command)
-        ]
-
+    def SetBuildBatchCommands(self, build_batch_commands):
         import yaml
+        # Create a builder for each command
+        batch_builders = [{'batch':command} for command in build_batch_commands]
         self.templates.append(yaml.dump({'builders': batch_builders}, default_flow_style=False)[:-1])
 
 
-    def SetBuildShellCommand(self, build_shell_command):
-        from ben10.foundation.types_ import AsList
-
-        # We accept either a single command, or a list of commands
-        shell_builders = [
-            {'shell':command} for command in AsList(build_shell_command)
-        ]
-
+    def SetBuildShellCommands(self, build_shell_commands):
         import yaml
+        # Create a builder for each command
+        shell_builders = [{'shell':command} for command in build_shell_commands]
         self.templates.append(yaml.dump({'builders': shell_builders}, default_flow_style=False)[:-1])
 
 
@@ -305,14 +296,14 @@ class JenkinsXmlJobGenerator(object):
             self.__jjgen.AddPlugin("description-setter", description_regex)
 
 
-    def SetBuildBatchCommand(self, build_batch_command):
+    def SetBuildBatchCommands(self, build_batch_commands):
         p = self.__jjgen.AddPlugin("batch")
-        p.command_lines += AsList(build_batch_command)
+        p.command_lines += build_batch_commands
 
 
-    def SetBuildShellCommand(self, build_shell_command):
+    def SetBuildShellCommands(self, build_shell_commands):
         p = self.__jjgen.AddPlugin("shell")
-        p.command_lines += AsList(build_shell_command)
+        p.command_lines += build_shell_commands
 
 
 

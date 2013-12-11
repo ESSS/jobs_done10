@@ -308,7 +308,8 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_batch_command: my_command
+                build_batch_commands:
+                - my_command
                 '''
             ),
             expected_diff=Dedent(
@@ -329,7 +330,8 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_batch_command: |
+                build_batch_commands:
+                - |
                   multi_line
                   command
                 '''
@@ -353,7 +355,7 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_batch_command:
+                build_batch_commands:
                 - command_1
                 - command_2
                 '''
@@ -382,7 +384,8 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_shell_command: my_command
+                build_shell_commands:
+                - my_command
                 '''
             ),
             expected_diff=Dedent(
@@ -403,7 +406,8 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_shell_command: |
+                build_shell_commands:
+                - |
                   multi_line
                   command
                 '''
@@ -427,7 +431,7 @@ class Test(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                build_shell_command:
+                build_shell_commands:
                 - command_1
                 - command_2
                 '''

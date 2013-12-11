@@ -22,8 +22,8 @@ class Test(object):
             def SetVariation(self, variation):
                 assert variation == {'id':1}
 
-            def SetBuildBatchCommand(self, command):
-                assert command == 'command'
+            def SetBuildBatchCommands(self, commands):
+                assert commands == ['command']
 
             def GenerateJobs(self):
                 pass
@@ -38,12 +38,12 @@ class Test(object):
         generator = MyGenerator(repository)
 
         # Test basic calls
-        with ExpectedCalls(generator, Reset=1, SetVariation=1, SetBuildBatchCommand=0):
+        with ExpectedCalls(generator, Reset=1, SetVariation=1, SetBuildBatchCommands=0):
             JobGeneratorConfigurator.Configure(generator, jobs_done_file)
 
         # Set some more values to jobs_done_file, and make sure it is called
-        jobs_done_file.build_batch_command = 'command'
-        with ExpectedCalls(generator, Reset=1, SetVariation=1, SetBuildBatchCommand=1):
+        jobs_done_file.build_batch_commands = ['command']
+        with ExpectedCalls(generator, Reset=1, SetVariation=1, SetBuildBatchCommands=1):
             JobGeneratorConfigurator.Configure(generator, jobs_done_file)
 
         # Try calling a missing option
