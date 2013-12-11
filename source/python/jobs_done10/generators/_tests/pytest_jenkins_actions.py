@@ -35,10 +35,11 @@ class Test(object):
         build_batch_commands:
         - "command"
 
-        planets:
-        - mercury
-        - venus
-        - jupiter
+        matrix:
+            planet:
+            - mercury
+            - venus
+            - jupiter
 
         '''
     )

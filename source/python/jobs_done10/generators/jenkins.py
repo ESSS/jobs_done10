@@ -51,7 +51,7 @@ class JenkinsYamlJobGenerator(object):
         self._junit_pattern = None
         self._boosttest_pattern = None
         self._description_regex = None
-        self._variation = {}
+        self._matrix_row = {}
 
 
     @Implements(IJobGenerator.GenerateJobs)
@@ -68,7 +68,7 @@ class JenkinsYamlJobGenerator(object):
             return '\n'.join(['    ' + line for line in text.splitlines()]) + '\n'
 
         # >>> Define some local vars to replace in template
-        template_parts = [value for (key, value) in sorted(self._variation.items())]
+        template_parts = [value for (key, value) in sorted(self._matrix_row.items())]
         job_name = '-'.join([self.job_group] + template_parts)
         node = '-'.join([self.repository.name] + template_parts)
         url = self.repository.url
@@ -125,9 +125,9 @@ class JenkinsYamlJobGenerator(object):
     #===============================================================================================
     # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
     #===============================================================================================
-    @Implements(IJobGenerator.SetVariation)
-    def SetVariation(self, variation):
-        self._variation = variation
+    @Implements(IJobGenerator.SetMatrixRow)
+    def SetMatrixRow(self, matrix_row):
+        self._matrix_row = matrix_row
 
 
     def SetParameters(self, parameters):
@@ -263,10 +263,10 @@ class JenkinsXmlJobGenerator(object):
     #===============================================================================================
     # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
     #===============================================================================================
-    @Implements(IJobGenerator.SetVariation)
-    def SetVariation(self, variation):
-        if variation:
-            self.__jjgen.variations = '-' + '-'.join([i[1] for i in sorted(variation.items())])
+    @Implements(IJobGenerator.SetMatrixRow)
+    def SetMatrixRow(self, matrix_row):
+        if matrix_row:
+            self.__jjgen.variations = '-' + '-'.join([i[1] for i in sorted(matrix_row.items())])
         else:
             self.__jjgen.variations = ''
 

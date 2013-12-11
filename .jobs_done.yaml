@@ -15,10 +15,11 @@ platform-redhat64:build_shell_commands:
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
-dist:
-- 12.0
+matrix:
+  dist:
+  - 12.0
 
-platform:
-- win32
-- win64
-- redhat64
+  platform:
+  - win32
+  - win64
+  - redhat64

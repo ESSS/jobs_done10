@@ -46,9 +46,9 @@ class IJobGenerator(Interface):
         web API, or anything that represents the final purpose of jobs_done.
         '''
 
-    def SetVariation(self, variation):
+    def SetMatrixRow(self, matrix_row):
         '''
-        Sets variation information to a job.
+        Sets current matrix_row of this job.
 
         Variations are any option unknown to a JobsDoneFile, and are used to represent possible
         variations of a job. They can be used, for example, to create jobs for multiple platforms
@@ -91,7 +91,7 @@ class JobGeneratorConfigurator(object):
             Will be used to extract options that must be configured in `builder`
         '''
         builder.Reset()
-        builder.SetVariation(jobs_done_file.variation)
+        builder.SetMatrixRow(jobs_done_file.matrix_row)
 
         for option in jobs_done_file.GENERATOR_OPTIONS:
             option_value = getattr(jobs_done_file, option)

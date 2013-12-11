@@ -20,22 +20,23 @@ class Test(object):
             - "cpptest*.xml"
 
             parameters:
-              - choice:
-                  name: "PARAM"
-                  choices:
-                  - "choice_1"
-                  - "choice_2"
-                  description: "Description"
+            - choice:
+                name: "PARAM"
+                choices:
+                - "choice_1"
+                - "choice_2"
+                description: "Description"
 
             build_batch_commands:
             - "command"
 
-            planets:
-            - mercury
-            - venus
+            matrix:
+              planet:
+              - mercury
+              - venus
 
-            moons:
-            - europa
+              moon:
+              - europa
             '''
         )
         jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
@@ -43,8 +44,8 @@ class Test(object):
         # Two possible variations (mercury-europa and venus-europa)
         assert len(jobs_done_files) == 2
 
-        # In this case, they are both the same
-        for jobs_done_file in jobs_done_files:
+        def CheckCommonValues(jobs_done_file):
+            assert jobs_done_file.matrix == {'moon': ['europa'], 'planet': ['mercury', 'venus']}
             assert jobs_done_file.junit_patterns == ['junit*.xml']
             assert jobs_done_file.boosttest_patterns == ['cpptest*.xml']
             assert jobs_done_file.build_batch_commands == ['command']
@@ -55,6 +56,17 @@ class Test(object):
                     'description': 'Description',
                 }
             }]
+
+        CheckCommonValues(jobs_done_files[0])
+        CheckCommonValues(jobs_done_files[1])
+
+        # Cant determine order of jobs, but these must be the possible matrix rows
+        matrix_row_0 = jobs_done_files[0].matrix_row
+        matrix_row_1 = jobs_done_files[1].matrix_row
+        expected_matrixes = [{'moon': 'europa', 'planet': 'mercury'}, {'moon': 'europa', 'planet': 'venus'}]
+        assert [matrix_row_0, matrix_row_1] == expected_matrixes \
+            or \
+               [matrix_row_1, matrix_row_0] == expected_matrixes \
 
 
     def testCreateJobsDoneFileFromYAMLWithConditions(self):
@@ -69,13 +81,14 @@ class Test(object):
             platform-windows:build_batch_commands:
             - "{platform} command"
 
-            platform:
-            - linux
-            - windows
+            matrix:
+                platform:
+                - linux
+                - windows
             '''
         )
         for jd_file in JobsDoneFile.CreateFromYAML(ci_contents):
-            if jd_file.variation['platform'] == 'linux':
+            if jd_file.matrix_row['platform'] == 'linux':
                 assert jd_file.junit_patterns == None
                 assert jd_file.build_batch_commands == None
                 assert jd_file.build_shell_commands == ['linux command']
@@ -86,20 +99,7 @@ class Test(object):
 
 
     def testUnknownOption(self):
-        # Variables are fine (anything unknown which is a list, even if it only has one value)
-        ci_contents = Dedent(
-            '''
-            planets:
-            - mercury
-            - venus
-
-            moons:
-            - europa
-            '''
-        )
-        JobsDoneFile.CreateFromYAML(ci_contents)
-
-        # Unknown options with a single value should fail
+        # Unknown options should fail
         ci_contents = Dedent(
             '''
             moon: europa

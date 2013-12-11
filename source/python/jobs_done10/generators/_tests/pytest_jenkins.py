@@ -484,12 +484,13 @@ class Test(object):
         def TestJobGenerator(variation):
             ci_contents = Dedent(
                 '''
-                planet:
-                - earth
-                - mars
-
-                moon:
-                - europa
+                matrix:
+                    planet:
+                    - earth
+                    - mars
+        
+                    moon:
+                    - europa
                 '''
             )
             repository = Repository(url='http://fake.git')
@@ -502,7 +503,7 @@ class Test(object):
                 JobGeneratorConfigurator.Configure(job_generator, jd_file)
                 jenkins_job = job_generator.GenerateJobs()
 
-                planet = jd_file.variation['planet']
+                planet = jd_file.matrix_row['planet']
                 self._AssertDiff(
                     jenkins_job.xml,
                     Dedent(
