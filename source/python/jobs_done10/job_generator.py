@@ -12,9 +12,10 @@ class IJobGenerator(Interface):
     These generators are responsible for creating continuous integration jobs for any particular
     tool, such as Jenkins or Bamboo.
 
-    Generators must implement this interface, which represents the bare minimum of options available,
-    but this is more than likely not enough to build a complete job. Configurations set in a
-    generators come from a `JobGeneratorConfigurator`, which itself extracts them from a `JobsDoneFile`.
+    Generators must implement this interface, which represents the bare minimum of options
+    available, but this is more than likely not enough to build a complete job. Configurations set
+    in a generators come from a `JobGeneratorConfigurator`, which itself extracts them from a
+    `JobsDoneFile`.
 
     As new options can be easily added to `JobsDoneFile`, and some options might not make sense for
     different tools, not all of them are defined in this interface, but helpful error messages
@@ -26,6 +27,7 @@ class IJobGenerator(Interface):
     .. seealso::
         http://en.wikipedia.org/wiki/Builder_pattern
     '''
+
     def __init__(self, repository):
         '''
         :param Repository repository:

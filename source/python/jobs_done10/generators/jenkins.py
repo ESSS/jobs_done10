@@ -6,6 +6,7 @@ This includes a generator, job publishers, constants and command line interface 
 from __future__ import absolute_import, with_statement
 from ben10.foundation.bunch import Bunch
 from ben10.foundation.decorators import Implements
+from ben10.foundation.types_ import AsList
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_generator import IJobGenerator
 
@@ -30,9 +31,9 @@ class JenkinsJob(Bunch):
 
 
 #===================================================================================================
-# JenkinsJobGenerator
+# JenkinsYamlJobGenerator
 #===================================================================================================
-class JenkinsJobGenerator(object):
+class JenkinsYamlXmlJobGenerator(object):
     '''
     Generates Jenkins jobs.
     '''
@@ -154,8 +155,6 @@ class JenkinsJobGenerator(object):
 
 
     def SetBuildBatchCommand(self, build_batch_command):
-        from ben10.foundation.types_ import AsList
-
         # We accept either a single command, or a list of commands
         batch_builders = [
             {'batch':command} for command in AsList(build_batch_command)
@@ -222,6 +221,98 @@ class JenkinsJobGenerator(object):
         import yaml
         template = yaml.dump(parsed_contents, default_flow_style=False)
         self.templates.append(template)
+
+
+
+#===================================================================================================
+# JenkinsXmlJobGenerator
+#===================================================================================================
+class JenkinsXmlJobGenerator(object):
+    '''
+    Generates Jenkins jobs.
+    '''
+    ImplementsInterface(IJobGenerator)
+
+    @Implements(IJobGenerator.__init__)
+    def __init__(self, repository):
+        from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
+
+        # TODO: Create interface for this attribute
+        self.job_group = repository.name + '-' + repository.branch
+
+        self.__jjgen = PyJenkinsJobGenerator(
+            repository.name,
+            repository.branch
+        )
+        self.__jjgen.assigned_node = '%(stream_name)s%(variations)s'
+        self.__jjgen.job_name_format = '%(stream_name)s-%(id)s%(variations)s'
+
+        # Configure description
+        self.__jjgen.description = '<!-- Managed by Jenkins Job Builder -->'
+
+        # Configure git SCM
+        git_plugin = self.__jjgen.AddPlugin('git', repository.url)
+        git_plugin.target_dir = repository.name
+
+
+
+    @Implements(IJobGenerator.Reset)
+    def Reset(self):
+        pass
+
+
+    @Implements(IJobGenerator.GenerateJobs)
+    def GenerateJobs(self):
+        return JenkinsJob(
+            name=self.__jjgen.GetJobName(),
+            xml=self.__jjgen.GetContent(),
+        )
+
+
+    #===============================================================================================
+    # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
+    #===============================================================================================
+    @Implements(IJobGenerator.SetVariation)
+    def SetVariation(self, variation):
+        if variation:
+            self.__jjgen.variations = '-' + '-'.join([i[1] for i in sorted(variation.items())])
+        else:
+            self.__jjgen.variations = ''
+
+
+    def SetParameters(self, parameters):
+        for i_parameter in parameters:
+            for _name, j_dict  in i_parameter.iteritems():
+                self.__jjgen.AddChoiceParameter(
+                    j_dict['name'],
+                    description=j_dict['description'],
+                    choices=j_dict['choices'],
+                )
+
+
+    def SetJunitPatterns(self, junit_patterns):
+        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin.junit_patterns = junit_patterns
+
+
+    def SetBoosttestPatterns(self, boosttest_patterns):
+        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin.boost_patterns = boosttest_patterns
+
+
+    def SetDescriptionRegex(self, description_regex):
+        if description_regex:
+            self.__jjgen.AddPlugin("description-setter", description_regex)
+
+
+    def SetBuildBatchCommand(self, build_batch_command):
+        p = self.__jjgen.AddPlugin("batch")
+        p.command_lines += AsList(build_batch_command)
+
+
+    def SetBuildShellCommand(self, build_shell_command):
+        p = self.__jjgen.AddPlugin("shell")
+        p.command_lines += AsList(build_shell_command)
 
 
 
@@ -387,7 +478,7 @@ def GetJobsFromFile(repository, jobs_done_file_contents):
     from jobs_done10.jobs_done_file import JobsDoneFile
     import re
 
-    jenkins_generator = JenkinsJobGenerator(repository)
+    jenkins_generator = JenkinsXmlJobGenerator(repository)
 
     jobs = []
     jobs_done_files = JobsDoneFile.CreateFromYAML(jobs_done_file_contents)

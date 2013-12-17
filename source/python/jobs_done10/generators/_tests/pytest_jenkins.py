@@ -1,5 +1,5 @@
 from ben10.foundation.string import Dedent
-from jobs_done10.generators.jenkins import JenkinsJobGenerator
+from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator
 from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_file import JobsDoneFile
 from jobs_done10.repository import Repository
@@ -35,7 +35,8 @@ class Test(object):
             <daysToKeep>7</daysToKeep>
             <numToKeep>16</numToKeep>
             <artifactDaysToKeep>-1</artifactDaysToKeep>
-            <artifactNumToKeep>-1</artifactNumToKeep></logRotator>
+            <artifactNumToKeep>-1</artifactNumToKeep>
+          </logRotator>
           <properties/>
           <scm class="hudson.plugins.git.GitSCM">
             <configVersion>2</configVersion>
@@ -75,7 +76,7 @@ class Test(object):
           <buildWrappers/>
         </project>
         ''',
-        ignore_last_linebreak=False
+        ignore_last_linebreak=True
     )
 
 
@@ -428,7 +429,7 @@ class Test(object):
         # This test should create two jobs_done_files from their variations
         jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
 
-        job_generator = JenkinsJobGenerator(repository)
+        job_generator = JenkinsXmlJobGenerator(repository)
         for jd_file in jobs_done_files:
             JobGeneratorConfigurator.Configure(job_generator, jd_file)
             jenkins_job = job_generator.GenerateJobs()
@@ -457,19 +458,19 @@ class Test(object):
         repository = Repository(url='http://fake.git')
         jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
 
-        job_generator = JenkinsJobGenerator(repository)
+        job_generator = JenkinsXmlJobGenerator(repository)
         JobGeneratorConfigurator.Configure(job_generator, jobs_done_files[0])
         jenkins_job = job_generator.GenerateJobs()
 
         self._AssertDiff(jenkins_job.xml, expected_diff)
 
 
-    def _AssertDiff(self, obtained_yaml, expected_diff):
+    def _AssertDiff(self, obtained_xml, expected_diff):
         import difflib
 
         diff = ''.join(difflib.unified_diff(
             self.BASIC_EXPECTED_XML.splitlines(1),
-            str(obtained_yaml).splitlines(1),
+            str(obtained_xml).splitlines(1),
             n=0,
         ))
         diff = '\n'.join(diff.splitlines()[2:])
