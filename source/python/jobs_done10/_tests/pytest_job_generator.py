@@ -15,7 +15,7 @@ class Test(object):
     def testJobGeneratorConfigurator(self, monkeypatch):
         class MyGenerator():
             ImplementsInterface(IJobGenerator)
-            
+
             def __init__(self, repository):
                 assert repository.url == 'http://repo.git'
 

@@ -4,7 +4,7 @@ This module is a copy of Git from sharedscripts10.
 It was copied here to remove dependencies to that project, and should be removed once that code
 is refactored into an open-source project.
 
-TODO: CI-123 Refactor Git code out of sharedscripts10 
+TODO: CI-123 Refactor Git code out of sharedscripts10
 '''
 from __future__ import with_statement
 
