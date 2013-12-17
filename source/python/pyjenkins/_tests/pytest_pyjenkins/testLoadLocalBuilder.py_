@@ -1,0 +1,11 @@
+from pyjenkins import JenkinsJobGenerator
+
+
+
+class MyJenkinsJobGenerator(JenkinsJobGenerator):
+
+    def __init__(self, job_stream, job_id, index):
+        JenkinsJobGenerator.__init__(self, job_stream, job_id, index)
+        self.builders = [
+            self.LoadLocalBuilder('testLoadLocalBuilder.txt')
+        ]
