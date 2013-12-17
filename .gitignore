@@ -1,4 +1,5 @@
 *.pyc
 *_generated.py
-__pycache__
+.coverage
 /build/
+__pycache__
