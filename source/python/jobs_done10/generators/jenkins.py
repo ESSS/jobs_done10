@@ -33,7 +33,7 @@ class JenkinsJob(Bunch):
 #===================================================================================================
 # JenkinsYamlJobGenerator
 #===================================================================================================
-class JenkinsYamlXmlJobGenerator(object):
+class JenkinsYamlJobGenerator(object):
     '''
     Generates Jenkins jobs.
     '''

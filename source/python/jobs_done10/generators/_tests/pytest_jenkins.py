@@ -1,5 +1,5 @@
 from ben10.foundation.string import Dedent
-from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator
+from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator, JenkinsYamlJobGenerator
 from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_file import JobsDoneFile
 from jobs_done10.repository import Repository
@@ -19,65 +19,128 @@ class Test(object):
     # Baseline expected XML. All tests are compared against this baseline, this way each test only
     # has to verify what is expected to be different, this way, if the baseline is changed, we don't
     # have to fix all tests.
-    BASIC_EXPECTED_XML = Dedent(
-        '''
-        <?xml version="1.0" ?>
-        <project>
-          <actions/>
-          <description>&lt;!-- Managed by Jenkins Job Builder --&gt;</description>
-          <keepDependencies>false</keepDependencies>
-          <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-          <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-          <concurrentBuild>false</concurrentBuild>
-          <assignedNode>fake</assignedNode>
-          <canRoam>false</canRoam>
-          <logRotator>
-            <daysToKeep>7</daysToKeep>
-            <numToKeep>16</numToKeep>
-            <artifactDaysToKeep>-1</artifactDaysToKeep>
-            <artifactNumToKeep>-1</artifactNumToKeep>
-          </logRotator>
-          <properties/>
-          <scm class="hudson.plugins.git.GitSCM">
-            <configVersion>2</configVersion>
-            <userRemoteConfigs>
-              <hudson.plugins.git.UserRemoteConfig>
-                <name>origin</name>
-                <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-                <url>http://fake.git</url>
-              </hudson.plugins.git.UserRemoteConfig>
-            </userRemoteConfigs>
-            <branches>
-              <hudson.plugins.git.BranchSpec>
-                <name>master</name>
-              </hudson.plugins.git.BranchSpec>
-            </branches>
-            <excludedUsers/>
-            <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
-            <disableSubmodules>false</disableSubmodules>
-            <recursiveSubmodules>false</recursiveSubmodules>
-            <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-            <authorOrCommitter>false</authorOrCommitter>
-            <clean>false</clean>
-            <wipeOutWorkspace>false</wipeOutWorkspace>
-            <pruneBranches>false</pruneBranches>
-            <remotePoll>false</remotePoll>
-            <gitTool>Default</gitTool>
-            <submoduleCfg class="list"/>
-            <relativeTargetDir>fake</relativeTargetDir>
-            <reference/>
-            <gitConfigName/>
-            <gitConfigEmail/>
-            <skipTag>false</skipTag>
-            <scmName/>
-          </scm>
-          <builders/>
-          <publishers/>
-          <buildWrappers/>
-        </project>
-        ''',
-        ignore_last_linebreak=True
-    )
+    JOB_GENERATOR_CLASS = {
+        'xml': JenkinsXmlJobGenerator,
+        'yaml' : JenkinsYamlJobGenerator,
+    }
+
+    BASIC_EXPECTED_XML = {
+        'xml' : Dedent('''
+            <?xml version="1.0" ?>
+            <project>
+              <actions/>
+              <description>&lt;!-- Managed by Jenkins Job Builder --&gt;</description>
+              <keepDependencies>false</keepDependencies>
+              <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+              <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+              <concurrentBuild>false</concurrentBuild>
+              <assignedNode>fake</assignedNode>
+              <canRoam>false</canRoam>
+              <logRotator>
+                <daysToKeep>7</daysToKeep>
+                <numToKeep>16</numToKeep>
+                <artifactDaysToKeep>-1</artifactDaysToKeep>
+                <artifactNumToKeep>-1</artifactNumToKeep>
+              </logRotator>
+              <properties/>
+              <scm class="hudson.plugins.git.GitSCM">
+                <configVersion>2</configVersion>
+                <userRemoteConfigs>
+                  <hudson.plugins.git.UserRemoteConfig>
+                    <name>origin</name>
+                    <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                    <url>http://fake.git</url>
+                  </hudson.plugins.git.UserRemoteConfig>
+                </userRemoteConfigs>
+                <branches>
+                  <hudson.plugins.git.BranchSpec>
+                    <name>master</name>
+                  </hudson.plugins.git.BranchSpec>
+                </branches>
+                <excludedUsers/>
+                <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+                <disableSubmodules>false</disableSubmodules>
+                <recursiveSubmodules>false</recursiveSubmodules>
+                <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+                <authorOrCommitter>false</authorOrCommitter>
+                <clean>false</clean>
+                <wipeOutWorkspace>false</wipeOutWorkspace>
+                <pruneBranches>false</pruneBranches>
+                <remotePoll>false</remotePoll>
+                <gitTool>Default</gitTool>
+                <submoduleCfg class="list"/>
+                <relativeTargetDir>fake</relativeTargetDir>
+                <reference/>
+                <gitConfigName/>
+                <gitConfigEmail/>
+                <skipTag>false</skipTag>
+                <scmName/>
+              </scm>
+              <builders/>
+              <publishers/>
+              <buildWrappers/>
+            </project>
+            ''',
+            ignore_last_linebreak=True
+        ),
+        'yaml' : Dedent('''
+            <?xml version="1.0" ?>
+            <project>
+              <actions/>
+              <description>&lt;!-- Managed by Jenkins Job Builder --&gt;</description>
+              <keepDependencies>false</keepDependencies>
+              <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+              <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+              <concurrentBuild>false</concurrentBuild>
+              <assignedNode>fake</assignedNode>
+              <canRoam>false</canRoam>
+              <logRotator>
+                <daysToKeep>7</daysToKeep>
+                <numToKeep>16</numToKeep>
+                <artifactDaysToKeep>-1</artifactDaysToKeep>
+                <artifactNumToKeep>-1</artifactNumToKeep></logRotator>
+              <properties/>
+              <scm class="hudson.plugins.git.GitSCM">
+                <configVersion>2</configVersion>
+                <userRemoteConfigs>
+                  <hudson.plugins.git.UserRemoteConfig>
+                    <name>origin</name>
+                    <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                    <url>http://fake.git</url>
+                  </hudson.plugins.git.UserRemoteConfig>
+                </userRemoteConfigs>
+                <branches>
+                  <hudson.plugins.git.BranchSpec>
+                    <name>master</name>
+                  </hudson.plugins.git.BranchSpec>
+                </branches>
+                <excludedUsers/>
+                <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
+                <disableSubmodules>false</disableSubmodules>
+                <recursiveSubmodules>false</recursiveSubmodules>
+                <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+                <authorOrCommitter>false</authorOrCommitter>
+                <clean>false</clean>
+                <wipeOutWorkspace>false</wipeOutWorkspace>
+                <pruneBranches>false</pruneBranches>
+                <remotePoll>false</remotePoll>
+                <gitTool>Default</gitTool>
+                <submoduleCfg class="list"/>
+                <relativeTargetDir>fake</relativeTargetDir>
+                <reference/>
+                <gitConfigName/>
+                <gitConfigEmail/>
+                <skipTag>false</skipTag>
+                <scmName/>
+              </scm>
+              <builders/>
+              <publishers/>
+              <buildWrappers/>
+            </project>
+            ''',
+            ignore_last_linebreak=False
+        ),
+    }
 
 
     def testEmpty(self):
@@ -414,37 +477,42 @@ class Test(object):
 
     @_SkipIfFailTestEmpty
     def testVariables(self):
-        ci_contents = Dedent(
-            '''
-            planet:
-            - earth
-            - mars
+        def TestJobGenerator(variation):
+            ci_contents = Dedent(
+                '''
+                planet:
+                - earth
+                - mars
 
-            moon:
-            - europa
-            '''
-        )
-        repository = Repository(url='http://fake.git')
-
-        # This test should create two jobs_done_files from their variations
-        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
-
-        job_generator = JenkinsXmlJobGenerator(repository)
-        for jd_file in jobs_done_files:
-            JobGeneratorConfigurator.Configure(job_generator, jd_file)
-            jenkins_job = job_generator.GenerateJobs()
-
-            planet = jd_file.variation['planet']
-            self._AssertDiff(
-                jenkins_job.xml,
-                Dedent(
-                    '''
-                    @@ @@
-                    -  <assignedNode>fake</assignedNode>
-                    +  <assignedNode>fake-europa-%(planet)s</assignedNode>
-                    ''' % locals()
-                )
+                moon:
+                - europa
+                '''
             )
+            repository = Repository(url='http://fake.git')
+
+            # This test should create two jobs_done_files from their variations
+            jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
+
+            job_generator = self.JOB_GENERATOR_CLASS[variation](repository)
+            for jd_file in jobs_done_files:
+                JobGeneratorConfigurator.Configure(job_generator, jd_file)
+                jenkins_job = job_generator.GenerateJobs()
+
+                planet = jd_file.variation['planet']
+                self._AssertDiff(
+                    jenkins_job.xml,
+                    Dedent(
+                        '''
+                        @@ @@
+                        -  <assignedNode>fake</assignedNode>
+                        +  <assignedNode>fake-europa-%(planet)s</assignedNode>
+                        ''' % locals()
+                    ),
+                    variation
+                )
+
+        TestJobGenerator('xml')
+        TestJobGenerator('yaml')
 
 
     def _DoTest(self, ci_contents, expected_diff):
@@ -455,21 +523,25 @@ class Test(object):
         :param str expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_XML.
         '''
-        repository = Repository(url='http://fake.git')
-        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
+        def TestJobGenerator(variation):
+            repository = Repository(url='http://fake.git')
+            jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
 
-        job_generator = JenkinsXmlJobGenerator(repository)
-        JobGeneratorConfigurator.Configure(job_generator, jobs_done_files[0])
-        jenkins_job = job_generator.GenerateJobs()
+            job_generator = self.JOB_GENERATOR_CLASS[variation](repository)
+            JobGeneratorConfigurator.Configure(job_generator, jobs_done_files[0])
+            jenkins_job = job_generator.GenerateJobs()
 
-        self._AssertDiff(jenkins_job.xml, expected_diff)
+            self._AssertDiff(jenkins_job.xml, expected_diff, variation)
+
+        TestJobGenerator('xml')
+        TestJobGenerator('yaml')
 
 
-    def _AssertDiff(self, obtained_xml, expected_diff):
+    def _AssertDiff(self, obtained_xml, expected_diff, variation):
         import difflib
 
         diff = ''.join(difflib.unified_diff(
-            self.BASIC_EXPECTED_XML.splitlines(1),
+            self.BASIC_EXPECTED_XML[variation].splitlines(1),
             str(obtained_xml).splitlines(1),
             n=0,
         ))
