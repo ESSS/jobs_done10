@@ -1,7 +1,6 @@
 from ben10.filesystem import MoveDirectory, DirectoryAlreadyExistsError, CreateDirectory, CreateFile
 from ben10.foundation.decorators import Implements
 from ben10.interface import Interface, ImplementsInterface
-from pyhudson.hudson_job_generator import HudsonJobGenerator
 from sharedscripts10.shared_scripts.system_ import System
 import os
 
