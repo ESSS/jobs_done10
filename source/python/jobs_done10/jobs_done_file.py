@@ -57,10 +57,8 @@ class JobsDoneFile(object):
         # list(str): Shell script commands used to build a project.
         'build_shell_commands':list,
 
-
         # list(str): Batch script commands used to build a project.
         'build_batch_commands':list,
-
 
         # str: Regex pattern to be matched from a job output and used as job description. (Jenkins)
         'description_regex':str,
