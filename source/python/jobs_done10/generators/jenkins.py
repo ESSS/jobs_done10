@@ -30,192 +30,6 @@ class JenkinsJob(Bunch):
 
 
 #===================================================================================================
-# JenkinsYamlJobGenerator
-#===================================================================================================
-class JenkinsYamlJobGenerator(object):
-    '''
-    Generates Jenkins jobs.
-    '''
-    ImplementsInterface(IJobGenerator)
-
-    @Implements(IJobGenerator.__init__)
-    def __init__(self, repository):
-        self.repository = repository
-        self.job_group = repository.name + '-' + repository.branch
-
-
-    @Implements(IJobGenerator.Reset)
-    def Reset(self):
-        self.templates = []
-
-        self._junit_pattern = None
-        self._boosttest_pattern = None
-        self._description_regex = None
-        self._matrix_row = {}
-
-
-    @Implements(IJobGenerator.GenerateJobs)
-    def GenerateJobs(self):
-        '''
-        :returns JenkinsJob:
-            A job built by this generator based on its configuration.
-        '''
-        # Handle Publishers (must be done after all of them have been set)
-        self._SetPulibshers()
-
-        # Create jenkins job builder yaml
-        def Indented(text):
-            return '\n'.join(['    ' + line for line in text.splitlines()]) + '\n'
-
-        # >>> Define some local vars to replace in template
-        template_parts = [value for (key, value) in sorted(self._matrix_row.items())]
-        job_name = '-'.join([self.job_group] + template_parts)
-        node = '-'.join([self.repository.name] + template_parts)
-        url = self.repository.url
-        branch = self.repository.branch
-        basedir = self.repository.name
-
-        # >>> Basic template
-        from ben10.foundation.string import Dedent
-        jenkins_job_builder_yaml_contents = Dedent(
-            '''
-            - job:
-                name: "%(job_name)s"
-                node: "%(node)s"
-
-                scm:
-                - git:
-                    url: "%(url)s"
-                    basedir: "%(basedir)s"
-                    wipe-workspace: false
-                    branches:
-                    - "%(branch)s"
-
-                logrotate:
-                    daysToKeep: 7
-                    numToKeep: 16
-                    artifactDaysToKeep: -1
-                    artifactNumToKeep: -1
-
-            '''
-        )
-
-        # >>> Include additional options set in this generator
-        template_contents = '\n'.join(map(str, self.templates))
-        jenkins_job_builder_yaml_contents += Indented(template_contents)
-
-        # >>> Format strings
-        jenkins_job_builder_yaml_contents %= locals()
-
-        # Parse jenkins job builder yaml to create job XML
-        from jenkins_jobs.builder import YamlParser
-        parser = YamlParser()
-        parser.parseContents(jenkins_job_builder_yaml_contents)
-        parser.generateXML()
-
-        # The way we create jobs should only generate one job per yaml
-        assert len(parser.jobs) == 1
-
-        return JenkinsJob(
-            name=parser.jobs[0].name,
-            xml=str(parser.jobs[0].output()),
-        )
-
-
-    #===============================================================================================
-    # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
-    #===============================================================================================
-    @Implements(IJobGenerator.SetMatrixRow)
-    def SetMatrixRow(self, matrix_row):
-        self._matrix_row = matrix_row
-
-
-    def SetParameters(self, parameters):
-        import yaml
-        self.templates.append(
-            yaml.dump(
-                {'parameters': parameters},
-                allow_unicode=False,
-                default_flow_style=False,
-            )[:-1]
-        )
-
-
-    def SetJunitPatterns(self, junit_patterns):
-        self._junit_pattern = ' '.join(junit_patterns)
-
-
-    def SetBoosttestPatterns(self, boosttest_patterns):
-        self._boosttest_pattern = ' '.join(boosttest_patterns)
-
-
-    def SetDescriptionRegex(self, description_regex):
-        self._description_regex = description_regex
-
-
-    def SetBuildBatchCommands(self, build_batch_commands):
-        import yaml
-        # Create a builder for each command
-        batch_builders = [{'batch':command} for command in build_batch_commands]
-        self.templates.append(yaml.dump({'builders': batch_builders}, default_flow_style=False)[:-1])
-
-
-    def SetBuildShellCommands(self, build_shell_commands):
-        import yaml
-        # Create a builder for each command
-        shell_builders = [{'shell':command} for command in build_shell_commands]
-        self.templates.append(yaml.dump({'builders': shell_builders}, default_flow_style=False)[:-1])
-
-
-    def _SetPulibshers(self):
-        '''
-        Sets "publisher" information in job (includes test results and build description)
-        '''
-        junit_pattern = self._junit_pattern
-        boosttest_pattern = self._boosttest_pattern
-        description_regex = self._description_regex
-
-        if not any((junit_pattern, boosttest_pattern, description_regex)):
-            return  # Need at least one publisher to do something
-
-        parsed_contents = {'publishers' : []}
-
-        if junit_pattern or boosttest_pattern:
-            xunit = {
-                'thresholds' : [{'failed' : {'unstable' : '0', 'unstablenew' : '0'}}],
-                'types' : []
-            }
-
-            if junit_pattern:
-                xunit['types'].append({'junit': {
-                    'pattern' : junit_pattern,
-                    'requireupdate' : 'false',
-                    'skipnotestfiles' : 'true',
-                    'stoponerror' : 'true',
-                }})
-            if boosttest_pattern:
-                xunit['types'].append({'boosttest': {
-                    'pattern' : boosttest_pattern,
-                    'requireupdate' : 'false',
-                    'skipnotestfiles' : 'true',
-                    'stoponerror' : 'true',
-                }})
-
-            parsed_contents['publishers'].append({'xunit' : xunit})
-
-        if description_regex:
-            parsed_contents['publishers'].append({'descriptionsetter' : {
-                'regexp' : description_regex,
-                'regexp-for-failed' : description_regex,
-            }})
-
-        import yaml
-        template = yaml.dump(parsed_contents, default_flow_style=False)
-        self.templates.append(template)
-
-
-
-#===================================================================================================
 # JenkinsXmlJobGenerator
 #===================================================================================================
 class JenkinsXmlJobGenerator(object):
@@ -226,14 +40,19 @@ class JenkinsXmlJobGenerator(object):
 
     @Implements(IJobGenerator.__init__)
     def __init__(self, repository):
-        from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
+        self.repository = repository
 
         # TODO: Create interface for this attribute
         self.job_group = repository.name + '-' + repository.branch
 
+
+    @Implements(IJobGenerator.Reset)
+    def Reset(self):
+        from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
+
         self.__jjgen = PyJenkinsJobGenerator(
-            repository.name,
-            repository.branch
+            self.repository.name,
+            self.repository.branch
         )
         self.__jjgen.assigned_node = '%(stream_name)s%(variations)s'
         self.__jjgen.job_name_format = '%(stream_name)s-%(id)s%(variations)s'
@@ -242,13 +61,8 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.description = '<!-- Managed by Jenkins Job Builder -->'
 
         # Configure git SCM
-        git_plugin = self.__jjgen.AddPlugin('git', repository.url)
-        git_plugin.target_dir = repository.name
-
-
-
-    @Implements(IJobGenerator.Reset)
-    def Reset(self):
+        git_plugin = self.__jjgen.AddPlugin('git', self.repository.url)
+        git_plugin.target_dir = self.repository.name
         pass
 
 

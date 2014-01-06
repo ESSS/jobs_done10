@@ -11,10 +11,9 @@ class JobsDone10(EsssProject):
     NAME = 'jobs_done10'
 
     DEPENDENCIES = [
-        'jenkins_job_builder',
-        'python_jenkins',
-
         'git',  # Used when creating jobs from local repository
+        'python_jenkins',
+        'pyyaml',
 
         'ben10',
     ]
