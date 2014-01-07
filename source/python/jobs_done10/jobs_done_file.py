@@ -12,42 +12,8 @@ class JobsDoneFile(object):
     '''
     Represents a jobs_done file with descriptions used to create jobs.
     This is a generic representation, not related to any specific continuous integration tool.
-
-    :ivar list(str) branch_patterns:
-        pass
-
-    :ivar dict matrix:
-        A dict that represents all possible job combinations created from this file.
-
-        When a jobs_done file is parsed, it can contain variables that form a matrix. For each
-        possible combination of these variables, a JobsDoneFile class is created. They can be used
-        for things such as creating jobs for multiple platforms from a single JobsDoneFile.
-
-        For example, if our file describes this matrix:
-            matrix:
-              planet:
-              - earth
-              - mars
-
-              moon:
-              - europa
-              - ganymede
-
-        This file's `matrix` will be:
-            {'planet' : ['earth', 'mars], 'moon' : ['europa', 'ganymede']}
-
-        This file's `matrix_row` will have one of these values (one for each JobsDoneFile created):
-            {'planet' : 'earth', 'moon' : 'europa'}
-            {'planet' : 'earth', 'moon' : 'ganymede'}
-            {'planet' : 'mars', 'moon' : 'europa'}
-            {'planet' : 'mars', 'moon' : 'ganymede'}
-
-    :ivar dict matrix_row:
-        A dict that represents a single row from this file's `matrix`.
-
-        .. seealso:: `matrix`
-
     '''
+
     # Options that should be forwarded to generators. These are set in JobsDoneFile instances
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
@@ -75,15 +41,51 @@ class JobsDoneFile(object):
         'parameters':list,
     }
 
-    # All parsed options (..seealso:: class docs)
+    # All parsed options
     PARSED_OPTIONS = {
+        # list(str) branch_patterns:
+        #    A list of regexes to matcvh against branch names.
+        #    Jobs for a branch will only be created if any of this pattern matches that name.
+        #    .. note:: Uses python `re` syntax.
         'branch_patterns':list,
+
+        # dict matrix:
+        #     A dict that represents all possible job combinations created from this file.
+        #
+        #     When a jobs_done file is parsed, it can contain variables that form a matrix. For each
+        #     possible combination of these variables, a JobsDoneFile class is created. They can be used
+        #     for things such as creating jobs for multiple platforms from a single JobsDoneFile.
+        #
+        #     For example, if our file describes this matrix:
+        #         matrix:
+        #           planet:
+        #           - earth
+        #           - mars
+        #
+        #           moon:
+        #           - europa
+        #           - ganymede
+        #
+        #     This file's `matrix` will be:
+        #         {'planet' : ['earth', 'mars], 'moon' : ['europa', 'ganymede']}
+        #
+        #     This file's `matrix_row` will have one of these values (one for each JobsDoneFile created):
+        #         {'planet' : 'earth', 'moon' : 'europa'}
+        #         {'planet' : 'earth', 'moon' : 'ganymede'}
+        #         {'planet' : 'mars', 'moon' : 'europa'}
+        #         {'planet' : 'mars', 'moon' : 'ganymede'}
         'matrix':dict,
     }
     PARSED_OPTIONS.update(GENERATOR_OPTIONS)
 
 
     def __init__(self):
+        '''
+        :ivar dict matrix_row:
+            A dict that represents a single row from this file's `matrix`.
+
+            .. seealso:: `matrix`@PARSED_OPTIONS
+        '''
         self.matrix_row = None
 
         # Initialize known options with None
