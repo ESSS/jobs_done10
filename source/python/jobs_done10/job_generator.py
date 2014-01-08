@@ -21,12 +21,18 @@ class IJobGenerator(Interface):
     different tools, not all of them are defined in this interface, but helpful error messages
     were added to guide development of builders.
 
+    :ivar job_group:
+        The group this job is associated.
+
     .. seealso::
         JobGeneratorConfigurator
 
     .. seealso::
         http://en.wikipedia.org/wiki/Builder_pattern
     '''
+
+
+    job_group = None
 
     def __init__(self, repository):
         '''

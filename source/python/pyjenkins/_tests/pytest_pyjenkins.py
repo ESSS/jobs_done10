@@ -8,49 +8,12 @@ import os
 #===================================================================================================
 class Test:
 
-    def testCreateJobDirectory(self, embed_data):
-        assert os.path.isfile(embed_data['job-name/config.xml']) == False
-        assert os.path.isdir(embed_data['job-name']) == False
-
-        job_generator = JenkinsJobGenerator('job-stream', 'job-name')
-        job_generator.CreateJobDirectory(embed_data.GetDataDirectory())
-
-        assert os.path.isdir(embed_data['job-name']) == True
-        assert os.path.isfile(embed_data['job-name/config.xml']) == True
-
-
-    def testCreateJobDirectoryReindex(self, embed_data):
-        assert os.path.isfile(embed_data['02-job-name/config.xml']) == False
-
-        assert os.path.isdir(embed_data['01-job-name']) == False
-        assert os.path.isdir(embed_data['02-job-name']) == False
-
-        job_generator = JenkinsJobGenerator('job-stream', 'job-name')
-        job_generator.job_name_format = '%(index)02d-%(id)s'
-        job_generator.index = 1
-        job_generator.CreateJobDirectory(embed_data.GetDataDirectory(), reindex=True)
-
-        assert os.path.isdir(embed_data['01-job-name']) == True
-        assert os.path.isdir(embed_data['02-job-name']) == False
-
-        # Reindex works only with reindex_directory set.
-        job_generator.index = 2
-        job_generator.CreateJobDirectory(
-            embed_data.GetDataDirectory(),
-            reindex=True,
-            reindex_directory=embed_data['01-job-name']
-        )
-
-        assert not os.path.isdir(embed_data['01-job-name'])
-        assert os.path.isdir(embed_data['02-job-name'])
-
-
     def testCreateConfigFile(self, embed_data):
         config_filename = embed_data['testCreateConfigFile.xml']
 
         assert os.path.isfile(config_filename) == False
 
-        job_generator = JenkinsJobGenerator('job-stream', 'job-name')
+        job_generator = JenkinsJobGenerator('job-name')
         job_generator.CreateConfigFile(config_filename)
 
         assert os.path.isfile(config_filename) == True
@@ -60,7 +23,7 @@ class Test:
 
 
     def testGetJobName(self):
-        job_generator = JenkinsJobGenerator('job-stream', 'job-name')
+        job_generator = JenkinsJobGenerator('job-name')
         assert (
             job_generator.GetJobName()
             == 'job-name'
