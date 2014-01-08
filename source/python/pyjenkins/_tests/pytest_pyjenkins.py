@@ -1,7 +1,5 @@
 from pyjenkins import JenkinsJobGenerator
 import os
-# from sharedscripts10.res_loader import ResourceLoaderByFiles
-# from sharedscripts10.shared_script import SharedScript, SharedScriptContext
 
 
 

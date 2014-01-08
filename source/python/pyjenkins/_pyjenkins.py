@@ -1,7 +1,6 @@
-from ben10.filesystem import MoveDirectory, DirectoryAlreadyExistsError, CreateDirectory, CreateFile
+from ben10.filesystem import CreateFile
 from ben10.foundation.decorators import Implements
 from ben10.interface import Interface, ImplementsInterface
-import os
 
 
 
@@ -34,6 +33,72 @@ class IJenkinsJobGeneratorPlugin(Interface):
 # JenkinsJobGenerator
 #===================================================================================================
 class JenkinsJobGenerator(object):
+    '''
+    Configure a Jenkins job for generation.
+
+    Usage:
+        job_generator = JenkinsJobGenerator('alpha', 'bravo-lib')
+
+        # Configure some options...
+        job_generator.num_to_keep = 10
+
+        job_generator.CreateJobDirectory('.')
+
+
+    :ivar str id:
+        The job identification string. This is used to generate the job name and workspace.
+
+    :ivar str name:
+        The job name. This is used inside templates.
+
+    :ivar int index:
+        The index of the job in the job-stream.
+
+    :ivar boolean link_job:
+        If True (default) links this job with the previous one.
+
+    :ivar str description:
+        The job description.
+
+    :ivar str display_name:
+        The job display-name. This value can use attribute replacement such as %(name)s
+
+    :ivar str assigned_node:
+        This must match the execution nodes configuration in order to be built on that node.
+
+    :ivar int days_to_keep:
+        Number of days to keep the job history.
+
+    :ivar int num_to_keep:
+        Number of history entries to keep.
+
+    :ivar int timeout:
+        Job build timeout in minutes. After the timeout the job automatically fails
+
+    :ivar str custom_workspace:
+        Path to the (custom) workspace for the job.
+
+    :ivar str builder_task_class:
+        "BatchFile" for windows or "Shell" for linux.
+
+    :ivar list(str) child_projects:
+        List of child job names. Child jobs are executed after the execution of this job.
+        List of child-projects (jobs) names to chain after the execution of this one.
+        By default executes the child only on success, but "chain_unstable_child" change this
+        behavior.
+
+    # @ivar bool chain_unstable_child:
+        If true chains the child projects (if any) even if the job is unstable
+
+    :ivar str job_name_format:
+        Determine the format of the job-name (GetJobName)
+        The dictionary expressions are replaced by this class attributes.
+
+    :ivar dict(str,tuple(str,str,list(str))) __parameters:
+        Holds information about job parameters
+        Use the following method to add a parameter:
+          AddChoiceParameter(name, description, choices)
+    '''
 
 
     CONFIG_FILENAME = 'config.xml'
@@ -79,86 +144,38 @@ class JenkinsJobGenerator(object):
             )
 
 
-    def __init__(self, stream_name, job_id, index=0):
-
-        # @ivar stream_name: str
-        #    The name of the stream of jobs.
-        self.stream_name = stream_name
-
-        # @ivar id: str
-        #    The job identification string. This is used to generate the job name and workspace.
+    def __init__(self, job_id, index=0):
         self.id = job_id
-
-        # @ivar name: str
-        #    The job name. This is used inside templates.
         self.name = job_id
-
-        # @ivar index: int
-        #    The index of the job in the job-stream.
         self.index = index
-
-        # @ivar link_job: boolean
-        #    If True (default) links this job with the previous one.
         self.link_job = True
-
-        # @ivar description: str
         self.description = 'JenkinsJobGenerator'
-
-        # @ivar display_name: str
         self.display_name = ''
-
-        # @ivar assigned_node: str
-        #    This must match the execution nodes configuration in order to be built on that node.
         self.assigned_node = self.DEFAULT_ASSIGNED_NODE
-
-        # @ivar days_to_keep: int
         self.days_to_keep = 7
-
-        # @ivar num_to_keep: int
         self.num_to_keep = 16
-
-        # @ivar timeout: int
-        #    Job build timeout in minutes. After the timeout the job automatically fails
         self.timeout = None
-
-        # @ivar custom_workspace: str
-        #    Path to the (custom) workspace for the job.
         self.custom_workspace = None
-
-        # @ivar builder_task_class: str
         self.builder_task_class = 'BatchFile'  # It can be BatchFile or Shell (for now)
-
-        # List of child-projects (jobs) names to chain after the execution of this one.
-        # By default executes the child only on success, but "chain_unstable_child" change this
-        # behavior.
-        # @ivar child_projects: list(str)
-        #     List of child job names. Child jobs are executed after the execution of this job.
         self.child_projects = []
-
-        # @ivar: chain_unstable_child: bool
-        #     If true chains the child projects (if any) even if the job is unstable
         self.chain_unstable_child = False
         self.chain_failed_child = False
-
-        # @ivar job_name_format: str
-        #     Determine the format of the job-name (GetJobName)
-        #     The dictionary expressions are replaced by this class attributes.
         self.job_name_format = '%(id)s'
-
-
-        # @ivar __parameters: dict(str,tuple(str,str,list(str)))
-        #    Holds information about job parameters
-        #    Use the following method to add a parameter:
-        #        AddChoiceParameter(name, description, choices)
         self.__parameters = {}
-
-        # Holds the plugin instances.
         self.__plugins = {}
 
 
-    # Plugins
+    # Plugins --------------------------------------------------------------------------------------
 
     def AddPlugin(self, name, *args, **kwargs):
+        '''
+        Adds a plugin in the generator instance.
+        Plugins are registered using the class method JenkinsJobGenerator.RegisterPlugin
+
+        :return IJenkinsJobGeneratorPlugin:
+            Returns the instance of the plugin.
+            If the plugin was already added, returns it and do not create a new instance.
+        '''
         plugin_class = self.PLUGINS.get(name)
         assert plugin_class is not None, 'Plugin class "%s" not found!' % name
 
@@ -171,10 +188,17 @@ class JenkinsJobGenerator(object):
 
 
     def ListPlugins(self, type_):
+        '''
+        Lists all plugins instances of the given type.
+
+        :param IJenkinsJobGeneratorPlugin.TYPE_XXX type:
+
+        :return list(IJenkinsJobGeneratorPlugin):
+        '''
         return [i for i in self.__plugins.itervalues() if i.TYPE == type_]
 
 
-    # Job
+    # Job ------------------------------------------------------------------------------------------
 
     def GetJobName(self, **kwargs):
         '''
@@ -190,42 +214,12 @@ class JenkinsJobGenerator(object):
         return self.job_name_format % dd
 
 
-    def _ReplacementDict(self, **kwargs):
+    def _ReplacementDict(self):
         '''
         Returns a replacement dict used to expand symbols for dynamically generated names (such
         as GetJobName).
         '''
-        r_replacement_dict = {}
-        r_replacement_dict.update(self.__dict__)
-        r_replacement_dict.update(kwargs)
-        return r_replacement_dict
-
-
-    def CreateJobDirectory(self, jobs_directory, reindex=True, reindex_directory=None):
-        '''
-        Create the job directory including the configuration file.
-
-        :param str jobs_directory:
-            The path where to create the job directory
-
-        :param bool reindex:
-            If True searches for the previous job with the same "id" and renames it. This makes the
-            new job retain the job history.
-        '''
-        job_name = self.GetJobName()
-        job_directory = '/'.join([jobs_directory, job_name])
-        if reindex and reindex_directory is not None:
-            try:
-                MoveDirectory(reindex_directory, job_directory)
-            except DirectoryAlreadyExistsError:
-                pass
-
-        CreateDirectory(job_directory)
-
-        config_filename = '%s/%s' % (job_directory, self.CONFIG_FILENAME)
-        self.CreateConfigFile(config_filename)
-
-        return job_directory
+        return self.__dict__
 
 
     def GetContent(self):
@@ -234,7 +228,7 @@ class JenkinsJobGenerator(object):
 
         :return str:
         '''
-        from ben10.xml_factory import XmlFactory
+        from xml_factory import XmlFactory
 
         xml_factory = XmlFactory('project')
         xml_factory['actions']
@@ -315,6 +309,7 @@ class JenkinsJobGenerator(object):
         This XML branch is where the job parameters are configured.
 
         :param XmlFactory xml_factory:
+            A xml-factory to fill.
         '''
         parameters_xml_path = 'hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
             'hudson.model.ChoiceParameterDefinition'
@@ -336,17 +331,39 @@ class JenkinsJobGenerator(object):
 # GitBuilder
 #===================================================================================================
 class GitBuilder(object):
+    '''
+    A jenkins-job-generator plugin that adds a git SCM in the generation.
+
+    :ivar str url:
+        The git repository URL.
+
+    :ivar str target_dir:
+        The target directory for the working copy.
+        Defaults to "" which means that the workspace directory will be the working copy.
+
+    :ivar str branch:
+        The branch to build.
+        Default to "master"
+
+    :ivar str remote:
+        The name of the git remote to configure.
+        Default to "origin"
+
+    :ivar str refspec:
+        "A refspec controls the remote refs to be retrieved and how they map to local refs."
+        Default to "+refs/heads/*:refs/remotes/origin/*"
+    '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_SCM
 
     def __init__(self, url):
+        self.url = url
+        self.target_dir = None
+        self.branch = 'master'
         self.remote = 'origin'
         self.refspec = '+refs/heads/*:refs/remotes/origin/*'
-        self.url = url
-        self.branch = 'master'
-        self.target_dir = None
 
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
@@ -385,6 +402,12 @@ JenkinsJobGenerator.RegisterPlugin('git', GitBuilder)
 # ShellBuilder
 #===================================================================================================
 class ShellBuilder(object):
+    '''
+    A jenkins-job-generator plugin that adds a shell (linux) command shell.
+
+    :ivar list(str) command_lines:
+        Command lines to execute.
+    '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
@@ -406,6 +429,12 @@ JenkinsJobGenerator.RegisterPlugin('shell', ShellBuilder)
 # BatchBuilder
 #===================================================================================================
 class BatchBuilder(object):
+    '''
+    A jenkins-job-generator plugin that adds a batch (windows) command.
+
+    :ivar list(str) command_lines:
+        Command lines to execute.
+    '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
@@ -427,6 +456,12 @@ JenkinsJobGenerator.RegisterPlugin('batch', BatchBuilder)
 # DescriptionSetterPublisher
 #===================================================================================================
 class DescriptionSetterPublisher(object):
+    '''
+    A jenkins-job-generator plugin that configures the description-setter.
+
+    :ivar str regexp:
+        Regular expression (Java) for the description setter.
+    '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
@@ -450,6 +485,15 @@ JenkinsJobGenerator.RegisterPlugin('description-setter', DescriptionSetterPublis
 # XUnitPublisher
 #===================================================================================================
 class XUnitPublisher(object):
+    '''
+    A jenkins-job-generator plugin that configures the unit-test publisher.
+
+    :ivar str junit_patterns:
+        File patterns to find JUnit files.
+
+    :ivar str boost_patterns:
+        File patterns to find Boost-Test files.
+    '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
@@ -491,7 +535,12 @@ JenkinsJobGenerator.RegisterPlugin('xunit', XUnitPublisher)
 # Timeout
 #===================================================================================================
 class Timeout(object):
+    '''
+    A jenkins-job-generator plugin that configures the job timetout.
 
+    :ivar int timeout:
+        The timeout value in minutes.
+    '''
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER
@@ -502,7 +551,7 @@ class Timeout(object):
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
-        build_timeout_wrapper['timeoutMinutes'] = self.timeout
+        build_timeout_wrapper['timeoutMinutes'] = str(self.timeout)
         build_timeout_wrapper['failBuild'] = 'true'
 
 
