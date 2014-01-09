@@ -50,12 +50,10 @@ class JenkinsXmlJobGenerator(object):
     def Reset(self):
         from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
 
-        self.__jjgen = PyJenkinsJobGenerator(
-            self.repository.name,
-            self.repository.branch
-        )
-        self.__jjgen.assigned_node = '%(stream_name)s%(variations)s'
-        self.__jjgen.job_name_format = '%(stream_name)s-%(id)s%(variations)s'
+        self.__jjgen = PyJenkinsJobGenerator(self.repository.name)
+        self.__jjgen.branch = self.repository.branch
+        self.__jjgen.assigned_node = '%(id)s%(variations)s'
+        self.__jjgen.job_name_format = '%(id)s-%(branch)s%(variations)s'
 
         # Configure description
         self.__jjgen.description = '<!-- Managed by Jenkins Job Builder -->'
@@ -196,8 +194,8 @@ class JenkinsJobPublisher(object):
         :param str output_directory:
              Target directory for outputting job .xmls
         '''
-        import os
         from ben10.filesystem import CreateFile
+        import os
         for job in self.jobs.values():
             CreateFile(
                 filename=os.path.join(output_directory, job.name),
@@ -246,10 +244,10 @@ def GetJobsFromDirectory(directory='.'):
 
     :return set(JenkinsJob)
     '''
-    from ben10.filesystem import GetFileContents, FileNotFoundError
+    from ben10.filesystem import FileNotFoundError, GetFileContents
+    from jobs_done10.git import Git
     from jobs_done10.jobs_done_file import JOBS_DONE_FILENAME
     from jobs_done10.repository import Repository
-    from jobs_done10.git import Git
     import os
 
     git = Git()

@@ -1,6 +1,6 @@
 from ben10.filesystem import CreateFile
 from ben10.foundation.decorators import Implements
-from ben10.interface import Interface, ImplementsInterface
+from ben10.interface import ImplementsInterface, Interface
 
 
 
@@ -46,16 +46,10 @@ class JenkinsJobGenerator(object):
 
 
     :ivar str id:
-        The job identification string. This is used to generate the job name and workspace.
+        The job identification string. This is used to generate the job name.
 
     :ivar str name:
         The job name. This is used inside templates.
-
-    :ivar int index:
-        The index of the job in the job-stream.
-
-    :ivar boolean link_job:
-        If True (default) links this job with the previous one.
 
     :ivar str description:
         The job description.
@@ -77,18 +71,6 @@ class JenkinsJobGenerator(object):
 
     :ivar str custom_workspace:
         Path to the (custom) workspace for the job.
-
-    :ivar str builder_task_class:
-        "BatchFile" for windows or "Shell" for linux.
-
-    :ivar list(str) child_projects:
-        List of child job names. Child jobs are executed after the execution of this job.
-        List of child-projects (jobs) names to chain after the execution of this one.
-        By default executes the child only on success, but "chain_unstable_child" change this
-        behavior.
-
-    # @ivar bool chain_unstable_child:
-        If true chains the child projects (if any) even if the job is unstable
 
     :ivar str job_name_format:
         Determine the format of the job-name (GetJobName)
@@ -144,11 +126,9 @@ class JenkinsJobGenerator(object):
             )
 
 
-    def __init__(self, job_id, index=0):
+    def __init__(self, job_id):
         self.id = job_id
         self.name = job_id
-        self.index = index
-        self.link_job = True
         self.description = 'JenkinsJobGenerator'
         self.display_name = ''
         self.assigned_node = self.DEFAULT_ASSIGNED_NODE
@@ -156,10 +136,6 @@ class JenkinsJobGenerator(object):
         self.num_to_keep = 16
         self.timeout = None
         self.custom_workspace = None
-        self.builder_task_class = 'BatchFile'  # It can be BatchFile or Shell (for now)
-        self.child_projects = []
-        self.chain_unstable_child = False
-        self.chain_failed_child = False
         self.job_name_format = '%(id)s'
         self.__parameters = {}
         self.__plugins = {}
