@@ -81,12 +81,9 @@ class JenkinsJobGenerator(object):
         Use the following method to add a parameter:
           AddChoiceParameter(name, description, choices)
     '''
-
-
     CONFIG_FILENAME = 'config.xml'
 
     DEFAULT_ASSIGNED_NODE = ''
-
 
     PLUGINS = {}
 
@@ -334,12 +331,19 @@ class GitBuilder(object):
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_SCM
 
-    def __init__(self, url):
+    def __init__(
+        self,
+        url,
+        target_dir=None,
+        branch='master',
+        remote='origin',
+        refspec='+refs/heads/*:refs/remotes/origin/*'):
+
         self.url = url
-        self.target_dir = None
-        self.branch = 'master'
-        self.remote = 'origin'
-        self.refspec = '+refs/heads/*:refs/remotes/origin/*'
+        self.target_dir = target_dir
+        self.branch = branch
+        self.remote = remote
+        self.refspec = refspec
 
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)

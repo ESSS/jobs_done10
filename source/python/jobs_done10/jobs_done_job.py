@@ -6,15 +6,16 @@ JOBS_DONE_FILENAME = '.jobs_done.yaml'
 
 
 #===================================================================================================
-# JobsDoneFile
+# JobsDoneJob
 #===================================================================================================
-class JobsDoneFile(object):
+class JobsDoneJob(object):
     '''
-    Represents a jobs_done file with descriptions used to create jobs.
+    Represents a jobs_done job, parsed from a jobs_done file.
+
     This is a generic representation, not related to any specific continuous integration tool.
     '''
 
-    # Options that should be forwarded to generators. These are set in JobsDoneFile instances
+    # Options that should be forwarded to generators. These are set in JobsDoneJob instances
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
         # list(str): Patterns to match when looking for boosttest results.
@@ -42,7 +43,8 @@ class JobsDoneFile(object):
     }
 
     # All parsed options
-    PARSED_OPTIONS = {
+    PARSEABLE_OPTIONS = GENERATOR_OPTIONS.copy()
+    PARSEABLE_OPTIONS.update({
         # list(str) branch_patterns:
         #    A list of regexes to matcvh against branch names.
         #    Jobs for a branch will only be created if any of this pattern matches that name.
@@ -53,8 +55,8 @@ class JobsDoneFile(object):
         #     A dict that represents all possible job combinations created from this file.
         #
         #     When a jobs_done file is parsed, it can contain variables that form a matrix. For each
-        #     possible combination of these variables, a JobsDoneFile class is created. They can be used
-        #     for things such as creating jobs for multiple platforms from a single JobsDoneFile.
+        #     possible combination of these variables, a JobsDoneJob class is created. They can be used
+        #     for things such as creating jobs for multiple platforms from a single JobsDoneJob.
         #
         #     For example, if our file describes this matrix:
         #         matrix:
@@ -69,14 +71,13 @@ class JobsDoneFile(object):
         #     This file's `matrix` will be:
         #         {'planet' : ['earth', 'mars], 'moon' : ['europa', 'ganymede']}
         #
-        #     This file's `matrix_row` will have one of these values (one for each JobsDoneFile created):
+        #     This file's `matrix_row` will have one of these values (one for each JobsDoneJob created):
         #         {'planet' : 'earth', 'moon' : 'europa'}
         #         {'planet' : 'earth', 'moon' : 'ganymede'}
         #         {'planet' : 'mars', 'moon' : 'europa'}
         #         {'planet' : 'mars', 'moon' : 'ganymede'}
         'matrix':dict,
-    }
-    PARSED_OPTIONS.update(GENERATOR_OPTIONS)
+    })
 
 
     def __init__(self):
@@ -84,98 +85,119 @@ class JobsDoneFile(object):
         :ivar dict matrix_row:
             A dict that represents a single row from this file's `matrix`.
 
-            .. seealso:: `matrix`@PARSED_OPTIONS
+            .. seealso:: `matrix`@PARSEABLE_OPTIONS
         '''
         self.matrix_row = None
 
         # Initialize known options with None
-        for option_name in self.PARSED_OPTIONS:
+        for option_name in self.PARSEABLE_OPTIONS:
             setattr(self, option_name, None)
 
 
     @classmethod
-    def CreateFromYAML(cls, yaml_contents):
+    def CreateFromYAML(cls, yaml_contents, repository):
         '''
+        Creates JobsDoneJob's from a jobs_done file in a repository.
+
+        This method parses that file and returns as many jobs as necessary. This number may vary
+        based on how big the job matrix is, and no jobs might be generated at all if the file is
+        empty or the current repository branch does not match anything in `branch_patterns` defined
+        in the file.
+
+        Jobs parsed by this method can use a string replacement syntax in their contents, and
+        those strings can be replaced by the current values in the matrix_row for that job, or a few
+        special replacements available to all jobs:
+        - name: Name of the repository for which we are creating jobs
+        - branch: Name of the repository branch for which we are creating jobs
+
         :param str yaml_contents:
+            Contents of a jobs_done file, in YAML format.
 
-        :return list(JobsDoneFile):
+        :param Repository repository:
+            Repository information for jobs created from `yaml_contents`
 
-        .. seealso:: JobsDoneFile
+        :return list(JobsDoneJob):
+            List of jobs created for parameters.
+
+        .. seealso:: JobsDoneJob
             For known options accepted in yaml_contents
 
-        .. seealso: pytest_jobs_done_file
-            For examples
-
-        YAML example:
+        Example:
+            repository = Repository(url='http://space.git', branch='milky_way')
             yaml_contents =
                 """
                 junit_patterns:
-                - "*.xml"
+                - "{planet}-{branch}.xml"
 
-                custom_variable:
-                - value_1
-                - value_2
+                matrix:
+                    planet:
+                    - earth
+                    - mars
                 """
 
-            resulting JobsDoneFiles:
-                JobsDoneFile(junit_patterns="*.xml", matrix_row={'custom_variable': 'value_1'}),
-                JobsDoneFile(junit_patterns="*.xml", matrix_row={'custom_variable': 'value_2'}),
+            resulting JobsDoneJob's:
+                JobsDoneJob(junit_patterns="earth-milky_way.xml", matrix_row={'planet': 'earth'}),
+                JobsDoneJob(junit_patterns="mars-milky_way.xml", matrix_row={'planet': 'mars'}),
+
+        .. seealso: pytest_jobs_done_job
+            For other examples
         '''
         if yaml_contents is None:
             return []
-
 
         # Load yaml
         jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader) or {}
 
         # Search for unknown options and type errors
-        parseable_options = JobsDoneFile.PARSED_OPTIONS.keys()
         for option_name, option_value in jd_data.iteritems():
             option_name = option_name.rsplit(':', 1)[-1]
-            if option_name not in parseable_options:
+            if option_name not in JobsDoneJob.PARSEABLE_OPTIONS:
                 raise UnknownJobsDoneFileOption(option_name)
 
             obtained_type = type(option_value)
-            expected_type = cls.PARSED_OPTIONS[option_name]
+            expected_type = JobsDoneJob.PARSEABLE_OPTIONS[option_name]
             if obtained_type != expected_type:
                 raise JobsDoneFileTypeError(option_name, obtained_type, expected_type)
 
+        # Check if this branch is acceptable (matches anything in branch_patterns)
+        import re
+        branch_patterns = jd_data.get('branch_patterns', ['.*'])
+        if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
+            return []
 
         # List combinations based on job matrix defined by file
-        if 'matrix' in jd_data.keys():
-            matrix = jd_data['matrix']
+        matrix = jd_data.get('matrix', {})
 
-            # Write up all possible combinations of the job matrix
-            # Stolen from http://stackoverflow.com/a/3873734/1209622
-            import itertools as it
-            matrix_rows = [
-                dict(zip(matrix, p)) for p in it.product(*(matrix[v] for v in matrix))
-            ]
-        else:
-            # If there is no job matrix, we have a single 'row', with no values
-            matrix_rows = [{}]
+        # >>> Write up all matrix_rows from possible combinations of the job matrix
+        # >>> Stolen from http://stackoverflow.com/a/3873734/1209622
+        import itertools as it
+        matrix_rows = [dict(zip(matrix, p)) for p in it.product(*(matrix[v] for v in matrix))]
 
 
         # Finally, create all jobs_done files (only known options remain in jd_data)
-        def ConditionMatch(matrix_row, conditions):
+        def ConditionMatch(matrix_row, condition):
             variable_name, variable_value = condition.split('-')
             return matrix_row[variable_name] == variable_value
 
-        jobs_done_files = []
+        jobs_done_jobs = []
         for matrix_row in matrix_rows:
-            jobs_done_file = JobsDoneFile()
-            jobs_done_files.append(jobs_done_file)
+            jobs_done_job = JobsDoneJob()
+            jobs_done_jobs.append(jobs_done_job)
 
-            jobs_done_file.matrix_row = matrix_row.copy()
+            jobs_done_job.repository = repository
+            jobs_done_job.matrix_row = matrix_row.copy()
 
             if not jd_data:
-                # Handling for empty jobs, they still are valid since we don't know what builder
+                # Handling for empty jobs, they still are valid since we don't know what a builder
                 # will do with them, maybe fill it with defaults
                 continue
 
-            # Re-read jd_data replacing all matrix variables with their values in the current matrix_row
+            # Re-read jd_data replacing all matrix variables with their values in the current
+            # matrix_row and special replacement variables 'branch' and 'name', based on repository.
+            format_dict = matrix_row.copy()
+            format_dict.update({'branch':repository.branch, 'name':repository.name})
             jd_string = (yaml.dump(jd_data, default_flow_style=False)[:-1])
-            formatted_jd_string = jd_string.format(**matrix_row)
+            formatted_jd_string = jd_string.format(**format_dict)
             jd_formatted_data = yaml.load(formatted_jd_string)
 
             for option_name, option_value in jd_formatted_data.iteritems():
@@ -189,38 +211,35 @@ class JobsDoneFile(object):
                     if not all([ConditionMatch(matrix_row, condition) for condition in conditions]):
                         continue
 
-                setattr(jobs_done_file, option_name, option_value)
+                setattr(jobs_done_job, option_name, option_value)
 
-        return jobs_done_files
+        return jobs_done_jobs
 
 
     @classmethod
-    def CreateFromFile(cls, filename):
+    def CreateFromFile(cls, filename, repository):
         '''
         :param str filename:
             Path to a jobs_done file
 
-        .. seealso:: CreateFromYAML
+        :param repository:
+            .. seealso:: CreateFromYAML
         '''
         from ben10.filesystem import GetFileContents
-        return cls.CreateFromYAML(GetFileContents(filename))
+        return cls.CreateFromYAML(GetFileContents(filename), repository)
 
 
     class _JobsDoneYamlLoader(yaml.loader.BaseLoader):
         '''
-        Custom loader that treats everything as strings
+        Custom loader that treats everything as ascii strings
         '''
         def construct_scalar(self, *args, **kwargs):
             value = yaml.loader.BaseLoader.construct_scalar(self, *args, **kwargs)
-            try:
-                return value.encode('ascii')
-            except:
-                return value
-
+            return value.encode('ascii')
 
 
 #===================================================================================================
-# UnknownJobsDoneFileOption
+# UnknownJobsDoneJobOption
 #===================================================================================================
 class UnknownJobsDoneFileOption(RuntimeError):
     '''
@@ -231,7 +250,7 @@ class UnknownJobsDoneFileOption(RuntimeError):
         RuntimeError.__init__(
             self,
             'Received unknown option "%s".\n\nAvailable options are:\n%s' % \
-            (option_name, '\n'.join('- ' + o for o in sorted(JobsDoneFile.PARSED_OPTIONS)))
+            (option_name, '\n'.join('- ' + o for o in sorted(JobsDoneJob.PARSEABLE_OPTIONS)))
         )
 
 

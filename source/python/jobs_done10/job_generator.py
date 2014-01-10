@@ -15,14 +15,11 @@ class IJobGenerator(Interface):
     Generators must implement this interface, which represents the bare minimum of options
     available, but this is more than likely not enough to build a complete job. Configurations set
     in a generators come from a `JobGeneratorConfigurator`, which itself extracts them from a
-    `JobsDoneFile`.
+    `JobsDoneJob`.
 
-    As new options can be easily added to `JobsDoneFile`, and some options might not make sense for
+    As new options can be easily added to `JobsDoneJob`, and some options might not make sense for
     different tools, not all of them are defined in this interface, but helpful error messages
-    were added to guide development of builders.
-
-    :ivar job_group:
-        The group this job is associated.
+    were added to guide development of generators.
 
     .. seealso::
         JobGeneratorConfigurator
@@ -31,34 +28,26 @@ class IJobGenerator(Interface):
         http://en.wikipedia.org/wiki/Builder_pattern
     '''
 
+    def Reset(self):
+        '''
+        Resets all configurations made to this generator.
+        '''
 
-    job_group = None
 
-    def __init__(self, repository):
+    def SetRepository(self, repository):
         '''
         :param Repository repository:
             Repository information for jobs created by this generator.
         '''
 
-    def Reset(self):
-        '''
-        Resets all configurations made to this builder.
-        '''
-
-
-    def GenerateJobs(self):
-        '''
-        Generate jobs. This might mean creating files in a directory, pushing content to a
-        web API, or anything that represents the final purpose of jobs_done.
-        '''
 
     def SetMatrixRow(self, matrix_row):
         '''
         Sets current matrix_row of this job.
 
-        Variations are any option unknown to a JobsDoneFile, and are used to represent possible
+        Variations are any option unknown to a JobsDoneJob, and are used to represent possible
         variations of a job. They can be used, for example, to create jobs for multiple platforms
-        from a single JobsDoneFile.
+        from a single JobsDoneJob.
 
         This will set a single build variation, with the values for the current variation being
         built.
@@ -69,7 +58,7 @@ class IJobGenerator(Interface):
                 variation = {'planet' : 'earth'}
 
         .. seealso::
-            JobsDoneFile
+            JobsDoneJob
         '''
 
 
@@ -78,29 +67,30 @@ class IJobGenerator(Interface):
 #===================================================================================================
 class JobGeneratorConfigurator(object):
     '''
-    Class used to configure `IJobGenerator`s using `JobsDoneFile` and `Repository` information.
+    Class used to configure `IJobGenerator`s using `JobsDoneJob`.
 
     .. seealso:: IJobGenerator
     '''
 
     @classmethod
-    def Configure(cls, builder, jobs_done_file):
+    def Configure(cls, builder, jobs_done_job):
         '''
         This simply iterates over data and calls a series of functions in a Builder. Functions
-        called are determined by options in `jobs_done_file` by converting the option names to camel case.
+        called are determined by options in `jobs_done_job` by converting the option names to camel case.
             e.g.: option 'junit_patterns' will trigger a call to builder.AddJunitPatterns
 
         :param IJobGenerator builder:
             Builder being configured.
 
-        :param JobsDoneFile jobs_done_file:
+        :param JobsDoneJob jobs_done_job:
             Will be used to extract options that must be configured in `builder`
         '''
+        builder.SetRepository(jobs_done_job.repository)
         builder.Reset()
-        builder.SetMatrixRow(jobs_done_file.matrix_row)
+        builder.SetMatrixRow(jobs_done_job.matrix_row)
 
-        for option in jobs_done_file.GENERATOR_OPTIONS:
-            option_value = getattr(jobs_done_file, option)
+        for option in jobs_done_job.GENERATOR_OPTIONS:
+            option_value = getattr(jobs_done_job, option)
             if option_value is None:
                 continue  # Skip unset options
 
@@ -111,11 +101,7 @@ class JobGeneratorConfigurator(object):
             try:
                 builder_function = getattr(builder, builder_function_name)
             except AttributeError:
-                raise JobGeneratorAttributeError(
-                    builder,
-                    builder_function_name,
-                    option
-                )
+                raise JobGeneratorAttributeError(builder, builder_function_name, option)
 
             builder_function(option_value)
 
@@ -130,8 +116,8 @@ class JobGeneratorAttributeError(AttributeError):
     '''
     Raised when trying to access a builder function that is not implemented.
     '''
-    def __init__(self, builder, attribute, jobs_done_file_option):
+    def __init__(self, builder, attribute, jobs_done_job_option):
         message = '%s "%s" cannot handle option "%s" (could not find function "%s").' % \
-            (IJobGenerator.__name__, builder.__class__.__name__, jobs_done_file_option, attribute)
+            (IJobGenerator.__name__, builder.__class__.__name__, jobs_done_job_option, attribute)
 
         AttributeError.__init__(self, message)

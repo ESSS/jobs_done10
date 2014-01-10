@@ -2,7 +2,7 @@ from ben10.filesystem import CreateDirectory, CreateFile
 from ben10.foundation.string import Dedent
 from jobs_done10.generators.jenkins import GetJobsFromFile, GetJobsFromDirectory, UploadJobsFromFile
 from jobs_done10.git import Git
-from jobs_done10.jobs_done_file import JOBS_DONE_FILENAME
+from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME
 from jobs_done10.repository import Repository
 import os
 
@@ -53,42 +53,6 @@ class Test(object):
         assert len(jobs) == 3
 
 
-    def testBranchPatterns(self, embed_data):
-        # Using a pattern that does not match our branch will prevent jobs from being generated
-        jd_file_contents = self._JOBS_DONE_FILE_CONTENTS
-        jd_file_contents += Dedent(
-            '''
-            branch_patterns:
-            - feature-.*
-            '''
-        )
-        _job_group, jobs = GetJobsFromFile(self._REPOSITORY, jd_file_contents)
-        assert len(jobs) == 0
-
-        # Matching patterns work as usual
-        jd_file_contents = self._JOBS_DONE_FILE_CONTENTS
-        jd_file_contents += Dedent(
-            '''
-            branch_patterns:
-            - branch
-            '''
-        )
-        _job_group, jobs = GetJobsFromFile(self._REPOSITORY, jd_file_contents)
-        assert len(jobs) == 3
-
-        # Also works with several patterns and regexes
-        jd_file_contents = self._JOBS_DONE_FILE_CONTENTS
-        jd_file_contents += Dedent(
-            '''
-            branch_patterns:
-            - master
-            - b.*
-            '''
-        )
-        _job_group, jobs = GetJobsFromFile(self._REPOSITORY, jd_file_contents)
-        assert len(jobs) == 3
-
-
     def testGetJobsFromDirectory(self, embed_data):
         repo_path = embed_data['git_repository']
         CreateDirectory(repo_path)
@@ -104,7 +68,7 @@ class Test(object):
 
         # If there is no jobs_done file, we should get zero jobs
         job_group, jobs = GetJobsFromDirectory(repo_path)
-        assert job_group == self._REPOSITORY.name + '-' + self._REPOSITORY.branch
+        assert job_group == 'space-branch'
         assert len(jobs) == 0
 
         # Create jobs_done file
@@ -118,63 +82,27 @@ class Test(object):
 
 
     def testUploadJobsFromFile(self, monkeypatch):
-        mock_jenkins = self._MockJenkinsAPI(monkeypatch)
+        '''
+        Tests that UploadJobsFromFile correctly calls JenkinsJobPublisher (already tested elsewhere)
+        '''
+        def MockPublishToUrl(self, url, username, password):
+            assert url == 'jenkins_url'
+            assert username == 'jenkins_user'
+            assert password == 'jenkins_pass'
 
-        new_jobs, updated_jobs, deleted_jobs = UploadJobsFromFile(
+            assert set(self.jobs.keys()) == set([
+                'space-branch-venus', 'space-branch-jupiter', 'space-branch-mercury'])
+
+            return 'mock publish result'
+
+        from jobs_done10.generators.jenkins import JenkinsJobPublisher
+        monkeypatch.setattr(JenkinsJobPublisher, 'PublishToUrl', MockPublishToUrl)
+
+        result = UploadJobsFromFile(
             repository=self._REPOSITORY,
-            jobs_done_file_contents=self._JOBS_DONE_FILE_CONTENTS,
+            jobs_done_job_contents=self._JOBS_DONE_FILE_CONTENTS,
             url='jenkins_url',
             username='jenkins_user',
             password='jenkins_pass',
         )
-        assert set(new_jobs) == mock_jenkins.NEW_JOBS == set(['space-branch-venus', 'space-branch-jupiter'])
-        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set(['space-branch-mercury'])
-        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-branch-saturn'])
-
-
-    def testUploadJobsFromFile2(self, monkeypatch):
-        mock_jenkins = self._MockJenkinsAPI(monkeypatch)
-
-        new_jobs, updated_jobs, deleted_jobs = UploadJobsFromFile(
-            repository=self._REPOSITORY,
-            jobs_done_file_contents=None,
-            url='jenkins_url',
-            username='jenkins_user',
-            password='jenkins_pass',
-        )
-        assert set(new_jobs) == mock_jenkins.NEW_JOBS == set()
-        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set()
-        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-branch-mercury', 'space-branch-saturn'])
-
-
-    def _MockJenkinsAPI(self, monkeypatch):
-        class MockJenkins(object):
-            NEW_JOBS = set()
-            UPDATED_JOBS = set()
-            DELETED_JOBS = set()
-
-            def __init__(self, url, username, password):
-                assert url == 'jenkins_url'
-                assert username == 'jenkins_user'
-                assert password == 'jenkins_pass'
-
-            def get_jobs(self):
-                return [
-                    {'name' : u'space-branch-mercury'},
-                    {'name' : u'space-branch-saturn'},
-                ]
-
-            def create_job(self, name, xml):
-                self.NEW_JOBS.add(name)
-
-            def reconfig_job(self, name, xml):
-                self.UPDATED_JOBS.add(name)
-
-            def delete_job(self, name):
-                self.DELETED_JOBS.add(name)
-
-
-        import jenkins
-        monkeypatch.setattr(jenkins, 'Jenkins', MockJenkins)
-
-        return MockJenkins
+        assert result == 'mock publish result'

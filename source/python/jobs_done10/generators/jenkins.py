@@ -38,12 +38,10 @@ class JenkinsXmlJobGenerator(object):
     '''
     ImplementsInterface(IJobGenerator)
 
-    @Implements(IJobGenerator.__init__)
-    def __init__(self, repository):
-        self.repository = repository
-
-        # TODO: Create interface for this attribute
-        self.job_group = repository.name + '-' + repository.branch
+    def __init__(self):
+        # Initialize some variables
+        self.__jjgen = None
+        self.repository = None
 
 
     @Implements(IJobGenerator.Reset)
@@ -52,40 +50,58 @@ class JenkinsXmlJobGenerator(object):
 
         self.__jjgen = PyJenkinsJobGenerator(self.repository.name)
         self.__jjgen.branch = self.repository.branch
-        self.__jjgen.assigned_node = '%(id)s%(variations)s'
-        self.__jjgen.job_name_format = '%(id)s-%(branch)s%(variations)s'
 
         # Configure description
-        self.__jjgen.description = '<!-- Managed by Jenkins Job Builder -->'
+        self.__jjgen.description = "<!-- Managed by Job's Done -->"
 
         # Configure git SCM
-        git_plugin = self.__jjgen.AddPlugin('git', self.repository.url)
-        git_plugin.target_dir = self.repository.name
-        pass
+        self.__jjgen.AddPlugin('git', url=self.repository.url, target_dir=self.repository.name)
 
 
-    @Implements(IJobGenerator.GenerateJobs)
-    def GenerateJobs(self):
-        return JenkinsJob(
-            name=self.__jjgen.GetJobName(),
-            xml=self.__jjgen.GetContent(),
-        )
+    @classmethod
+    def GetJobGroup(cls, repository):
+        '''
+        A single repository/branch combination can create many jobs, depending on the job matrix.
+
+        This variable is used to identify jobs within the same group.
+
+        :param Repository repository:
+            A repository that can contain jobs
+
+        :returns str:
+            Job group for the given repository
+        '''
+        return repository.name + '-' + repository.branch
+
+
+    def GetJobs(self):
+        return JenkinsJob(name=self.__jjgen.GetJobName(), xml=self.__jjgen.GetContent())
 
 
     #===============================================================================================
-    # Configurator functions (..seealso:: JobsDoneFile ivars for docs)
+    # Configurator functions (..seealso:: JobsDoneJob ivars for docs)
     #===============================================================================================
+    @Implements(IJobGenerator.SetRepository)
+    def SetRepository(self, repository):
+        self.repository = repository
+
+
     @Implements(IJobGenerator.SetMatrixRow)
     def SetMatrixRow(self, matrix_row):
+        self.__jjgen.assigned_node = self.repository.name
+        self.__jjgen.job_name_format = self.GetJobGroup(self.repository)
+
         if matrix_row:
-            self.__jjgen.variations = '-' + '-'.join([i[1] for i in sorted(matrix_row.items())])
-        else:
-            self.__jjgen.variations = ''
+            row_representation = '-'.join([i[1] for i in sorted(matrix_row.items())])
+
+            self.__jjgen.assigned_node += '-' + row_representation
+            self.__jjgen.job_name_format += '-' + row_representation
 
 
     def SetParameters(self, parameters):
         for i_parameter in parameters:
             for _name, j_dict  in i_parameter.iteritems():
+                # We only handle Choice parameters for now
                 self.__jjgen.AddChoiceParameter(
                     j_dict['name'],
                     description=j_dict['description'],
@@ -128,7 +144,6 @@ class JenkinsJobPublisher(object):
     '''
     def __init__(self, job_group, jobs):
         '''
-
         :param str job_group:
             Group to which these jobs belong to.
 
@@ -207,12 +222,12 @@ class JenkinsJobPublisher(object):
 #===================================================================================================
 # Actions for common uses of Jenkins classes
 #===================================================================================================
-def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, password=None):
+def UploadJobsFromFile(repository, jobs_done_job_contents, url, username=None, password=None):
     '''
     :param repository:
         ..seealso:: GetJobsFromFile
 
-    :param jobs_done_file_contents:
+    :param jobs_done_job_contents:
         ..seealso:: GetJobsFromFile
 
     :param str url:
@@ -228,7 +243,7 @@ def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, 
         ..seealso:: JenkinsJobPublisher.PublishToUrl
 
     '''
-    job_group, jobs = GetJobsFromFile(repository, jobs_done_file_contents)
+    job_group, jobs = GetJobsFromFile(repository, jobs_done_job_contents)
     publisher = JenkinsJobPublisher(job_group, jobs)
 
     return publisher.PublishToUrl(url, username, password)
@@ -246,7 +261,7 @@ def GetJobsFromDirectory(directory='.'):
     '''
     from ben10.filesystem import FileNotFoundError, GetFileContents
     from jobs_done10.git import Git
-    from jobs_done10.jobs_done_file import JOBS_DONE_FILENAME
+    from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME
     from jobs_done10.repository import Repository
     import os
 
@@ -273,29 +288,23 @@ def GetJobsFromFile(repository, jobs_done_file_contents):
         ..seealso:: Repository
 
     :param str|None jobs_done_file_contents:
-        ..seealso:: JobsDoneFile.CreateFromYAML
+        ..seealso:: JobsDoneJob.CreateFromYAML
 
     :return set(JenkinsJob)
     '''
     from jobs_done10.job_generator import JobGeneratorConfigurator
-    from jobs_done10.jobs_done_file import JobsDoneFile
-    import re
+    from jobs_done10.jobs_done_job import JobsDoneJob
 
-    jenkins_generator = JenkinsXmlJobGenerator(repository)
+    jenkins_generator = JenkinsXmlJobGenerator()
+    job_group = jenkins_generator.GetJobGroup(repository)
 
     jobs = []
-    jobs_done_files = JobsDoneFile.CreateFromYAML(jobs_done_file_contents)
-    for jobs_done_file in jobs_done_files:
-        # If jobs_done file defines patterns for acceptable branches to create jobs, compare those
-        # against the current branch, to determine if we should generate jobs or not.
-        if jobs_done_file.branch_patterns is not None:
-            if not any([re.match(pattern, repository.branch) for pattern in jobs_done_file.branch_patterns]):
-                continue
+    jobs_done_jobs = JobsDoneJob.CreateFromYAML(jobs_done_file_contents, repository)
+    for jobs_done_job in jobs_done_jobs:
+        JobGeneratorConfigurator.Configure(jenkins_generator, jobs_done_job)
+        jobs.append(jenkins_generator.GetJobs())
 
-        JobGeneratorConfigurator.Configure(jenkins_generator, jobs_done_file)
-        jobs.append(jenkins_generator.GenerateJobs())
-
-    return jenkins_generator.job_group, jobs
+    return job_group, jobs
 
 
 
@@ -309,7 +318,6 @@ def ConfigureCommandLineInterface(jobs_done_application):
     :param App jobs_done_application:
         Command line application we are registering commands to.
     '''
-
     @jobs_done_application
     def jenkins(console_, url, username=None, password=None):
         '''

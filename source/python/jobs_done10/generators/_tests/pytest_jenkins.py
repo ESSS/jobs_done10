@@ -1,6 +1,6 @@
 from ben10.foundation.string import Dedent
 from jobs_done10.job_generator import JobGeneratorConfigurator
-from jobs_done10.jobs_done_file import JobsDoneFile
+from jobs_done10.jobs_done_job import JobsDoneJob
 from jobs_done10.repository import Repository
 import functools
 import pytest
@@ -23,7 +23,7 @@ class Test(object):
         <?xml version="1.0" ?>
         <project>
           <actions/>
-          <description>&lt;!-- Managed by Jenkins Job Builder --&gt;</description>
+          <description>&lt;!-- Managed by Job's Done --&gt;</description>
           <keepDependencies>false</keepDependencies>
           <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
           <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
@@ -101,7 +101,7 @@ class Test(object):
         def testFunc(self, *args, **kwargs):
             try:
                 self.testEmpty()
-            except:
+            except: # pragma: no cover
                 pytest.skip('Skipping until testEmpty is fixed.')
                 return
             return original_test(self, *args, **kwargs)
@@ -436,14 +436,14 @@ class Test(object):
         )
         repository = Repository(url='http://fake.git')
 
-        # This test should create two jobs_done_files from their variations
-        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
+        # This test should create two jobs_done_jobs from their variations
+        jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
 
         from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator
-        job_generator = JenkinsXmlJobGenerator(repository)
-        for jd_file in jobs_done_files:
+        job_generator = JenkinsXmlJobGenerator()
+        for jd_file in jobs_done_jobs:
             JobGeneratorConfigurator.Configure(job_generator, jd_file)
-            jenkins_job = job_generator.GenerateJobs()
+            jenkins_job = job_generator.GetJobs()
 
             planet = jd_file.matrix_row['planet']
             self._AssertDiff(
@@ -468,18 +468,18 @@ class Test(object):
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
-            Contents of JobsDoneFile used for this test
+            Contents of JobsDoneJob used for this test
 
         :param str expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_XML.
         '''
         repository = Repository(url='http://fake.git')
-        jobs_done_files = JobsDoneFile.CreateFromYAML(ci_contents)
+        jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
 
         from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator
-        job_generator = JenkinsXmlJobGenerator(repository)
-        JobGeneratorConfigurator.Configure(job_generator, jobs_done_files[0])
-        jenkins_job = job_generator.GenerateJobs()
+        job_generator = JenkinsXmlJobGenerator()
+        JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
+        jenkins_job = job_generator.GetJobs()
 
         self._AssertDiff(jenkins_job.xml, expected_diff)
 

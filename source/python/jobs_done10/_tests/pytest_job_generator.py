@@ -1,6 +1,6 @@
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_generator import IJobGenerator, JobGeneratorConfigurator, JobGeneratorAttributeError
-from jobs_done10.jobs_done_file import JobsDoneFile
+from jobs_done10.jobs_done_job import JobsDoneJob
 from jobs_done10.repository import Repository
 import contextlib
 import pytest
@@ -16,7 +16,7 @@ class Test(object):
         class MyGenerator():
             ImplementsInterface(IJobGenerator)
 
-            def __init__(self, repository):
+            def SetRepository(self, repository):
                 assert repository.url == 'http://repo.git'
 
             def SetMatrixRow(self, matrix_row):
@@ -25,31 +25,28 @@ class Test(object):
             def SetBuildBatchCommands(self, commands):
                 assert commands == ['command']
 
-            def GenerateJobs(self):
-                pass
-
             def Reset(self):
                 pass
 
-        jobs_done_file = JobsDoneFile()
-        jobs_done_file.matrix_row = {'id':1}
-        repository = Repository(url='http://repo.git')
+        jobs_done_job = JobsDoneJob()
+        jobs_done_job.matrix_row = {'id':1}
+        jobs_done_job.repository = Repository(url='http://repo.git')
 
-        generator = MyGenerator(repository)
+        generator = MyGenerator()
 
         # Test basic calls
-        with ExpectedCalls(generator, Reset=1, SetMatrixRow=1, SetBuildBatchCommands=0):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_file)
+        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrixRow=1, SetBuildBatchCommands=0):
+            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
-        # Set some more values to jobs_done_file, and make sure it is called
-        jobs_done_file.build_batch_commands = ['command']
-        with ExpectedCalls(generator, Reset=1, SetMatrixRow=1, SetBuildBatchCommands=1):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_file)
+        # Set some more values to jobs_done_job, and make sure it is called
+        jobs_done_job.build_batch_commands = ['command']
+        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrixRow=1, SetBuildBatchCommands=1):
+            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
         # Try calling a missing option
-        jobs_done_file.boosttest_patterns = 'patterns'
+        jobs_done_job.boosttest_patterns = 'patterns'
         with pytest.raises(JobGeneratorAttributeError):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_file)
+            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
 
 
