@@ -73,21 +73,21 @@ class JobGeneratorConfigurator(object):
     '''
 
     @classmethod
-    def Configure(cls, builder, jobs_done_job):
+    def Configure(cls, generator, jobs_done_job):
         '''
-        This simply iterates over data and calls a series of functions in a Builder. Functions
+        This simply iterates over data and calls a series of functions in a generator. Functions
         called are determined by options in `jobs_done_job` by converting the option names to camel case.
-            e.g.: option 'junit_patterns' will trigger a call to builder.AddJunitPatterns
+            e.g.: option 'junit_patterns' will trigger a call to generator.AddJunitPatterns
 
-        :param IJobGenerator builder:
-            Builder being configured.
+        :param IJobGenerator generator:
+            Generator being configured.
 
         :param JobsDoneJob jobs_done_job:
-            Will be used to extract options that must be configured in `builder`
+            Will be used to extract options that must be configured in `generator`
         '''
-        builder.SetRepository(jobs_done_job.repository)
-        builder.Reset()
-        builder.SetMatrixRow(jobs_done_job.matrix_row)
+        generator.SetRepository(jobs_done_job.repository)
+        generator.Reset()
+        generator.SetMatrixRow(jobs_done_job.matrix_row)
 
         for option in jobs_done_job.GENERATOR_OPTIONS:
             option_value = getattr(jobs_done_job, option)
@@ -95,17 +95,17 @@ class JobGeneratorConfigurator(object):
                 continue  # Skip unset options
 
             # Find function name associated with the option being processed
-            builder_function_name = 'Set' + option.title().replace('_', '')
+            generator_function_name = 'Set' + option.title().replace('_', '')
 
             # Obtain and call that function with the option value
             try:
-                builder_function = getattr(builder, builder_function_name)
+                generator_function = getattr(generator, generator_function_name)
             except AttributeError:
-                raise JobGeneratorAttributeError(builder, builder_function_name, option)
+                raise JobGeneratorAttributeError(generator, generator_function_name, option)
 
-            builder_function(option_value)
+            generator_function(option_value)
 
-        return builder
+        return generator
 
 
 
@@ -114,10 +114,10 @@ class JobGeneratorConfigurator(object):
 #===================================================================================================
 class JobGeneratorAttributeError(AttributeError):
     '''
-    Raised when trying to access a builder function that is not implemented.
+    Raised when trying to access a generator function that is not implemented.
     '''
-    def __init__(self, builder, attribute, jobs_done_job_option):
+    def __init__(self, generator, attribute, jobs_done_job_option):
         message = '%s "%s" cannot handle option "%s" (could not find function "%s").' % \
-            (IJobGenerator.__name__, builder.__class__.__name__, jobs_done_job_option, attribute)
+            (IJobGenerator.__name__, generator.__class__.__name__, jobs_done_job_option, attribute)
 
         AttributeError.__init__(self, message)

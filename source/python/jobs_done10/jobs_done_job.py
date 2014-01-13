@@ -188,7 +188,7 @@ class JobsDoneJob(object):
             jobs_done_job.matrix_row = matrix_row.copy()
 
             if not jd_data:
-                # Handling for empty jobs, they still are valid since we don't know what a builder
+                # Handling for empty jobs, they still are valid since we don't know what a generator
                 # will do with them, maybe fill it with defaults
                 continue
 

@@ -5,7 +5,7 @@ from jobs_done10.generators.jenkins import ConfigureCommandLineInterface
 # Create command line application
 jobs_done_application = App('jobs_done')
 
-# Configure application with available builders
+# Configure application with available generators
 ConfigureCommandLineInterface(jobs_done_application)
 
 # Run application
