@@ -222,12 +222,12 @@ class JenkinsJobPublisher(object):
 #===================================================================================================
 # Actions for common uses of Jenkins classes
 #===================================================================================================
-def UploadJobsFromFile(repository, jobs_done_job_contents, url, username=None, password=None):
+def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, password=None):
     '''
     :param repository:
         ..seealso:: GetJobsFromFile
 
-    :param jobs_done_job_contents:
+    :param jobs_done_file_contents:
         ..seealso:: GetJobsFromFile
 
     :param str url:
@@ -243,7 +243,7 @@ def UploadJobsFromFile(repository, jobs_done_job_contents, url, username=None, p
         ..seealso:: JenkinsJobPublisher.PublishToUrl
 
     '''
-    job_group, jobs = GetJobsFromFile(repository, jobs_done_job_contents)
+    job_group, jobs = GetJobsFromFile(repository, jobs_done_file_contents)
     publisher = JenkinsJobPublisher(job_group, jobs)
 
     return publisher.PublishToUrl(url, username, password)
