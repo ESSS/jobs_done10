@@ -105,7 +105,7 @@ class JobsDoneJob(object):
         in the file.
 
         Jobs parsed by this method can use a string replacement syntax in their contents, and
-        those strings can be replaced by the current values in the matrix_row for that job, or a few
+        those strings can be replaced by the current values in the i_matrix_row for that job, or a few
         special replacements available to all jobs:
         - name: Name of the repository for which we are creating jobs
         - branch: Name of the repository branch for which we are creating jobs
@@ -136,8 +136,8 @@ class JobsDoneJob(object):
                 """
 
             resulting JobsDoneJob's:
-                JobsDoneJob(junit_patterns="earth-milky_way.xml", matrix_row={'planet': 'earth'}),
-                JobsDoneJob(junit_patterns="mars-milky_way.xml", matrix_row={'planet': 'mars'}),
+                JobsDoneJob(junit_patterns="earth-milky_way.xml", i_matrix_row={'planet': 'earth'}),
+                JobsDoneJob(junit_patterns="mars-milky_way.xml", i_matrix_row={'planet': 'mars'}),
 
         .. seealso: pytest_jobs_done_job
             For other examples
@@ -165,27 +165,15 @@ class JobsDoneJob(object):
         if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
             return []
 
-        # List combinations based on job matrix defined by file
-        matrix = jd_data.get('matrix', {})
-
-        # >>> Write up all matrix_rows from possible combinations of the job matrix
-        # >>> Stolen from http://stackoverflow.com/a/3873734/1209622
-        import itertools as it
-        matrix_rows = [dict(zip(matrix, p)) for p in it.product(*(matrix[v] for v in matrix))]
-
-
-        # Finally, create all jobs_done files (only known options remain in jd_data)
-        def ConditionMatch(matrix_row, condition):
-            variable_name, variable_value = condition.split('-')
-            return matrix_row[variable_name] == variable_value
+        matrix_rows = cls.CreateMatrixRows(jd_data.get('matrix', {}))
 
         jobs_done_jobs = []
-        for matrix_row in matrix_rows:
+        for i_matrix_row in matrix_rows:
             jobs_done_job = JobsDoneJob()
             jobs_done_jobs.append(jobs_done_job)
 
             jobs_done_job.repository = repository
-            jobs_done_job.matrix_row = matrix_row.copy()
+            jobs_done_job.matrix_row = i_matrix_row.AsDict()
 
             if not jd_data:
                 # Handling for empty jobs, they still are valid since we don't know what a generator
@@ -193,9 +181,12 @@ class JobsDoneJob(object):
                 continue
 
             # Re-read jd_data replacing all matrix variables with their values in the current
-            # matrix_row and special replacement variables 'branch' and 'name', based on repository.
-            format_dict = matrix_row.copy()
-            format_dict.update({'branch':repository.branch, 'name':repository.name})
+            # i_matrix_row and special replacement variables 'branch' and 'name', based on repository.
+            format_dict = {
+                'branch':repository.branch,
+                'name':repository.name
+            }
+            format_dict.update(i_matrix_row.AsDict())
             jd_string = (yaml.dump(jd_data, default_flow_style=False)[:-1])
             formatted_jd_string = jd_string.format(**format_dict)
             jd_formatted_data = yaml.load(formatted_jd_string)
@@ -208,12 +199,91 @@ class JobsDoneJob(object):
                     option_name = option_name.split(':')[-1]
 
                     # Skip this option if any condition is not met
-                    if not all([ConditionMatch(matrix_row, condition) for condition in conditions]):
+                    if not i_matrix_row.Match(conditions):
                         continue
 
                 setattr(jobs_done_job, option_name, option_value)
 
         return jobs_done_jobs
+
+
+    @classmethod
+    def CreateMatrixRows(self, matrix_dict):
+        '''
+        Write up all matrix_rows from possible combinations of the job matrix
+
+        Inspired on http://stackoverflow.com/a/3873734/1209622
+
+        :param dict(str:tuple) matrix_dict:
+            A dictionary mapping names to values.
+        '''
+
+        class MatrixRow(object):
+            '''
+            Holds a combination of the matrix values.
+
+            :ivar dict __dict:
+                Maps names to a list of values.
+                Only the first value is considered on AsDict.
+            '''
+
+            def __init__(self, names, values):
+                '''
+                Create a matrix-row instance from a matrix-dict and a value tuple.
+
+                :param list(str) names:
+                    List of variables names.
+
+                :param list(str) values:
+                    List of values assumed by this row.
+                    One value for each name in names parameter.
+                '''
+                values = tuple(i.split(',') for i in values)
+                self.__dict = dict(zip(names, values))
+
+            def __str__(self):
+                '''
+                String representation for tests.
+
+                :return str:
+                '''
+                result = []
+                for i_name, i_values in self.__dict.iteritems():
+                    for j_value in i_values:
+                        result.append('%s-%s' % (i_name, j_value))
+                return '<MatrixRow %s>' % ' '.join(result)
+
+            def AsDict(self):
+                '''
+                Returns the matrix-row as a dict.
+                Only considers the first value for each entry.
+                '''
+                result = dict((i, j[0]) for (i, j) in self.__dict.iteritems())
+                return result
+
+            def Match(self, conditions):
+                '''
+                Check if the given conditions matches this row.
+
+                :param list(str) conditions:
+                    A list of conditions in the form 'name-value'.
+
+                :return boolean:
+                    Returns True if all the given conditions matches the values associated with this
+                    matrix row.
+                '''
+                def _Match(matrix_row, condition):
+                    variable_name, variable_value = condition.split('-')
+                    return variable_value in matrix_row[variable_name]
+
+                return all([_Match(self.__dict, i) for i in conditions])
+
+        import itertools as it
+
+        # Create all combinations of values available in the matrix
+        names = matrix_dict.keys()
+        value_combinations = it.product(*matrix_dict.values())
+        return [MatrixRow(names, v) for v in value_combinations]
 
 
     @classmethod

@@ -77,7 +77,7 @@ class Test(object):
             "command on planet venus (repository 'space' on 'milky_way')"]
 
 
-    def testCreateJobsDoneJobFromYAMLWithConditions(self):
+    def testMatrixAndFlags(self):
         ci_contents = Dedent(
             '''
             platform-windows:junit_patterns:
@@ -106,7 +106,72 @@ class Test(object):
                 assert jd_file.build_shell_commands == None
 
 
-    def testBranchPatterns(self, embed_data):
+    def testMatrixAndExtraFlags(self):
+        ci_contents = Dedent(
+            '''
+            platform-windows:junit_patterns:
+            - "junit*.xml"
+
+            platform-linux:build_shell_commands:
+            - "linux command: {platform}"
+
+            platform-windows:build_batch_commands:
+            - "windows command: {platform}"
+
+            matrix:
+                platform:
+                - win32,windows
+                - win64,windows
+                - redhat64,linux
+            '''
+        )
+        for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
+            if jd_file.matrix_row['platform'] == 'redhat64':
+                assert jd_file.junit_patterns == None
+                assert jd_file.build_batch_commands == None
+                assert jd_file.build_shell_commands == ['linux command: redhat64']
+            if jd_file.matrix_row['platform'] == 'win32':
+                assert jd_file.junit_patterns == ['junit*.xml']
+                assert jd_file.build_batch_commands == ['windows command: win32']
+                assert jd_file.build_shell_commands == None
+
+
+    def testCreateMatrixRows(self):
+        matrix_rows = JobsDoneJob.CreateMatrixRows(
+            {
+            'platform' :
+                [
+                'redhat64,linux',
+                'win32,windows',
+                'win64,windows',
+                ]
+            }
+        )
+        assert map(str, matrix_rows) == [
+            "<MatrixRow platform-redhat64 platform-linux>",
+            "<MatrixRow platform-win32 platform-windows>",
+            "<MatrixRow platform-win64 platform-windows>",
+        ]
+
+
+    def testDictKeysAndValuesOrder(self):
+        '''
+        Sanity Check
+        Check if Python's dictionary returns the same order of keys and values if no change were
+        made in it.
+
+        We count on keys and values returning the same order in CreateMatrixRows algorithm.
+        '''
+        d = {}
+        for i in xrange(100):
+            d[str(i)] = str(100 - i)
+
+        assert d.keys() == [i[0] for i in d.items()]
+        assert d.values() == [d[i] for i in d.keys()]
+        assert d.keys() == d.keys()
+
+
+    def testBranchPatterns(self):
         base_contents = Dedent(
             '''
             matrix:
@@ -186,7 +251,7 @@ class Test(object):
         assert e.value.obtained_type == str
 
 
-    def testCreateFomrFile(self, embed_data):
+    def testCreateFromFile(self, embed_data):
         contents = Dedent(
             '''
             matrix:
