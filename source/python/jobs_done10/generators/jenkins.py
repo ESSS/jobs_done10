@@ -357,8 +357,9 @@ def ConfigureCommandLineInterface(jobs_done_application):
         :param output_directory: Directory to output job xmls instead of uploading to `url`.
         '''
         directory = '.'
-        jobs = GetJobsFromDirectory(directory)
+        job_group, jobs = GetJobsFromDirectory(directory)
 
         console_.Print('Saving jobs in "%s"' % output_directory)
-        JenkinsJobPublisher(jobs).PublishToDirectory(output_directory)
+        publisher = JenkinsJobPublisher(job_group, jobs)
+        publisher.PublishToDirectory(output_directory)
         console_.ProgressOk()
