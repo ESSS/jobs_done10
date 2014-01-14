@@ -19,7 +19,7 @@ class Test(object):
         assert GetFileContents(embed_data['space-milky_way-venus']) == 'venus'
 
 
-    def testUploadJobsFromFile(self, monkeypatch):
+    def testPublishToUrl(self, monkeypatch):
         mock_jenkins = self._MockJenkinsAPI(monkeypatch)
 
         new_jobs, updated_jobs, deleted_jobs = self._GetPublisher().PublishToUrl(
@@ -32,7 +32,7 @@ class Test(object):
         assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-saturn'])
 
 
-    def testUploadJobsFromFile2(self, monkeypatch):
+    def testPublishToUrl2(self, monkeypatch):
         mock_jenkins = self._MockJenkinsAPI(monkeypatch)
 
         publisher = self._GetPublisher()

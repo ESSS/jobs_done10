@@ -100,7 +100,7 @@ class Test(object):
 
         result = UploadJobsFromFile(
             repository=self._REPOSITORY,
-            jobs_done_job_contents=self._JOBS_DONE_FILE_CONTENTS,
+            jobs_done_file_contents=self._JOBS_DONE_FILE_CONTENTS,
             url='jenkins_url',
             username='jenkins_user',
             password='jenkins_pass',
