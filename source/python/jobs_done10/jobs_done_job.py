@@ -38,7 +38,7 @@ class JobsDoneJob(object):
         # .. seealso:: http://ci.openstack.org/jenkins-job-builder/parameters.html
         #
         # e.g.
-        #     parameters = {'choices' : ['1', '2'], 'name' : 'my_param'}
+        #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
         'parameters':list,
     }
 
