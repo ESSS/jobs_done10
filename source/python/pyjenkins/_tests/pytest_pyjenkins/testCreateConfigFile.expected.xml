@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <project>
   <actions/>
-  <description>JenkinsJobGenerator</description>
+  <description></description>
   <keepDependencies>false</keepDependencies>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>

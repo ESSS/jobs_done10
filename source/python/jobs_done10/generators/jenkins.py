@@ -75,7 +75,7 @@ class JenkinsXmlJobGenerator(object):
 
 
     def GetJobs(self):
-        return JenkinsJob(name=self.__jjgen.GetJobName(), xml=self.__jjgen.GetContent())
+        return JenkinsJob(name=self.__jjgen.job_name, xml=self.__jjgen.GetContent())
 
 
     #===============================================================================================
@@ -89,13 +89,13 @@ class JenkinsXmlJobGenerator(object):
     @Implements(IJobGenerator.SetMatrixRow)
     def SetMatrixRow(self, matrix_row):
         self.__jjgen.assigned_node = self.repository.name
-        self.__jjgen.job_name_format = self.GetJobGroup(self.repository)
+        self.__jjgen.job_name = self.GetJobGroup(self.repository)
 
         if matrix_row:
             row_representation = '-'.join([i[1] for i in sorted(matrix_row.items())])
 
             self.__jjgen.assigned_node += '-' + row_representation
-            self.__jjgen.job_name_format += '-' + row_representation
+            self.__jjgen.job_name += '-' + row_representation
 
 
     def SetParameters(self, parameters):

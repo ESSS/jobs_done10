@@ -42,14 +42,14 @@ class JenkinsJobGenerator(object):
         # Configure some options...
         job_generator.num_to_keep = 10
 
-        job_generator.CreateJobDirectory('.')
+        # Add some plugins
+        xunit_plugin = job_generator.AddPlugin("xunit")
+        xunit_plugin.junit_patterns = junit_patterns
 
+        print job_generator.GetContent()
 
-    :ivar str id:
-        The job identification string. This is used to generate the job name.
-
-    :ivar str name:
-        The job name. This is used inside templates.
+    :ivar str job_name:
+        Determines the job name
 
     :ivar str description:
         The job description.
@@ -72,9 +72,6 @@ class JenkinsJobGenerator(object):
     :ivar str custom_workspace:
         Path to the (custom) workspace for the job.
 
-    :ivar str job_name_format:
-        Determine the format of the job-name (GetJobName)
-        The dictionary expressions are replaced by this class attributes.
 
     :ivar dict(str,tuple(str,str,list(str))) __parameters:
         Holds information about job parameters
@@ -87,58 +84,26 @@ class JenkinsJobGenerator(object):
 
     PLUGINS = {}
 
-    @classmethod
-    def RegisterPlugin(cls, plugin_name, plugin_class):
-        assert plugin_name not in cls.PLUGINS, \
-            "Plugin class named '%s' already registered" % plugin_name
-        cls.PLUGINS[plugin_name] = plugin_class
-
-
-    class BuilderFilenameNotFound(RuntimeError):
-        '''
-        Exception raised when a builder is not found.
-
-        This exception has the following attributes:
-
-        :ivar str filename:
-            The filename "as requested" of the builder
-
-        :ivar list(str) tried:
-            A list of full filenames tried by the algorithm for the given filename.
-        '''
-
-        def __init__(self, filename, tried):
-            '''
-            :param list(str) tried:
-                List of
-            '''
-            RuntimeError.__init__(self)
-            self.filename = filename
-            self.tried = tried
-
-        def __str__(self):
-            return "Builder filename not found:%s.\nTried:%s" % (
-                self.filename,
-                '\n  - '.join([''] + self.tried)
-            )
-
-
-    def __init__(self, job_id):
-        self.id = job_id
-        self.name = job_id
-        self.description = 'JenkinsJobGenerator'
+    def __init__(self, job_name):
+        self.job_name = job_name
+        self.description = ''
         self.display_name = ''
         self.assigned_node = self.DEFAULT_ASSIGNED_NODE
         self.days_to_keep = 7
         self.num_to_keep = 16
         self.timeout = None
         self.custom_workspace = None
-        self.job_name_format = '%(id)s'
         self.__parameters = {}
         self.__plugins = {}
 
 
     # Plugins --------------------------------------------------------------------------------------
+    @classmethod
+    def RegisterPlugin(cls, plugin_name, plugin_class):
+        assert plugin_name not in cls.PLUGINS, \
+            "Plugin class named '%s' already registered" % plugin_name
+        cls.PLUGINS[plugin_name] = plugin_class
+
 
     def AddPlugin(self, name, *args, **kwargs):
         '''
@@ -172,29 +137,6 @@ class JenkinsJobGenerator(object):
 
 
     # Job ------------------------------------------------------------------------------------------
-
-    def GetJobName(self, **kwargs):
-        '''
-        Returns the job name.
-        Uses the format defined in job_name_format attribute.
-
-        :rtype: str
-        :returns:
-            The job name.
-        '''
-        dd = self._ReplacementDict()
-        dd.update(kwargs)
-        return self.job_name_format % dd
-
-
-    def _ReplacementDict(self):
-        '''
-        Returns a replacement dict used to expand symbols for dynamically generated names (such
-        as GetJobName).
-        '''
-        return self.__dict__
-
-
     def GetContent(self):
         '''
         Returns the configuration file XML contents.
@@ -207,12 +149,12 @@ class JenkinsJobGenerator(object):
         xml_factory['actions']
         xml_factory['description'] = self.description
         if self.display_name != '':
-            xml_factory['displayName'] = self.display_name % self._ReplacementDict()
+            xml_factory['displayName'] = self.display_name % self.__dict__
         xml_factory['keepDependencies'] = 'false'
         xml_factory['blockBuildWhenDownstreamBuilding'] = 'false'
         xml_factory['blockBuildWhenUpstreamBuilding'] = 'false'
         xml_factory['concurrentBuild'] = 'false'
-        xml_factory['assignedNode'] = self.assigned_node % self._ReplacementDict()
+        xml_factory['assignedNode'] = self.assigned_node % self.__dict__
         xml_factory['canRoam'] = 'false'
 
         # Log Rotator
@@ -244,7 +186,7 @@ class JenkinsJobGenerator(object):
             i_publisher_plugin.Create(build_wrappers_xml)
 
         if self.custom_workspace:
-            xml_factory['customWorkspace'] = self.custom_workspace % self._ReplacementDict()
+            xml_factory['customWorkspace'] = self.custom_workspace % self.__dict__
 
         return xml_factory.GetContent(xml_header=True)
 
@@ -354,6 +296,7 @@ class GitBuilder(object):
         xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec'] = self.refspec
         xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url'] = self.url
         xml_factory['scm/branches/hudson.plugins.git.BranchSpec/name'] = self.branch
+        xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
         xml_factory['scm/excludedUsers']
         xml_factory['scm/buildChooser@class'] = 'hudson.plugins.git.util.DefaultBuildChooser'
         xml_factory['scm/disableSubmodules'] = 'false'
@@ -370,7 +313,6 @@ class GitBuilder(object):
         xml_factory['scm/reference']
         xml_factory['scm/gitConfigName']
         xml_factory['scm/gitConfigEmail']
-        xml_factory['scm/skipTag'] = 'false'
         xml_factory['scm/scmName']
 
 
@@ -536,4 +478,3 @@ class Timeout(object):
 
 
 JenkinsJobGenerator.RegisterPlugin('timeout', Timeout)
-
