@@ -296,7 +296,6 @@ class GitBuilder(object):
         xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec'] = self.refspec
         xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url'] = self.url
         xml_factory['scm/branches/hudson.plugins.git.BranchSpec/name'] = self.branch
-        xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
         xml_factory['scm/excludedUsers']
         xml_factory['scm/buildChooser@class'] = 'hudson.plugins.git.util.DefaultBuildChooser'
         xml_factory['scm/disableSubmodules'] = 'false'
@@ -315,6 +314,9 @@ class GitBuilder(object):
         xml_factory['scm/gitConfigEmail']
         xml_factory['scm/scmName']
 
+        # Checkout to local branch is done twice to work with different versions of plugin (2.0+, 1.5) 
+        xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
+        xml_factory['scm/localBranch'] = self.branch
 
 JenkinsJobGenerator.RegisterPlugin('git', GitBuilder)
 

@@ -51,11 +51,6 @@ class Test(object):
                 <name>master</name>
               </hudson.plugins.git.BranchSpec>
             </branches>
-            <extensions>
-              <hudson.plugins.git.extensions.impl.LocalBranch>
-                <localBranch>master</localBranch>
-              </hudson.plugins.git.extensions.impl.LocalBranch>
-            </extensions>
             <excludedUsers/>
             <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
             <disableSubmodules>false</disableSubmodules>
@@ -73,6 +68,12 @@ class Test(object):
             <gitConfigName/>
             <gitConfigEmail/>
             <scmName/>
+            <extensions>
+              <hudson.plugins.git.extensions.impl.LocalBranch>
+                <localBranch>master</localBranch>
+              </hudson.plugins.git.extensions.impl.LocalBranch>
+            </extensions>
+            <localBranch>master</localBranch>
           </scm>
           <builders/>
           <publishers/>
