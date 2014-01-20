@@ -48,7 +48,7 @@ class Test(object):
             </userRemoteConfigs>
             <branches>
               <hudson.plugins.git.BranchSpec>
-                <name>master</name>
+                <name>not_master</name>
               </hudson.plugins.git.BranchSpec>
             </branches>
             <excludedUsers/>
@@ -70,10 +70,10 @@ class Test(object):
             <scmName/>
             <extensions>
               <hudson.plugins.git.extensions.impl.LocalBranch>
-                <localBranch>master</localBranch>
+                <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
             </extensions>
-            <localBranch>master</localBranch>
+            <localBranch>not_master</localBranch>
           </scm>
           <builders/>
           <publishers/>
@@ -439,7 +439,7 @@ class Test(object):
                 - europa
             '''
         )
-        repository = Repository(url='http://fake.git')
+        repository = Repository(url='http://fake.git', branch='not_master')
 
         # This test should create two jobs_done_jobs from their variations
         jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
@@ -478,7 +478,7 @@ class Test(object):
         :param str expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_XML.
         '''
-        repository = Repository(url='http://fake.git')
+        repository = Repository(url='http://fake.git', branch='not_master')
         jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
 
         from jobs_done10.generators.jenkins import JenkinsXmlJobGenerator

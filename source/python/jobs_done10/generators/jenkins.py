@@ -49,13 +49,17 @@ class JenkinsXmlJobGenerator(object):
         from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
 
         self.__jjgen = PyJenkinsJobGenerator(self.repository.name)
-        self.__jjgen.branch = self.repository.branch
 
         # Configure description
         self.__jjgen.description = "<!-- Managed by Job's Done -->"
 
         # Configure git SCM
-        self.__jjgen.AddPlugin('git', url=self.repository.url, target_dir=self.repository.name)
+        self.__jjgen.AddPlugin(
+            'git',
+            url=self.repository.url,
+            target_dir=self.repository.name,
+            branch=self.repository.branch
+        )
 
 
     @classmethod
