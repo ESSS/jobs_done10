@@ -314,7 +314,7 @@ class GitBuilder(object):
         xml_factory['scm/gitConfigEmail']
         xml_factory['scm/scmName']
 
-        # Checkout to local branch is done twice to work with different versions of plugin (2.0+, 1.5) 
+        # Checkout to local branch is done twice to work with different versions of plugin (2.0+, 1.5)
         xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
         xml_factory['scm/localBranch'] = self.branch
 
@@ -402,6 +402,51 @@ class DescriptionSetterPublisher(object):
 
 
 JenkinsJobGenerator.RegisterPlugin('description-setter', DescriptionSetterPublisher)
+
+
+
+#===================================================================================================
+# StashNotifier
+#===================================================================================================
+class StashNotifier(object):
+    '''
+    Notifies Stash instances when a build passes
+
+    :ivar str url:
+        Stash URL
+
+    :ivar str username:
+
+    :ivar str password:
+    '''
+
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
+
+    def __init__(self, url, username=None, password=None):
+        self.url = url
+
+        if password and not username:
+            raise ValueError('Must pass "username" when passing "password"')
+
+        self.username = username
+        self.password = password
+
+
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashServerBaseUrl'] = self.url
+
+        if self.username is not None:
+            xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserName'] = self.username
+
+        if self.password is not None:
+            xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserPassword'] = self.password
+
+
+JenkinsJobGenerator.RegisterPlugin('stash-notifier', StashNotifier)
 
 
 

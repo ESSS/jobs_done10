@@ -21,17 +21,24 @@ class JobsDoneJob(object):
         # list(str): Patterns to match when looking for boosttest results.
         'boosttest_patterns':list,
 
-        # list(str): Shell script commands used to build a project.
-        'build_shell_commands':list,
-
         # list(str): Batch script commands used to build a project.
         'build_batch_commands':list,
 
+        # list(str): Shell script commands used to build a project.
+        'build_shell_commands':list,
+
         # str: Regex pattern to be matched from a job output and used as job description. (Jenkins)
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':str,
 
         # list(str): List of patterns to match when looking for junit test results.
         'junit_patterns':list,
+
+        # str: Notifies Stash when a build passes
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
+        # e.g.
+        #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
+        'notify_stash':dict,
 
         # Definition of parameters available to this job.
         # Uses jenkins-job-builder syntax parsed by yaml.

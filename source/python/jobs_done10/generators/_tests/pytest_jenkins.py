@@ -421,6 +421,48 @@ class Test(object):
 
 
     @_SkipIfFailTestEmpty
+    def testNotifyStash(self):
+        with pytest.raises(ValueError) as e:
+            self._DoTest(
+                ci_contents=Dedent(
+                    r'''
+                    notify_stash:
+                      url: stash.com
+                      password: pass
+                    '''
+                ),
+                expected_diff=None
+            )
+        assert str(e.value) == 'Must pass "username" when passing "password"'
+
+
+        self._DoTest(
+            ci_contents=Dedent(
+                r'''
+                notify_stash:
+                  url: stash.com
+                  username: user
+                  password: pass
+                '''
+            ),
+            expected_diff=Dedent(
+                r'''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
+                +      <stashUserName>user</stashUserName>
+                +      <stashUserPassword>pass</stashUserPassword>
+                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +  </publishers>
+                '''
+            ),
+
+        )
+
+
+    @_SkipIfFailTestEmpty
     def testVariables(self):
         ci_contents = Dedent(
             '''

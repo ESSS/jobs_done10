@@ -102,30 +102,9 @@ class JenkinsXmlJobGenerator(object):
             self.__jjgen.job_name += '-' + row_representation
 
 
-    def SetParameters(self, parameters):
-        for i_parameter in parameters:
-            for _name, j_dict  in i_parameter.iteritems():
-                # We only handle Choice parameters for now
-                self.__jjgen.AddChoiceParameter(
-                    j_dict['name'],
-                    description=j_dict['description'],
-                    choices=j_dict['choices'],
-                )
-
-
-    def SetJunitPatterns(self, junit_patterns):
-        xunit_plugin = self.__jjgen.AddPlugin("xunit")
-        xunit_plugin.junit_patterns = junit_patterns
-
-
     def SetBoosttestPatterns(self, boosttest_patterns):
         xunit_plugin = self.__jjgen.AddPlugin("xunit")
         xunit_plugin.boost_patterns = boosttest_patterns
-
-
-    def SetDescriptionRegex(self, description_regex):
-        if description_regex:
-            self.__jjgen.AddPlugin("description-setter", description_regex)
 
 
     def SetBuildBatchCommands(self, build_batch_commands):
@@ -136,6 +115,31 @@ class JenkinsXmlJobGenerator(object):
     def SetBuildShellCommands(self, build_shell_commands):
         p = self.__jjgen.AddPlugin("shell")
         p.command_lines += build_shell_commands
+
+
+    def SetDescriptionRegex(self, description_regex):
+        if description_regex:
+            self.__jjgen.AddPlugin("description-setter", description_regex)
+
+
+    def SetJunitPatterns(self, junit_patterns):
+        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin.junit_patterns = junit_patterns
+
+
+    def SetNotifyStash(self, configurations):
+        self.__jjgen.AddPlugin("stash-notifier", **configurations)
+
+
+    def SetParameters(self, parameters):
+        for i_parameter in parameters:
+            for _name, j_dict  in i_parameter.iteritems():
+                # We only handle Choice parameters for now
+                self.__jjgen.AddChoiceParameter(
+                    j_dict['name'],
+                    description=j_dict['description'],
+                    choices=j_dict['choices'],
+                )
 
 
 
