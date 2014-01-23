@@ -31,6 +31,10 @@ class JobsDoneJob(object):
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':str,
 
+        # list(str): List of patterns to match when looking for jsunit test results.
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
+        'jsunit_patterns':list,
+
         # list(str): List of patterns to match when looking for junit test results.
         'junit_patterns':list,
 

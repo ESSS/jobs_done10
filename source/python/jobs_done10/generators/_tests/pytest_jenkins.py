@@ -194,6 +194,46 @@ class Test(object):
 
         )
 
+
+    @_SkipIfFailTestEmpty
+    def testJSUnitPatterns(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                jsunit_patterns:
+                - "jsunit*.xml"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <xunit>
+                +      <types>
+                +        <JSUnitPluginType>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <skipNoTestFiles>true</skipNoTestFiles>
+                +          <failIfNotNew>false</failIfNotNew>
+                +          <deleteOutputFiles>true</deleteOutputFiles>
+                +          <stopProcessingIfError>true</stopProcessingIfError>
+                +        </JSUnitPluginType>
+                +      </types>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
+                +    </xunit>
+                +  </publishers>
+                '''
+            ),
+
+        )
+
+
     @_SkipIfFailTestEmpty
     def testMulitpleTestResults(self):
         self._DoTest(

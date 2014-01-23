@@ -457,11 +457,14 @@ class XUnitPublisher(object):
     '''
     A jenkins-job-generator plugin that configures the unit-test publisher.
 
-    :ivar str junit_patterns:
-        File patterns to find JUnit files.
-
     :ivar str boost_patterns:
         File patterns to find Boost-Test files.
+
+    :ivar str jsunit_patterns:
+        File patterns to find JSUnit files.
+
+    :ivar str junit_patterns:
+        File patterns to find JUnit files.
     '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -469,27 +472,30 @@ class XUnitPublisher(object):
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
 
     def __init__(self):
-        self.junit_patterns = ''
         self.boost_patterns = ''
+        self.jsunit_patterns = ''
+        self.junit_patterns = ''
+
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        if not self.junit_patterns and self.boost_patterns:
+        types = {
+            'BoostTestJunitHudsonTestType' : self.boost_patterns,
+            'JSUnitPluginType' : self.jsunit_patterns,
+            'JUnitType' : self.junit_patterns,
+        }
+        if not any(types.values()):
             return
 
-        if self.junit_patterns:
-            xml_factory['xunit/types/JUnitType/pattern'] = ' '.join(self.junit_patterns)
-            xml_factory['xunit/types/JUnitType/skipNoTestFiles'] = 'true'
-            xml_factory['xunit/types/JUnitType/failIfNotNew'] = 'false'
-            xml_factory['xunit/types/JUnitType/deleteOutputFiles'] = 'true'
-            xml_factory['xunit/types/JUnitType/stopProcessingIfError'] = 'true'
-
-        if self.boost_patterns:
-            xml_factory['xunit/types/BoostTestJunitHudsonTestType/pattern'] = ' '.join(self.boost_patterns)
-            xml_factory['xunit/types/BoostTestJunitHudsonTestType/skipNoTestFiles'] = 'true'
-            xml_factory['xunit/types/BoostTestJunitHudsonTestType/failIfNotNew'] = 'false'
-            xml_factory['xunit/types/BoostTestJunitHudsonTestType/deleteOutputFiles'] = 'true'
-            xml_factory['xunit/types/BoostTestJunitHudsonTestType/stopProcessingIfError'] = 'true'
+        for pattern_plugin, pattern in types.iteritems():
+            if not pattern:
+                continue
+            plugin_xml = xml_factory['xunit/types/' + pattern_plugin]
+            plugin_xml['pattern'] = ' '.join(pattern)
+            plugin_xml['skipNoTestFiles'] = 'true'
+            plugin_xml['failIfNotNew'] = 'false'
+            plugin_xml['deleteOutputFiles'] = 'true'
+            plugin_xml['stopProcessingIfError'] = 'true'
 
         xml_factory['xunit/thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableThreshold'] = '0'
         xml_factory['xunit/thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableNewThreshold'] = '0'

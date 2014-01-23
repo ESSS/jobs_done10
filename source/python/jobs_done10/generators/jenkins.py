@@ -127,6 +127,11 @@ class JenkinsXmlJobGenerator(object):
         xunit_plugin.junit_patterns = junit_patterns
 
 
+    def SetJsunitPatterns(self, jsunit_patterns):
+        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin.jsunit_patterns = jsunit_patterns
+
+
     def SetNotifyStash(self, configurations):
         self.__jjgen.AddPlugin("stash-notifier", **configurations)
 
