@@ -1,25 +1,21 @@
-junit_patterns:
-- "**/build/{dist}-{platform}-tests/*.xml"
-
-platform-win32:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.update jobs_done10 --projects-dir=%WORKSPACE% --dependencies-only --sources=head --binaries=none"
-- "%AA_AASIMAR_AA% -t project.build jobs_done10 --projects-dir=%WORKSPACE% --dist={dist} --platform={platform}"
-
-platform-win64:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.update jobs_done10 --projects-dir=%WORKSPACE% --dependencies-only --sources=head --binaries=none"
-- "%AA_AASIMAR_AA% -t project.build jobs_done10 --projects-dir=%WORKSPACE% --dist={dist} --platform={platform}"
-
-platform-redhat64:build_shell_commands:
-- "$AA_AASIMAR_AA -t project.update jobs_done10 --projects-dir=$WORKSPACE --dependencies-only --sources=head --binaries=none"
-- "$AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
-
-description_regex: "HUDSON DESCRIPTION\\: (.*)"
-
 matrix:
   dist:
   - 12.0
 
   platform:
-  - win32
-  - win64
-  - redhat64
+  - win32,windows
+  - win64,windows
+  - redhat64,linux
+
+junit_patterns:
+- "**/build/{dist}-{platform}-tests/*.xml"
+
+platform-windows:build_batch_commands:
+- "%AA_AASIMAR_AA% -t project.update jobs_done10 --projects-dir=%WORKSPACE% --dependencies-only --sources=head --binaries=none"
+- "%AA_AASIMAR_AA% -t project.build jobs_done10 --projects-dir=%WORKSPACE% --dist={dist} --platform={platform}"
+
+platform-linux:build_shell_commands:
+- "$AA_AASIMAR_AA -t project.update jobs_done10 --projects-dir=$WORKSPACE --dependencies-only --sources=head --binaries=none"
+- "$AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
+
+description_regex: "HUDSON DESCRIPTION\\: (.*)"
