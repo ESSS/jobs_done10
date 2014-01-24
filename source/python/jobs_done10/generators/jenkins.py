@@ -3,7 +3,7 @@ Module containing everything related to Jenkins in jobs_done10.
 
 This includes a generator, job publishers, constants and command line interface commands.
 '''
-from __future__ import absolute_import, with_statement
+from __future__ import absolute_import
 from ben10.foundation.bunch import Bunch
 from ben10.foundation.decorators import Implements
 from ben10.interface import ImplementsInterface
