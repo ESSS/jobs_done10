@@ -154,23 +154,6 @@ class Test(object):
         ]
 
 
-    def testDictKeysAndValuesOrder(self):
-        '''
-        Sanity Check
-        Check if Python's dictionary returns the same order of keys and values if no change were
-        made in it.
-
-        We count on keys and values returning the same order in CreateMatrixRows algorithm.
-        '''
-        d = {}
-        for i in xrange(100):
-            d[str(i)] = str(100 - i)
-
-        assert d.keys() == [i[0] for i in d.items()]
-        assert d.values() == [d[i] for i in d.keys()]
-        assert d.keys() == d.keys()
-
-
     def testBranchPatterns(self):
         base_contents = Dedent(
             '''

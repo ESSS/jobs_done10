@@ -116,7 +116,7 @@ class JobsDoneJob(object):
         in the file.
 
         Jobs parsed by this method can use a string replacement syntax in their contents, and
-        those strings can be replaced by the current values in the i_matrix_row for that job, or a few
+        those strings can be replaced by the current values in the matrix_row for that job, or a few
         special replacements available to all jobs:
         - name: Name of the repository for which we are creating jobs
         - branch: Name of the repository branch for which we are creating jobs
@@ -147,8 +147,8 @@ class JobsDoneJob(object):
                 """
 
             resulting JobsDoneJob's:
-                JobsDoneJob(junit_patterns="earth-milky_way.xml", i_matrix_row={'planet': 'earth'}),
-                JobsDoneJob(junit_patterns="mars-milky_way.xml", i_matrix_row={'planet': 'mars'}),
+                JobsDoneJob(junit_patterns="earth-milky_way.xml", matrix_row={'planet': 'earth'}),
+                JobsDoneJob(junit_patterns="mars-milky_way.xml", matrix_row={'planet': 'mars'}),
 
         .. seealso: pytest_jobs_done_job
             For other examples
