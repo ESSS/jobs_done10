@@ -1,6 +1,6 @@
 from ben10.filesystem import CreateDirectory, CreateFile
 from ben10.foundation.string import Dedent
-from jobs_done10.generators.jenkins import GetJobsFromFile, GetJobsFromDirectory, UploadJobsFromFile
+from jobs_done10.generators.jenkins import GetJobsFromDirectory, GetJobsFromFile, UploadJobsFromFile
 from jobs_done10.git import Git
 from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME
 from jobs_done10.repository import Repository

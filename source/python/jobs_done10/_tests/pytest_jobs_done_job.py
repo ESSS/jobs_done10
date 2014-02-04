@@ -1,8 +1,9 @@
-from ben10.foundation.string import Dedent
-from jobs_done10.jobs_done_job import JobsDoneJob, UnknownJobsDoneFileOption, JobsDoneFileTypeError
-import pytest
-from jobs_done10.repository import Repository
 from ben10.filesystem import CreateFile
+from ben10.foundation.string import Dedent
+from jobs_done10.jobs_done_job import (JobsDoneFileTypeError, JobsDoneJob,
+    UnknownJobsDoneFileOption, UnmatchableConditionError)
+from jobs_done10.repository import Repository
+import pytest
 
 
 
@@ -279,3 +280,23 @@ class Test(object):
 
         assert jobs[0].junit_patterns != [1]
         assert jobs[0].junit_patterns == ['1']
+
+
+    def testUnmatchableCondition(self):
+        '''
+        Asserts that using a condition that can never be matched will raise an error.
+        '''
+        contents = Dedent(
+            '''
+            planet-pluto:junit_patterns:
+                - '*.xml'
+
+            matrix:
+                planet:
+                - earth
+            '''
+        )
+        with pytest.raises(UnmatchableConditionError) as e:
+            JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
+
+        assert e.value.option == 'planet-pluto:junit_patterns'
