@@ -38,6 +38,12 @@ class JobsDoneJob(object):
         # list(str): List of patterns to match when looking for junit test results.
         'junit_patterns':list,
 
+        # str: The format for the job display name.
+        'display_name':str,
+
+        # str: An "label expression" that is used to match slave nodes.
+        'label_expression':str,
+
         # str: Notifies Stash when a build passes
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.

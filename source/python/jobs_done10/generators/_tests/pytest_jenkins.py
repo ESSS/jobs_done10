@@ -106,7 +106,7 @@ class Test(object):
         def testFunc(self, *args, **kwargs):
             try:
                 self.testEmpty()
-            except: # pragma: no cover
+            except:  # pragma: no cover
                 pytest.skip('Skipping until testEmpty is fixed.')
                 return
             return original_test(self, *args, **kwargs)
@@ -550,6 +550,23 @@ class Test(object):
                     ''' % locals()
                 ),
             )
+
+
+    @_SkipIfFailTestEmpty
+    def testDisplayName(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                display_name: "{name}-{branch}"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <displayName>fake-not_master</displayName>
+                '''
+            ),
+        )
 
 
     def _DoTest(self, ci_contents, expected_diff):
