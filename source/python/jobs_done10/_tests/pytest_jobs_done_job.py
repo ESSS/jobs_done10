@@ -22,6 +22,10 @@ class Test(object):
             boosttest_patterns:
             - "cpptest*.xml"
 
+            display_name: "[{branch}] {planet}-{moon} {name}"
+
+            label_expression: "planet-{planet}&&moon-{moon}"
+
             parameters:
             - choice:
                 name: "PARAM"
@@ -75,6 +79,14 @@ class Test(object):
             "command on planet mercury (repository 'space' on 'milky_way')"]
         assert venus_job.build_batch_commands == [
             "command on planet venus (repository 'space' on 'milky_way')"]
+
+        # Check display_name
+        assert mercury_job.display_name == '[milky_way] mercury-europa space'
+        assert mercury_job.label_expression == 'planet-mercury&&moon-europa'
+
+        # Check labels
+        assert venus_job.display_name == '[milky_way] venus-europa space'
+        assert venus_job.label_expression == 'planet-venus&&moon-europa'
 
 
     def testMatrixAndFlags(self):

@@ -57,7 +57,7 @@ class JenkinsJobGenerator(object):
     :ivar str display_name:
         The job display-name. This value can use attribute replacement such as %(name)s
 
-    :ivar str assigned_node:
+    :ivar str label_expression:
         This must match the execution nodes configuration in order to be built on that node.
 
     :ivar int days_to_keep:
@@ -80,7 +80,7 @@ class JenkinsJobGenerator(object):
     '''
     CONFIG_FILENAME = 'config.xml'
 
-    DEFAULT_ASSIGNED_NODE = ''
+    DEFAULT_LABEL_EXPRESSION = ''
 
     PLUGINS = {}
 
@@ -88,7 +88,7 @@ class JenkinsJobGenerator(object):
         self.job_name = job_name
         self.description = ''
         self.display_name = ''
-        self.assigned_node = self.DEFAULT_ASSIGNED_NODE
+        self.label_expression = self.DEFAULT_LABEL_EXPRESSION
         self.days_to_keep = 7
         self.num_to_keep = 16
         self.timeout = None
@@ -154,7 +154,7 @@ class JenkinsJobGenerator(object):
         xml_factory['blockBuildWhenDownstreamBuilding'] = 'false'
         xml_factory['blockBuildWhenUpstreamBuilding'] = 'false'
         xml_factory['concurrentBuild'] = 'false'
-        xml_factory['assignedNode'] = self.assigned_node % self.__dict__
+        xml_factory['assignedNode'] = self.label_expression % self.__dict__
         xml_factory['canRoam'] = 'false'
 
         # Log Rotator

@@ -92,13 +92,13 @@ class JenkinsXmlJobGenerator(object):
 
     @Implements(IJobGenerator.SetMatrixRow)
     def SetMatrixRow(self, matrix_row):
-        self.__jjgen.assigned_node = self.repository.name
+        self.__jjgen.label_expression = self.repository.name
         self.__jjgen.job_name = self.GetJobGroup(self.repository)
 
         if matrix_row:
             row_representation = '-'.join([i[1] for i in sorted(matrix_row.items())])
 
-            self.__jjgen.assigned_node += '-' + row_representation
+            self.__jjgen.label_expression += '-' + row_representation
             self.__jjgen.job_name += '-' + row_representation
 
 
@@ -134,6 +134,14 @@ class JenkinsXmlJobGenerator(object):
 
     def SetNotifyStash(self, configurations):
         self.__jjgen.AddPlugin("stash-notifier", **configurations)
+
+
+    def SetDisplayName(self, display_name):
+        self.__jjgen.display_name = display_name
+
+
+    def SetLabelExpression(self, label_expression):
+        self.__jjgen.label_expression = label_expression
 
 
     def SetParameters(self, parameters):
