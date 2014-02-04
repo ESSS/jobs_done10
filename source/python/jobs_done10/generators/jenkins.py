@@ -140,6 +140,10 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.display_name = display_name
 
 
+    def SetLabelExpression(self, label_expression):
+        self.__jjgen.label_expression = label_expression
+
+
     def SetParameters(self, parameters):
         for i_parameter in parameters:
             for _name, j_dict  in i_parameter.iteritems():

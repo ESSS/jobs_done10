@@ -569,6 +569,24 @@ class Test(object):
         )
 
 
+    @_SkipIfFailTestEmpty
+    def testLabelExpression(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                label_expression: "win32&&dist-12.0"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <assignedNode>fake</assignedNode>
+                +  <assignedNode>win32&amp;&amp;dist-12.0</assignedNode>
+                '''
+            ),
+        )
+
+
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
