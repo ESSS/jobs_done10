@@ -36,7 +36,6 @@ class Test(object):
             <artifactDaysToKeep>-1</artifactDaysToKeep>
             <artifactNumToKeep>-1</artifactNumToKeep>
           </logRotator>
-          <properties/>
           <scm class="hudson.plugins.git.GitSCM">
             <configVersion>2</configVersion>
             <userRemoteConfigs>
@@ -118,7 +117,7 @@ class Test(object):
     # Tests
     #===============================================================================================
     @_SkipIfFailTestEmpty
-    def testParameters(self):
+    def testChoiceParameters(self):
         self._DoTest(
             ci_contents=Dedent(
                 '''
@@ -134,7 +133,6 @@ class Test(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <properties/>
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
@@ -150,6 +148,33 @@ class Test(object):
                 +        </hudson.model.ChoiceParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
+                +  </properties>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
+    def testStringParameters(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                parameters:
+                  - string:
+                      name: "PARAM_VERSION"
+                      default: "Default"
+                      description: "Description"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <properties>
+                +    <hudson.model.StringParameterDefinition>
+                +      <name>PARAM_VERSION</name>
+                +      <description>Description</description>
+                +      <defaultValue>Default</defaultValue>
+                +    </hudson.model.StringParameterDefinition>
                 +  </properties>
                 '''
             ),

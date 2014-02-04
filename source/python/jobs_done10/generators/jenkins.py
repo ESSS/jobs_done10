@@ -146,13 +146,21 @@ class JenkinsXmlJobGenerator(object):
 
     def SetParameters(self, parameters):
         for i_parameter in parameters:
-            for _name, j_dict  in i_parameter.iteritems():
-                # We only handle Choice parameters for now
-                self.__jjgen.AddChoiceParameter(
-                    j_dict['name'],
-                    description=j_dict['description'],
-                    choices=j_dict['choices'],
-                )
+            for name, j_dict  in i_parameter.iteritems():
+                if name == 'choice':
+                    self.__jjgen.AddPlugin(
+                        "choice-parameter",
+                        param_name=j_dict['name'],
+                        description=j_dict['description'],
+                        choices=j_dict['choices'],
+                    )
+                elif name == 'string':
+                    self.__jjgen.AddPlugin(
+                        "string-parameter",
+                        param_name=j_dict['name'],
+                        description=j_dict['description'],
+                        default=j_dict['default'],
+                    )
 
 
 
