@@ -7,6 +7,10 @@ matrix:
   - win64,windows
   - redhat64,linux
 
+branch_patterns:
+- master
+- fb-.*
+
 junit_patterns:
 - "**/build/{dist}-{platform}-tests/*.xml"
 
@@ -19,3 +23,9 @@ platform-linux:build_shell_commands:
 - "$AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
+
+notify_stash:
+  url: "https://eden.esss.com.br/stash"
+  username: "dev"
+  password: "esss0dev"
+
