@@ -15,9 +15,10 @@ class IJenkinsJobGeneratorPlugin(Interface):
     '''
 
     TYPE_BUILDER = 'builders'
+    TYPE_BUILD_WRAPPER = 'buildWrappers'
+    TYPE_PARAMETER = 'parameter'
     TYPE_PUBLISHER = 'publishers'
     TYPE_SCM = 'scm'
-    TYPE_BUILD_WRAPPER = 'buildWrappers'
 
     # One of the TYPE_XXX constants above.
     TYPE = None
@@ -71,12 +72,6 @@ class JenkinsJobGenerator(object):
 
     :ivar str custom_workspace:
         Path to the (custom) workspace for the job.
-
-
-    :ivar dict(str,tuple(str,str,list(str))) __parameters:
-        Holds information about job parameters
-        Use the following method to add a parameter:
-          AddChoiceParameter(name, description, choices)
     '''
     CONFIG_FILENAME = 'config.xml'
 
@@ -93,7 +88,6 @@ class JenkinsJobGenerator(object):
         self.num_to_keep = 16
         self.timeout = None
         self.custom_workspace = None
-        self.__parameters = {}
         self.__plugins = {}
 
 
@@ -163,7 +157,9 @@ class JenkinsJobGenerator(object):
         xml_factory['logRotator/artifactDaysToKeep'] = -1
         xml_factory['logRotator/artifactNumToKeep'] = -1
 
-        self._CreateProperties(xml_factory)
+        # Parameters
+        for i_parameter_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_PARAMETER):
+            i_parameter_plugin.Create(xml_factory)
 
         # Configure SCM
         for i_publisher_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_SCM):
@@ -201,50 +197,28 @@ class JenkinsJobGenerator(object):
         CreateFile(config_filename, self.GetContent())
 
 
-    PARAM_CHOICE = 'CHOICE'
 
-    def AddChoiceParameter(self, name, description, choices):
-        '''
-        Adds a choice parameter to the job.
+#===================================================================================================
+# Plugins
+#===================================================================================================
+def PyJenkinsPlugin(plugin_name):
+    '''
+    Decorator for plugin classes
 
-        :param str name:
-            The name of the parameter. Usually PARAM_XXX
-        :param str description:
-            The description of the parameter
-        :param list(str) choices:
-            List of possible values. The first is the default.
-        '''
-        self.__parameters[name] = (self.PARAM_CHOICE, description, choices)
-
-
-    def _CreateProperties(self, xml_factory):
-        '''
-        Create the "properties" XML entry for the job.
-
-        This XML branch is where the job parameters are configured.
-
-        :param XmlFactory xml_factory:
-            A xml-factory to fill.
-        '''
-        parameters_xml_path = 'hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
-            'hudson.model.ChoiceParameterDefinition'
-
-        properties = xml_factory['properties']
-        for (i_name, (i_type, i_description, i_choices)) in self.__parameters.iteritems():
-            if i_type == self.PARAM_CHOICE:
-                p = properties[parameters_xml_path]
-                p['name'] = i_name
-                p['description'] = i_description
-                p['choices@class'] = 'java.util.Arrays$ArrayList'
-                p['choices/a@class'] = 'string-array'
-                for j_choice in i_choices:
-                    p['choices/a/string+'] = j_choice
+    :param str plugin_name:
+        Name of the plugin, used in `JenkinsJobGenerator.AddPlugin`
+    '''
+    def PluginDecorator(plugin_class):
+        JenkinsJobGenerator.RegisterPlugin(plugin_name, plugin_class)
+        return plugin_class
+    return PluginDecorator
 
 
 
 #===================================================================================================
 # GitBuilder
 #===================================================================================================
+@PyJenkinsPlugin('git')
 class GitBuilder(object):
     '''
     A jenkins-job-generator plugin that adds a git SCM in the generation.
@@ -318,13 +292,12 @@ class GitBuilder(object):
         xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
         xml_factory['scm/localBranch'] = self.branch
 
-JenkinsJobGenerator.RegisterPlugin('git', GitBuilder)
-
 
 
 #===================================================================================================
 # ShellBuilder
 #===================================================================================================
+@PyJenkinsPlugin('shell')
 class ShellBuilder(object):
     '''
     A jenkins-job-generator plugin that adds a shell (linux) command shell.
@@ -345,13 +318,12 @@ class ShellBuilder(object):
         for i_command_line in self.command_lines:
             xml_factory['hudson.tasks.Shell+/command'] = i_command_line
 
-JenkinsJobGenerator.RegisterPlugin('shell', ShellBuilder)
-
 
 
 #===================================================================================================
 # BatchBuilder
 #===================================================================================================
+@PyJenkinsPlugin('batch')
 class BatchBuilder(object):
     '''
     A jenkins-job-generator plugin that adds a batch (windows) command.
@@ -372,13 +344,12 @@ class BatchBuilder(object):
         for i_command_line in self.command_lines:
             xml_factory['hudson.tasks.BatchFile+/command'] = i_command_line
 
-JenkinsJobGenerator.RegisterPlugin('batch', BatchBuilder)
-
 
 
 #===================================================================================================
 # DescriptionSetterPublisher
 #===================================================================================================
+@PyJenkinsPlugin('description-setter')
 class DescriptionSetterPublisher(object):
     '''
     A jenkins-job-generator plugin that configures the description-setter.
@@ -401,13 +372,11 @@ class DescriptionSetterPublisher(object):
         xml_factory['hudson.plugins.descriptionsetter.DescriptionSetterPublisher/setForMatrix'] = 'false'
 
 
-JenkinsJobGenerator.RegisterPlugin('description-setter', DescriptionSetterPublisher)
-
-
 
 #===================================================================================================
 # StashNotifier
 #===================================================================================================
+@PyJenkinsPlugin('stash-notifier')
 class StashNotifier(object):
     '''
     Notifies Stash instances when a build passes
@@ -446,13 +415,11 @@ class StashNotifier(object):
             xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserPassword'] = self.password
 
 
-JenkinsJobGenerator.RegisterPlugin('stash-notifier', StashNotifier)
-
-
 
 #===================================================================================================
 # XUnitPublisher
 #===================================================================================================
+@PyJenkinsPlugin('xunit')
 class XUnitPublisher(object):
     '''
     A jenkins-job-generator plugin that configures the unit-test publisher.
@@ -502,13 +469,11 @@ class XUnitPublisher(object):
         xml_factory['xunit/thresholdMode'] = '1'
 
 
-JenkinsJobGenerator.RegisterPlugin('xunit', XUnitPublisher)
-
-
 
 #===================================================================================================
 # Timeout
 #===================================================================================================
+@PyJenkinsPlugin('timeout')
 class Timeout(object):
     '''
     A jenkins-job-generator plugin that configures the job timetout.
@@ -530,4 +495,77 @@ class Timeout(object):
         build_timeout_wrapper['failBuild'] = 'true'
 
 
-JenkinsJobGenerator.RegisterPlugin('timeout', Timeout)
+
+#===================================================================================================
+# ChoiceParameter
+#===================================================================================================
+@PyJenkinsPlugin('choice-parameter')
+class ChoiceParameter(object):
+    '''
+    A jenkins-job-generator plugin that configures a choice parameter.
+
+    :ivar str name:
+        The name of the parameter. Usually PARAM_XXX
+
+    :ivar str description:
+        The description of the parameter
+
+    :ivar list(str) choices:
+        List of possible values. The first is the default.
+    '''
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_PARAMETER
+
+    def __init__(self, param_name, description, choices):
+        self.param_name = param_name
+        self.description = description
+        self.choices = choices
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        p = xml_factory['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
+            'hudson.model.ChoiceParameterDefinition']
+        p['name'] = self.param_name
+        p['description'] = self.description
+        p['choices@class'] = 'java.util.Arrays$ArrayList'
+        p['choices/a@class'] = 'string-array'
+        for i_choice in self.choices:
+            p['choices/a/string+'] = i_choice
+
+
+
+#===================================================================================================
+# StringParameter
+#===================================================================================================
+@PyJenkinsPlugin('string-parameter')
+class StringParameter(object):
+    '''
+    A jenkins-job-generator plugin that configures a string parameter.
+
+    :ivar str name:
+        The name of the parameter. Usually PARAM_XXX
+
+    :ivar str description:
+        The description of the parameter
+
+    :ivar str default:
+        Default value for parameter.
+
+    '''
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_PARAMETER
+
+    def __init__(self, param_name, description, default=None):
+        self.param_name = param_name
+        self.description = description
+        self.default = default
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        p = xml_factory['properties/hudson.model.StringParameterDefinition']
+        p['name'] = self.param_name
+        p['description'] = self.description
+        if self.default:
+            p['defaultValue'] = self.default

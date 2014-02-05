@@ -1,3 +1,5 @@
+from ben10.filesystem import GetFileContents
+from ben10.foundation.string import Dedent
 from pyjenkins import JenkinsJobGenerator
 import os
 
@@ -18,5 +20,27 @@ class Test:
 
         assert os.path.isfile(config_filename) == True
 
-        expected_config_filename = embed_data['testCreateConfigFile.expected.xml']
-        embed_data.AssertEqualFiles(config_filename, expected_config_filename)
+        assert GetFileContents(config_filename) == Dedent(
+            '''
+            <?xml version="1.0" ?>
+            <project>
+              <actions/>
+              <description></description>
+              <keepDependencies>false</keepDependencies>
+              <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+              <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+              <concurrentBuild>false</concurrentBuild>
+              <assignedNode></assignedNode>
+              <canRoam>false</canRoam>
+              <logRotator>
+                <daysToKeep>7</daysToKeep>
+                <numToKeep>16</numToKeep>
+                <artifactDaysToKeep>-1</artifactDaysToKeep>
+                <artifactNumToKeep>-1</artifactNumToKeep>
+              </logRotator>
+              <builders/>
+              <publishers/>
+              <buildWrappers/>
+            </project>
+            '''
+        )
