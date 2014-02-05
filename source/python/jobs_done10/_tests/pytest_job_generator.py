@@ -1,5 +1,6 @@
 from ben10.interface import ImplementsInterface
-from jobs_done10.job_generator import IJobGenerator, JobGeneratorConfigurator, JobGeneratorAttributeError
+from jobs_done10.job_generator import (IJobGenerator, JobGeneratorAttributeError,
+    JobGeneratorConfigurator)
 from jobs_done10.jobs_done_job import JobsDoneJob
 from jobs_done10.repository import Repository
 import contextlib

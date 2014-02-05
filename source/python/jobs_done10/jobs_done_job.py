@@ -165,6 +165,13 @@ class JobsDoneJob(object):
         # Load yaml
         jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader) or {}
 
+        # Check if this branch is acceptable (matches anything in branch_patterns)
+        import re
+        branch_patterns = jd_data.get('branch_patterns', ['.*'])
+        if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
+            return []
+
+
         # Search for unknown options and type errors
         for option_name, option_value in jd_data.iteritems():
             option_name = option_name.rsplit(':', 1)[-1]
@@ -176,21 +183,23 @@ class JobsDoneJob(object):
             if obtained_type != expected_type:
                 raise JobsDoneFileTypeError(option_name, obtained_type, expected_type)
 
-        # Check if this branch is acceptable (matches anything in branch_patterns)
-        import re
-        branch_patterns = jd_data.get('branch_patterns', ['.*'])
-        if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
-            return []
-
+        # List all possible matrix_rows
         matrix_rows = cls.CreateMatrixRows(jd_data.get('matrix', {}))
 
+        # Raise an error if a condition can never be matched
+        for option_name, option_value in jd_data.iteritems():
+            if ':' in option_name:
+                conditions = option_name.split(':')[:-1]
+                if not any((row.Match(conditions) for row in matrix_rows)):
+                    raise UnmatchableConditionError(option_name)
+
         jobs_done_jobs = []
-        for i_matrix_row in matrix_rows:
+        for matrix_row in matrix_rows:
             jobs_done_job = JobsDoneJob()
             jobs_done_jobs.append(jobs_done_job)
 
             jobs_done_job.repository = repository
-            jobs_done_job.matrix_row = i_matrix_row.AsDict()
+            jobs_done_job.matrix_row = matrix_row.AsDict()
 
             if not jd_data:
                 # Handling for empty jobs, they still are valid since we don't know what a generator
@@ -198,12 +207,12 @@ class JobsDoneJob(object):
                 continue
 
             # Re-read jd_data replacing all matrix variables with their values in the current
-            # i_matrix_row and special replacement variables 'branch' and 'name', based on repository.
+            # matrix_row and special replacement variables 'branch' and 'name', based on repository.
             format_dict = {
                 'branch':repository.branch,
                 'name':repository.name
             }
-            format_dict.update(i_matrix_row.AsDict())
+            format_dict.update(matrix_row.AsDict())
             jd_string = (yaml.dump(jd_data, default_flow_style=False)[:-1])
             formatted_jd_string = jd_string.format(**format_dict)
             jd_formatted_data = yaml.load(formatted_jd_string)
@@ -216,7 +225,7 @@ class JobsDoneJob(object):
                     option_name = option_name.split(':')[-1]
 
                     # Skip this option if any condition is not met
-                    if not i_matrix_row.Match(conditions):
+                    if not matrix_row.Match(conditions):
                         continue
 
                 setattr(jobs_done_job, option_name, option_value)
@@ -325,12 +334,16 @@ class JobsDoneJob(object):
             return value.encode('ascii')
 
 
+
 #===================================================================================================
 # UnknownJobsDoneJobOption
 #===================================================================================================
 class UnknownJobsDoneFileOption(RuntimeError):
     '''
     Raised when parsing an unknown option.
+
+    :ivar str option_name:
+        Name of the unknown option.
     '''
     def __init__(self, option_name):
         self.option_name = option_name
@@ -348,15 +361,49 @@ class UnknownJobsDoneFileOption(RuntimeError):
 class JobsDoneFileTypeError(TypeError):
     '''
     Raised when parsing an option with a bad type.
+
+    :ivar str option_name:
+        Name of the option that was set with a bad type
+
+    :ivar type obtained_type:
+        Obtained (bad) type
+        e.g.
+            list, str
+
+    :ivar type expected_type:
+        Expected (good) type
+        e.g.
+            list, str
     '''
     def __init__(self, option_name, obtained_type, expected_type):
         self.option_name = option_name
         self.obtained_type = obtained_type
         self.expected_type = expected_type
-        self.option_name = option_name
 
         TypeError.__init__(
             self,
             'On option "%s". Expected "%s" but got "%s".' % \
             (option_name, expected_type, obtained_type)
+        )
+
+
+
+#===================================================================================================
+# UnmatchableConditionError
+#===================================================================================================
+class UnmatchableConditionError(ValueError):
+    '''
+    Raised when declaring a condition that can never be matches based on available matrix variations.
+
+    :ivar str option:
+        Option with a condition that can't be matched.
+        e.g.:
+            'planet-pluto:junit_patterns'
+    '''
+    def __init__(self, option):
+        self.option = option
+
+        ValueError.__init__(
+            self,
+            'Condition "%s" can never be matched based on possible matrix variations.' % option
         )
