@@ -29,3 +29,4 @@ notify_stash:
   username: "dev"
   password: "esss0dev"
 
+display_name: "[{branch}] {name} {dist}-{platform}"
