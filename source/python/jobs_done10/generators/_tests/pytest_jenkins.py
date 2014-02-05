@@ -170,11 +170,15 @@ class Test(object):
                 '''
                 @@ @@
                 +  <properties>
-                +    <hudson.model.StringParameterDefinition>
-                +      <name>PARAM_VERSION</name>
-                +      <description>Description</description>
-                +      <defaultValue>Default</defaultValue>
-                +    </hudson.model.StringParameterDefinition>
+                +    <hudson.model.ParametersDefinitionProperty>
+                +      <parameterDefinitions>
+                +        <hudson.model.StringParameterDefinition>
+                +          <name>PARAM_VERSION</name>
+                +          <description>Description</description>
+                +          <defaultValue>Default</defaultValue>
+                +        </hudson.model.StringParameterDefinition>
+                +      </parameterDefinitions>
+                +    </hudson.model.ParametersDefinitionProperty>
                 +  </properties>
                 '''
             ),

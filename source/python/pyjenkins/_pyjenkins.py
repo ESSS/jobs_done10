@@ -564,7 +564,8 @@ class StringParameter(object):
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        p = xml_factory['properties/hudson.model.StringParameterDefinition']
+        p = xml_factory['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
+            'hudson.model.StringParameterDefinition']
         p['name'] = self.param_name
         p['description'] = self.description
         if self.default:
