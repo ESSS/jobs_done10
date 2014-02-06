@@ -530,6 +530,58 @@ class Test(object):
 
         )
 
+    @_SkipIfFailTestEmpty
+    def testNotifyStashWithTests(self):
+        '''
+        When we have both notify_stash, and some test pattern, we have to make sure that the output
+        jenkins job xml places the notify_stash publisher AFTER the test publisher, otherwise builds
+        with failed tests might be reported as successful to Stash
+        '''
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                notify_stash:
+                  url: stash.com
+                  username: user
+                  password: pass
+
+                jsunit_patterns:
+                - "jsunit*.xml"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <xunit>
+                +      <types>
+                +        <JSUnitPluginType>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <skipNoTestFiles>true</skipNoTestFiles>
+                +          <failIfNotNew>false</failIfNotNew>
+                +          <deleteOutputFiles>true</deleteOutputFiles>
+                +          <stopProcessingIfError>true</stopProcessingIfError>
+                +        </JSUnitPluginType>
+                +      </types>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
+                +    </xunit>
+                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
+                +      <stashUserName>user</stashUserName>
+                +      <stashUserPassword>pass</stashUserPassword>
+                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +  </publishers>
+                '''
+            ),
+        )
+
 
     @_SkipIfFailTestEmpty
     def testVariables(self):

@@ -13,7 +13,6 @@ class IJenkinsJobGeneratorPlugin(Interface):
 
     All plugins must define a TYPE (class attribute) and implement the Create method. That's it!
     '''
-
     TYPE_BUILDER = 'builders'
     TYPE_BUILD_WRAPPER = 'buildWrappers'
     TYPE_PARAMETER = 'parameter'
@@ -127,7 +126,8 @@ class JenkinsJobGenerator(object):
 
         :return list(IJenkinsJobGeneratorPlugin):
         '''
-        return [i for i in self.__plugins.itervalues() if i.TYPE == type_]
+        # Sort plugins because some might required a defined order among them
+        return sorted([i for i in self.__plugins.itervalues() if i.TYPE == type_])
 
 
     # Job ------------------------------------------------------------------------------------------
@@ -403,7 +403,6 @@ class StashNotifier(object):
         self.password = password
 
 
-
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashServerBaseUrl'] = self.url
@@ -413,6 +412,18 @@ class StashNotifier(object):
 
         if self.password is not None:
             xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserPassword'] = self.password
+
+
+    def __cmp__(self, other):
+        '''
+        StashNotifier must always be the last plugin when compared to other plugins, to make sure
+        that things such as test result publisher are executed before this, otherwise, builds with
+        failed tests might be reported as successful to Stash.
+
+        :param IJenkinsJobGeneratorPlugin(TYPE=TYPE_PUBLISHER) other:
+            Other plugin being compared to this.
+        '''
+        return 1
 
 
 
