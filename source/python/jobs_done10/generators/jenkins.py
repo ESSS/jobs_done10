@@ -132,8 +132,16 @@ class JenkinsXmlJobGenerator(object):
         xunit_plugin.jsunit_patterns = jsunit_patterns
 
 
-    def SetNotifyStash(self, configurations):
-        self.__jjgen.AddPlugin("stash-notifier", **configurations)
+    def SetNotifyStash(self, args):
+        if isinstance(args, basestring):
+            # Happens when no parameter is given, indicating we want to use the default
+            # configuration set in the Jenkins server
+            self.__jjgen.AddPlugin("stash-notifier")
+        elif isinstance(args, dict):
+            # Using parameters
+            self.__jjgen.AddPlugin("stash-notifier", **args)
+        else:
+            raise TypeError()
 
 
     def SetDisplayName(self, display_name):

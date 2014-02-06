@@ -48,7 +48,7 @@ class JobsDoneJob(object):
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
-        'notify_stash':dict,
+        'notify_stash':(dict,str),
 
         # Definition of parameters available to this job.
         # Uses jenkins-job-builder syntax parsed by yaml.
@@ -178,10 +178,11 @@ class JobsDoneJob(object):
             if option_name not in JobsDoneJob.PARSEABLE_OPTIONS:
                 raise UnknownJobsDoneFileOption(option_name)
 
+            from ben10.foundation.types_ import AsList
             obtained_type = type(option_value)
-            expected_type = JobsDoneJob.PARSEABLE_OPTIONS[option_name]
-            if obtained_type != expected_type:
-                raise JobsDoneFileTypeError(option_name, obtained_type, expected_type)
+            expected_types = AsList(JobsDoneJob.PARSEABLE_OPTIONS[option_name])
+            if obtained_type not in expected_types:
+                raise JobsDoneFileTypeError(option_name, obtained_type, expected_types)
 
         # List all possible matrix_rows
         matrix_rows = cls.CreateMatrixRows(jd_data.get('matrix', {}))
@@ -370,20 +371,21 @@ class JobsDoneFileTypeError(TypeError):
         e.g.
             list, str
 
-    :ivar type expected_type:
-        Expected (good) type
+    :ivar iter(type) accepted_types:
+        Accepted (good) types
         e.g.
-            list, str
+            (list,)
+            (dict, str)
     '''
-    def __init__(self, option_name, obtained_type, expected_type):
+    def __init__(self, option_name, obtained_type, accepted_types):
         self.option_name = option_name
         self.obtained_type = obtained_type
-        self.expected_type = expected_type
+        self.accepted_types = accepted_types
 
         TypeError.__init__(
             self,
-            'On option "%s". Expected "%s" but got "%s".' % \
-            (option_name, expected_type, obtained_type)
+            'On option "%s". Expected one of "%s" but got "%s".' % \
+            (option_name, accepted_types, obtained_type)
         )
 
 

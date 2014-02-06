@@ -199,7 +199,29 @@ class JenkinsJobGenerator(object):
 
 
 #===================================================================================================
-# Plugins
+# BaseJenkinsJobGeneratorPlugin
+#===================================================================================================
+class BaseJenkinsJobGeneratorPlugin(object):
+    '''
+    :cvar int PRIORITY:
+        Priority of this plugin in relation to others.
+        Smaller values mean higher priority.
+    '''
+    PRIORITY = 0
+
+    def __cmp__(self, other):
+        '''
+        Used for sorting plugins in order of priority.
+
+        :param BaseJenkinsJobGeneratorPlugin other:
+            Other plugin being compared to this one.
+        '''
+        return cmp(self.PRIORITY, other.PRIORITY)
+
+
+
+#===================================================================================================
+# PyJenkinsPlugin
 #===================================================================================================
 def PyJenkinsPlugin(plugin_name):
     '''
@@ -219,7 +241,7 @@ def PyJenkinsPlugin(plugin_name):
 # GitBuilder
 #===================================================================================================
 @PyJenkinsPlugin('git')
-class GitBuilder(object):
+class GitBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a git SCM in the generation.
 
@@ -298,7 +320,7 @@ class GitBuilder(object):
 # ShellBuilder
 #===================================================================================================
 @PyJenkinsPlugin('shell')
-class ShellBuilder(object):
+class ShellBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a shell (linux) command shell.
 
@@ -324,7 +346,7 @@ class ShellBuilder(object):
 # BatchBuilder
 #===================================================================================================
 @PyJenkinsPlugin('batch')
-class BatchBuilder(object):
+class BatchBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a batch (windows) command.
 
@@ -350,7 +372,7 @@ class BatchBuilder(object):
 # DescriptionSetterPublisher
 #===================================================================================================
 @PyJenkinsPlugin('description-setter')
-class DescriptionSetterPublisher(object):
+class DescriptionSetterPublisher(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures the description-setter.
 
@@ -377,7 +399,7 @@ class DescriptionSetterPublisher(object):
 # StashNotifier
 #===================================================================================================
 @PyJenkinsPlugin('stash-notifier')
-class StashNotifier(object):
+class StashNotifier(BaseJenkinsJobGeneratorPlugin):
     '''
     Notifies Stash instances when a build passes
 
@@ -393,37 +415,26 @@ class StashNotifier(object):
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
 
-    def __init__(self, url, username=None, password=None):
+    # StashNotifier must always be the last plugin when compared to other plugins, to make sure that
+    # things such as test result publisher are executed before this, otherwise, builds with failed
+    # tests might be reported as successful to Stash.
+    PRIORITY = 1
+
+    def __init__(self, url='', username='', password=''):
         self.url = url
+        self.username = username
+        self.password = password
 
         if password and not username:
             raise ValueError('Must pass "username" when passing "password"')
 
-        self.username = username
-        self.password = password
-
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashServerBaseUrl'] = self.url
-
-        if self.username is not None:
-            xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserName'] = self.username
-
-        if self.password is not None:
-            xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier/stashUserPassword'] = self.password
-
-
-    def __cmp__(self, other):
-        '''
-        StashNotifier must always be the last plugin when compared to other plugins, to make sure
-        that things such as test result publisher are executed before this, otherwise, builds with
-        failed tests might be reported as successful to Stash.
-
-        :param IJenkinsJobGeneratorPlugin(TYPE=TYPE_PUBLISHER) other:
-            Other plugin being compared to this.
-        '''
-        return 1
+        notifier = xml_factory['org.jenkinsci.plugins.stashNotifier.StashNotifier']
+        notifier['stashServerBaseUrl'] = self.url
+        notifier['stashUserName'] = self.username
+        notifier['stashUserPassword'] = self.password
 
 
 
@@ -431,7 +442,7 @@ class StashNotifier(object):
 # XUnitPublisher
 #===================================================================================================
 @PyJenkinsPlugin('xunit')
-class XUnitPublisher(object):
+class XUnitPublisher(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures the unit-test publisher.
 
@@ -485,7 +496,7 @@ class XUnitPublisher(object):
 # Timeout
 #===================================================================================================
 @PyJenkinsPlugin('timeout')
-class Timeout(object):
+class Timeout(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures the job timetout.
 
@@ -511,7 +522,7 @@ class Timeout(object):
 # ChoiceParameter
 #===================================================================================================
 @PyJenkinsPlugin('choice-parameter')
-class ChoiceParameter(object):
+class ChoiceParameter(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures a choice parameter.
 
@@ -550,7 +561,7 @@ class ChoiceParameter(object):
 # StringParameter
 #===================================================================================================
 @PyJenkinsPlugin('string-parameter')
-class StringParameter(object):
+class StringParameter(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures a string parameter.
 

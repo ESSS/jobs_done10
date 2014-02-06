@@ -491,20 +491,6 @@ class Test(object):
 
     @_SkipIfFailTestEmpty
     def testNotifyStash(self):
-        with pytest.raises(ValueError) as e:
-            self._DoTest(
-                ci_contents=Dedent(
-                    r'''
-                    notify_stash:
-                      url: stash.com
-                      password: pass
-                    '''
-                ),
-                expected_diff=None
-            )
-        assert str(e.value) == 'Must pass "username" when passing "password"'
-
-
         self._DoTest(
             ci_contents=Dedent(
                 r'''
@@ -529,6 +515,50 @@ class Test(object):
             ),
 
         )
+
+
+    @_SkipIfFailTestEmpty
+    def testNotifyStashServerDefault(self):
+        '''
+        When given no parameters, use the default Stash configurations set in the Jenkins server
+        '''
+        self._DoTest(
+            ci_contents=Dedent(
+                r'''
+                notify_stash:
+                '''
+            ),
+            expected_diff=Dedent(
+                r'''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +      <stashServerBaseUrl></stashServerBaseUrl>
+                +      <stashUserName></stashUserName>
+                +      <stashUserPassword></stashUserPassword>
+                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
+                +  </publishers>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
+    def testNotifyStashIncompleteParameters(self):
+        with pytest.raises(ValueError) as e:
+            self._DoTest(
+                ci_contents=Dedent(
+                    r'''
+                    notify_stash:
+                      url: stash.com
+                      password: pass
+                    '''
+                ),
+                expected_diff=None
+            )
+        assert str(e.value) == 'Must pass "username" when passing "password"'
+
 
     @_SkipIfFailTestEmpty
     def testNotifyStashWithTests(self):
