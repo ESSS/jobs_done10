@@ -54,7 +54,7 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.description = "<!-- Managed by Job's Done -->"
 
         # Configure git SCM
-        self.__jjgen.AddPlugin(
+        self.__jjgen.GetOrCreatePlugin(
             'git',
             url=self.repository.url,
             target_dir=self.repository.name,
@@ -103,32 +103,32 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
-        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
         xunit_plugin.boost_patterns = boosttest_patterns
 
 
     def SetBuildBatchCommands(self, build_batch_commands):
-        p = self.__jjgen.AddPlugin("batch")
-        p.command_lines += build_batch_commands
+        for command in build_batch_commands:
+            self.__jjgen.CreatePlugin("batch", command)
 
 
     def SetBuildShellCommands(self, build_shell_commands):
-        p = self.__jjgen.AddPlugin("shell")
-        p.command_lines += build_shell_commands
+        for command in build_shell_commands:
+            self.__jjgen.CreatePlugin("shell", command)
 
 
     def SetDescriptionRegex(self, description_regex):
         if description_regex:
-            self.__jjgen.AddPlugin("description-setter", description_regex)
+            self.__jjgen.CreatePlugin("description-setter", description_regex)
 
 
     def SetJunitPatterns(self, junit_patterns):
-        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns
 
 
     def SetJsunitPatterns(self, jsunit_patterns):
-        xunit_plugin = self.__jjgen.AddPlugin("xunit")
+        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
         xunit_plugin.jsunit_patterns = jsunit_patterns
 
 
@@ -136,10 +136,10 @@ class JenkinsXmlJobGenerator(object):
         if isinstance(args, basestring):
             # Happens when no parameter is given, indicating we want to use the default
             # configuration set in the Jenkins server
-            self.__jjgen.AddPlugin("stash-notifier")
+            self.__jjgen.CreatePlugin("stash-notifier")
         elif isinstance(args, dict):
             # Using parameters
-            self.__jjgen.AddPlugin("stash-notifier", **args)
+            self.__jjgen.CreatePlugin("stash-notifier", **args)
         else:
             raise TypeError()
 
@@ -156,14 +156,14 @@ class JenkinsXmlJobGenerator(object):
         for i_parameter in parameters:
             for name, j_dict  in i_parameter.iteritems():
                 if name == 'choice':
-                    self.__jjgen.AddPlugin(
+                    self.__jjgen.CreatePlugin(
                         "choice-parameter",
                         param_name=j_dict['name'],
                         description=j_dict['description'],
                         choices=j_dict['choices'],
                     )
                 elif name == 'string':
-                    self.__jjgen.AddPlugin(
+                    self.__jjgen.CreatePlugin(
                         "string-parameter",
                         param_name=j_dict['name'],
                         description=j_dict['description'],

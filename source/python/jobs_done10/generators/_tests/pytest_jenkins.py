@@ -153,6 +153,59 @@ class Test(object):
             ),
         )
 
+    @_SkipIfFailTestEmpty
+    def testMultipleChoiceParameters(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                parameters:
+                  - choice:
+                      name: "PARAM"
+                      choices:
+                      - "choice_1"
+                      - "choice_2"
+                      description: "Description"
+                  - choice:
+                      name: "PARAM_2"
+                      choices:
+                      - "choice_1"
+                      - "choice_2"
+                      description: "Description"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <properties>
+                +    <hudson.model.ParametersDefinitionProperty>
+                +      <parameterDefinitions>
+                +        <hudson.model.ChoiceParameterDefinition>
+                +          <name>PARAM</name>
+                +          <description>Description</description>
+                +          <choices class="java.util.Arrays$ArrayList">
+                +            <a class="string-array">
+                +              <string>choice_1</string>
+                +              <string>choice_2</string>
+                +            </a>
+                +          </choices>
+                +        </hudson.model.ChoiceParameterDefinition>
+                +        <hudson.model.ChoiceParameterDefinition>
+                +          <name>PARAM_2</name>
+                +          <description>Description</description>
+                +          <choices class="java.util.Arrays$ArrayList">
+                +            <a class="string-array">
+                +              <string>choice_1</string>
+                +              <string>choice_2</string>
+                +            </a>
+                +          </choices>
+                +        </hudson.model.ChoiceParameterDefinition>
+                +      </parameterDefinitions>
+                +    </hudson.model.ParametersDefinitionProperty>
+                +  </properties>
+                '''
+            ),
+        )
+
 
     @_SkipIfFailTestEmpty
     def testStringParameters(self):
@@ -174,6 +227,46 @@ class Test(object):
                 +      <parameterDefinitions>
                 +        <hudson.model.StringParameterDefinition>
                 +          <name>PARAM_VERSION</name>
+                +          <description>Description</description>
+                +          <defaultValue>Default</defaultValue>
+                +        </hudson.model.StringParameterDefinition>
+                +      </parameterDefinitions>
+                +    </hudson.model.ParametersDefinitionProperty>
+                +  </properties>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
+    def testMultipleStringParameters(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                parameters:
+                  - string:
+                      name: "PARAM_VERSION"
+                      default: "Default"
+                      description: "Description"
+                  - string:
+                      name: "PARAM_VERSION_2"
+                      default: "Default"
+                      description: "Description"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <properties>
+                +    <hudson.model.ParametersDefinitionProperty>
+                +      <parameterDefinitions>
+                +        <hudson.model.StringParameterDefinition>
+                +          <name>PARAM_VERSION</name>
+                +          <description>Description</description>
+                +          <defaultValue>Default</defaultValue>
+                +        </hudson.model.StringParameterDefinition>
+                +        <hudson.model.StringParameterDefinition>
+                +          <name>PARAM_VERSION_2</name>
                 +          <description>Description</description>
                 +          <defaultValue>Default</defaultValue>
                 +        </hudson.model.StringParameterDefinition>
