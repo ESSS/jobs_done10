@@ -225,6 +225,29 @@ class Test(object):
 
 
     @_SkipIfFailTestEmpty
+    def testTimeout(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                timeout: 60
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <buildWrappers/>
+                +  <buildWrappers>
+                +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
+                +      <timeoutMinutes>60</timeoutMinutes>
+                +      <failBuild>true</failBuild>
+                +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+                +  </buildWrappers>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
     def testJSUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -308,7 +331,6 @@ class Test(object):
                 +  </publishers>
                 '''
             ),
-
         )
 
 

@@ -122,6 +122,10 @@ class JenkinsXmlJobGenerator(object):
             self.__jjgen.AddPlugin("description-setter", description_regex)
 
 
+    def SetDisplayName(self, display_name):
+        self.__jjgen.display_name = display_name
+
+
     def SetJunitPatterns(self, junit_patterns):
         xunit_plugin = self.__jjgen.AddPlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns
@@ -130,6 +134,10 @@ class JenkinsXmlJobGenerator(object):
     def SetJsunitPatterns(self, jsunit_patterns):
         xunit_plugin = self.__jjgen.AddPlugin("xunit")
         xunit_plugin.jsunit_patterns = jsunit_patterns
+
+
+    def SetLabelExpression(self, label_expression):
+        self.__jjgen.label_expression = label_expression
 
 
     def SetNotifyStash(self, args):
@@ -142,14 +150,6 @@ class JenkinsXmlJobGenerator(object):
             self.__jjgen.AddPlugin("stash-notifier", **args)
         else:
             raise TypeError()
-
-
-    def SetDisplayName(self, display_name):
-        self.__jjgen.display_name = display_name
-
-
-    def SetLabelExpression(self, label_expression):
-        self.__jjgen.label_expression = label_expression
 
 
     def SetParameters(self, parameters):
@@ -169,6 +169,10 @@ class JenkinsXmlJobGenerator(object):
                         description=j_dict['description'],
                         default=j_dict['default'],
                     )
+
+
+    def SetTimeout(self, timeout):
+        self.__jjgen.AddPlugin("timeout", timeout)
 
 
 
