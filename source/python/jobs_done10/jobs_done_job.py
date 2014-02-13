@@ -31,15 +31,15 @@ class JobsDoneJob(object):
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':str,
 
+        # str: The format for the job display name.
+        'display_name':str,
+
         # list(str): List of patterns to match when looking for jsunit test results.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
         'jsunit_patterns':list,
 
         # list(str): List of patterns to match when looking for junit test results.
         'junit_patterns':list,
-
-        # str: The format for the job display name.
-        'display_name':str,
 
         # str: An "label expression" that is used to match slave nodes.
         'label_expression':str,
@@ -57,6 +57,9 @@ class JobsDoneJob(object):
         # e.g.
         #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
         'parameters':list,
+
+        # Job timeout in minutes
+        'timeout' : str
     }
 
     # All parsed options
