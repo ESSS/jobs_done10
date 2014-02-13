@@ -98,7 +98,7 @@ class JenkinsJobGenerator(object):
         cls.PLUGINS[plugin_name] = plugin_class
 
 
-    def GetOrCreatePlugin(self, name, *args, **kwargs):
+    def ObtainPlugin(self, name, *args, **kwargs):
         '''
         Adds a plugin in the generator instance.
         Plugins are registered using the class method JenkinsJobGenerator.RegisterPlugin

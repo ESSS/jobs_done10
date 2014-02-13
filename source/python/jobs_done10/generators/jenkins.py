@@ -54,7 +54,7 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.description = "<!-- Managed by Job's Done -->"
 
         # Configure git SCM
-        self.__jjgen.GetOrCreatePlugin(
+        self.__jjgen.CreatePlugin(
             'git',
             url=self.repository.url,
             target_dir=self.repository.name,
@@ -103,7 +103,7 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
-        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
+        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.boost_patterns = boosttest_patterns
 
 
@@ -123,12 +123,12 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetJunitPatterns(self, junit_patterns):
-        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
+        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns
 
 
     def SetJsunitPatterns(self, jsunit_patterns):
-        xunit_plugin = self.__jjgen.GetOrCreatePlugin("xunit")
+        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.jsunit_patterns = jsunit_patterns
 
 
