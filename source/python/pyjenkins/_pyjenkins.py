@@ -98,7 +98,23 @@ class JenkinsJobGenerator(object):
         cls.PLUGINS[plugin_name] = plugin_class
 
 
-    def AddPlugin(self, name, *args, **kwargs):
+    def ObtainPlugin(self, name, *args, **kwargs):
+        '''
+        Adds a plugin in the generator instance.
+        Plugins are registered using the class method JenkinsJobGenerator.RegisterPlugin
+
+        :return IJenkinsJobGeneratorPlugin:
+            Returns the instance of the plugin.
+            If the plugin was already added, returns it and do not create a new instance.
+        '''
+        instances = self.__plugins.get(name)
+        if instances is not None:
+            return instances[0]
+
+        return self.CreatePlugin(name, *args, **kwargs)
+
+
+    def CreatePlugin(self, name, *args, **kwargs):
         '''
         Adds a plugin in the generator instance.
         Plugins are registered using the class method JenkinsJobGenerator.RegisterPlugin
@@ -110,10 +126,8 @@ class JenkinsJobGenerator(object):
         plugin_class = self.PLUGINS.get(name)
         assert plugin_class is not None, 'Plugin class "%s" not found!' % name
 
-        plugin_instance = self.__plugins.get(name)
-        if plugin_instance is None:
-            plugin_instance = plugin_class(*args, **kwargs)
-            self.__plugins[name] = plugin_instance
+        plugin_instance = plugin_class(*args, **kwargs)
+        self.__plugins.setdefault(name, []).append(plugin_instance)
 
         return plugin_instance
 
@@ -126,8 +140,11 @@ class JenkinsJobGenerator(object):
 
         :return list(IJenkinsJobGeneratorPlugin):
         '''
+        from ben10.foundation.types_ import Flatten
+        plugins = [p for p in Flatten(self.__plugins.itervalues()) if p.TYPE == type_]
+
         # Sort plugins because some might required a defined order among them
-        return sorted([i for i in self.__plugins.itervalues() if i.TYPE == type_])
+        return sorted(plugins)
 
 
     # Job ------------------------------------------------------------------------------------------
@@ -332,13 +349,12 @@ class ShellBuilder(BaseJenkinsJobGeneratorPlugin):
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILDER
 
-    def __init__(self):
-        self.command_lines = []
+    def __init__(self, command):
+        self.command = command
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        for i_command_line in self.command_lines:
-            xml_factory['hudson.tasks.Shell+/command'] = i_command_line
+        xml_factory['hudson.tasks.Shell+/command'] = self.command
 
 
 
@@ -358,13 +374,12 @@ class BatchBuilder(BaseJenkinsJobGeneratorPlugin):
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILDER
 
-    def __init__(self):
-        self.command_lines = []
+    def __init__(self, command):
+        self.command = command
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        for i_command_line in self.command_lines:
-            xml_factory['hudson.tasks.BatchFile+/command'] = i_command_line
+        xml_factory['hudson.tasks.BatchFile+/command'] = self.command
 
 
 
@@ -547,7 +562,7 @@ class ChoiceParameter(BaseJenkinsJobGeneratorPlugin):
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         p = xml_factory['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
-            'hudson.model.ChoiceParameterDefinition']
+            'hudson.model.ChoiceParameterDefinition+']
         p['name'] = self.param_name
         p['description'] = self.description
         p['choices@class'] = 'java.util.Arrays$ArrayList'
@@ -587,7 +602,7 @@ class StringParameter(BaseJenkinsJobGeneratorPlugin):
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         p = xml_factory['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/' \
-            'hudson.model.StringParameterDefinition']
+            'hudson.model.StringParameterDefinition+']
         p['name'] = self.param_name
         p['description'] = self.description
         if self.default:
