@@ -172,7 +172,7 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetTimeout(self, timeout):
-        self.__jjgen.AddPlugin("timeout", timeout)
+        self.__jjgen.CreatePlugin("timeout", timeout)
 
 
 
