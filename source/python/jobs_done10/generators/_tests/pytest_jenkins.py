@@ -32,7 +32,7 @@ class Test(object):
           <canRoam>false</canRoam>
           <logRotator>
             <daysToKeep>7</daysToKeep>
-            <numToKeep>16</numToKeep>
+            <numToKeep>-1</numToKeep>
             <artifactDaysToKeep>-1</artifactDaysToKeep>
             <artifactNumToKeep>-1</artifactNumToKeep>
           </logRotator>

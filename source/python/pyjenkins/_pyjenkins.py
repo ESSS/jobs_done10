@@ -84,7 +84,7 @@ class JenkinsJobGenerator(object):
         self.display_name = ''
         self.label_expression = self.DEFAULT_LABEL_EXPRESSION
         self.days_to_keep = 7
-        self.num_to_keep = 16
+        self.num_to_keep = -1
         self.timeout = None
         self.custom_workspace = None
         self.__plugins = {}
