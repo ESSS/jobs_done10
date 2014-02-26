@@ -27,6 +27,9 @@ class JobsDoneJob(object):
         # list(str): Shell script commands used to build a project.
         'build_shell_commands':list,
 
+        # str: Time based triggers for job (Jenkins)
+        'cron':str,
+
         # str: Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':str,

@@ -117,6 +117,10 @@ class JenkinsXmlJobGenerator(object):
             self.__jjgen.CreatePlugin("shell", command)
 
 
+    def SetCron(self, schedule):
+        self.__jjgen.CreatePlugin("cron", schedule)
+
+
     def SetDescriptionRegex(self, description_regex):
         if description_regex:
             self.__jjgen.CreatePlugin("description-setter", description_regex)

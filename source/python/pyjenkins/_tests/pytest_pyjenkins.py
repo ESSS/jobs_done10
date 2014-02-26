@@ -41,6 +41,7 @@ class Test:
               <builders/>
               <publishers/>
               <buildWrappers/>
+              <triggers/>
             </project>
             '''
         )

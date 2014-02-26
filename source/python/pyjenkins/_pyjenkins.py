@@ -16,6 +16,7 @@ class IJenkinsJobGeneratorPlugin(Interface):
     TYPE_BUILDER = 'builders'
     TYPE_BUILD_WRAPPER = 'buildWrappers'
     TYPE_PARAMETER = 'parameter'
+    TYPE_TRIGGER = 'triggers'
     TYPE_PUBLISHER = 'publishers'
     TYPE_SCM = 'scm'
 
@@ -197,6 +198,10 @@ class JenkinsJobGenerator(object):
         build_wrappers_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER]
         for i_publisher_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER):
             i_publisher_plugin.Create(build_wrappers_xml)
+
+        triggers_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_TRIGGER]
+        for i_trigger_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_TRIGGER):
+            i_trigger_plugin.Create(triggers_xml)
 
         if self.custom_workspace:
             xml_factory['customWorkspace'] = self.custom_workspace % self.__dict__
@@ -607,3 +612,28 @@ class StringParameter(BaseJenkinsJobGeneratorPlugin):
         p['description'] = self.description
         if self.default:
             p['defaultValue'] = self.default
+
+
+
+#===================================================================================================
+# Cron
+#===================================================================================================
+@PyJenkinsPlugin('cron')
+class Cron(BaseJenkinsJobGeneratorPlugin):
+    '''
+    Configures a job to run based on a schedule
+
+    :ivar str schedule:
+        Cron configurations using a format employed by Jenkins.
+    '''
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_TRIGGER
+
+    def __init__(self, schedule):
+        self.schedule = schedule
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        xml_factory['hudson.triggers.TimerTrigger/spec'] = self.schedule
+
