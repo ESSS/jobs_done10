@@ -77,6 +77,7 @@ class Test(object):
           <builders/>
           <publishers/>
           <buildWrappers/>
+          <triggers/>
         </project>
         ''',
         ignore_last_linebreak=True
@@ -808,6 +809,31 @@ class Test(object):
                 @@ @@
                 -  <assignedNode>fake</assignedNode>
                 +  <assignedNode>win32&amp;&amp;dist-12.0</assignedNode>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
+    def testCron(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                cron: |
+                       # Everyday at 22 pm
+                       0 22 * * *
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <triggers/>
+                +  <triggers>
+                +    <hudson.triggers.TimerTrigger>
+                +      <spec># Everyday at 22 pm
+                +0 22 * * *</spec>
+                +    </hudson.triggers.TimerTrigger>
+                +  </triggers>
                 '''
             ),
         )
