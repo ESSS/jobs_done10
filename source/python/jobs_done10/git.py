@@ -4,6 +4,8 @@ This module is a copy of Git from sharedscripts10.
 It was copied here to remove dependencies to that project, and should be removed once that code
 is refactored into an open-source project.
 
+All classes have "pragma: no cover" because we didn't copy tests for this class.
+
 TODO: CI-123 Refactor Git code out of sharedscripts10
 '''
 
@@ -12,7 +14,7 @@ TODO: CI-123 Refactor Git code out of sharedscripts10
 #===================================================================================================
 # Git
 #===================================================================================================
-class Git(object):
+class Git(object):  # pragma: no cover (see module docs)
 
     # Constants for common refs
     ZERO_REVISION = '0' * 40
@@ -266,7 +268,7 @@ class Git(object):
 #===================================================================================================
 # GitExecuteError
 #===================================================================================================
-class GitExecuteError(RuntimeError):
+class GitExecuteError(RuntimeError):  # pragma: no cover (see module docs)
     '''
     Raised when running the git executable returns anything other than 0.
     '''
@@ -286,7 +288,7 @@ class GitExecuteError(RuntimeError):
 #===================================================================================================
 # DirtyRepositoryError
 #===================================================================================================
-class DirtyRepositoryError(Exception):
+class DirtyRepositoryError(Exception):  # pragma: no cover (see module docs)
     '''
     Raised when trying to perform some operations in a dirty (uncommited changes) repository.
     '''
@@ -299,7 +301,7 @@ class DirtyRepositoryError(Exception):
 #===================================================================================================
 # BranchAlreadyExistsError
 #===================================================================================================
-class BranchAlreadyExistsError(Exception):
+class BranchAlreadyExistsError(Exception):  # pragma: no cover (see module docs)
     '''
     Raised when trying to create a branch that already exists.
     '''
@@ -312,7 +314,7 @@ class BranchAlreadyExistsError(Exception):
 #===================================================================================================
 # NotCurrentlyInAnyBranchError
 #===================================================================================================
-class NotCurrentlyInAnyBranchError(Exception):
+class NotCurrentlyInAnyBranchError(Exception):  # pragma: no cover (see module docs)
     '''
     Raised when operating while not on any branch (headless state)
     '''

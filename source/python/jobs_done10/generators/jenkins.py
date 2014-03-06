@@ -145,15 +145,15 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetNotifyStash(self, args):
+        assert isinstance(args, (basestring, dict)), '"args" must be a string or dict.'
+
         if isinstance(args, basestring):
             # Happens when no parameter is given, indicating we want to use the default
             # configuration set in the Jenkins server
             self.__jjgen.CreatePlugin("stash-notifier")
-        elif isinstance(args, dict):
+        else:  # dict
             # Using parameters
             self.__jjgen.CreatePlugin("stash-notifier", **args)
-        else:
-            raise TypeError()
 
 
     def SetParameters(self, parameters):
