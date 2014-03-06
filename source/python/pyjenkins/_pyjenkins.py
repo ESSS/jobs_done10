@@ -69,9 +69,6 @@ class JenkinsJobGenerator(object):
 
     :ivar int timeout:
         Job build timeout in minutes. After the timeout the job automatically fails
-
-    :ivar str custom_workspace:
-        Path to the (custom) workspace for the job.
     '''
     CONFIG_FILENAME = 'config.xml'
 
@@ -87,7 +84,6 @@ class JenkinsJobGenerator(object):
         self.days_to_keep = 7
         self.num_to_keep = -1
         self.timeout = None
-        self.custom_workspace = None
         self.__plugins = {}
 
 
@@ -202,9 +198,6 @@ class JenkinsJobGenerator(object):
         triggers_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_TRIGGER]
         for i_trigger_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_TRIGGER):
             i_trigger_plugin.Create(triggers_xml)
-
-        if self.custom_workspace:
-            xml_factory['customWorkspace'] = self.custom_workspace % self.__dict__
 
         return xml_factory.GetContent(xml_header=True)
 
@@ -493,8 +486,6 @@ class XUnitPublisher(BaseJenkinsJobGeneratorPlugin):
             'JSUnitPluginType' : self.jsunit_patterns,
             'JUnitType' : self.junit_patterns,
         }
-        if not any(types.values()):
-            return
 
         for pattern_plugin, pattern in types.iteritems():
             if not pattern:
