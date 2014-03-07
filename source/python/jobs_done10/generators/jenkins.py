@@ -83,7 +83,7 @@ class JenkinsXmlJobGenerator(object):
 
 
     #===============================================================================================
-    # Configurator functions (..seealso:: JobsDoneJob ivars for docs)
+    # Configurator functions (.. seealso:: JobsDoneJob ivars for docs)
     #===============================================================================================
     @Implements(IJobGenerator.SetRepository)
     def SetRepository(self, repository):
@@ -270,10 +270,10 @@ class JenkinsJobPublisher(object):
 def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, password=None):
     '''
     :param repository:
-        ..seealso:: GetJobsFromFile
+        .. seealso:: GetJobsFromFile
 
     :param jobs_done_file_contents:
-        ..seealso:: GetJobsFromFile
+        .. seealso:: GetJobsFromFile
 
     :param str url:
         URL of a Jenkins sevrer instance where jobs will be uploaded
@@ -285,7 +285,7 @@ def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, 
         Password for Jenkins server.
 
     :returns:
-        ..seealso:: JenkinsJobPublisher.PublishToUrl
+        .. seealso:: JenkinsJobPublisher.PublishToUrl
 
     '''
     job_group, jobs = GetJobsFromFile(repository, jobs_done_file_contents)
@@ -330,10 +330,10 @@ def GetJobsFromFile(repository, jobs_done_file_contents):
     Creates jobs from repository information and a jobs_done file.
 
     :param Repository repository:
-        ..seealso:: Repository
+        .. seealso:: Repository
 
     :param str|None jobs_done_file_contents:
-        ..seealso:: JobsDoneJob.CreateFromYAML
+        .. seealso:: JobsDoneJob.CreateFromYAML
 
     :return set(JenkinsJob)
     '''
