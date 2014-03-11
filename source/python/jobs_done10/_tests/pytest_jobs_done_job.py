@@ -300,3 +300,16 @@ class Test(object):
             JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
 
         assert e.value.option == 'planet-pluto:junit_patterns'
+
+    def testStripFile(self):
+        '''
+        Asserts that we can handle empty spaces and tabs in .yaml files, without having parse errors
+        '''
+        contents = Dedent(
+            '''
+            junit_patterns:
+                - 1
+            '''
+        )
+        contents += '\t'
+        JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)

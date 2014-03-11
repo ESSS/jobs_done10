@@ -168,6 +168,9 @@ class JobsDoneJob(object):
         if yaml_contents is None:
             return []
 
+        # Avoid errors with tabs at the end of file
+        yaml_contents=yaml_contents.strip()
+
         # Load yaml
         jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader) or {}
 
