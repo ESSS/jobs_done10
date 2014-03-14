@@ -8,6 +8,8 @@ jobs_done_application = App('jobs_done')
 # Configure application with available generators
 ConfigureCommandLineInterface(jobs_done_application)
 
+
 # Run application
+main = jobs_done_application.Main
 if __name__ == '__main__':
-    jobs_done_application.Main()
+    main()
