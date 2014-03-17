@@ -3,3 +3,7 @@
 .coverage
 /build/
 __pycache__
+/dist/
+/pip/
+*.egg-info
+/.pypirc
