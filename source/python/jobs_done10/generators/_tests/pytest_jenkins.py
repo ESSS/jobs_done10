@@ -288,6 +288,53 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     @_SkipIfFailTestEmpty
+    def testParametersMaintainOrder(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                parameters:
+                  - choice:
+                      name: "PARAM"
+                      choices:
+                      - "choice_1"
+                      - "choice_2"
+                      description: "Description"
+                  - string:
+                      name: "PARAM_VERSION"
+                      default: "Default"
+                      description: "Description"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <properties>
+                +    <hudson.model.ParametersDefinitionProperty>
+                +      <parameterDefinitions>
+                +        <hudson.model.ChoiceParameterDefinition>
+                +          <name>PARAM</name>
+                +          <description>Description</description>
+                +          <choices class="java.util.Arrays$ArrayList">
+                +            <a class="string-array">
+                +              <string>choice_1</string>
+                +              <string>choice_2</string>
+                +            </a>
+                +          </choices>
+                +        </hudson.model.ChoiceParameterDefinition>
+                +        <hudson.model.StringParameterDefinition>
+                +          <name>PARAM_VERSION</name>
+                +          <description>Description</description>
+                +          <defaultValue>Default</defaultValue>
+                +        </hudson.model.StringParameterDefinition>
+                +      </parameterDefinitions>
+                +    </hudson.model.ParametersDefinitionProperty>
+                +  </properties>
+                '''
+            ),
+        )
+
+
+    @_SkipIfFailTestEmpty
     def testJUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(
