@@ -1,4 +1,3 @@
-from ben10.filesystem import CreateFile
 from ben10.foundation.decorators import Implements
 from ben10.interface import ImplementsInterface, Interface
 
@@ -84,7 +83,9 @@ class JenkinsJobGenerator(object):
         self.days_to_keep = 7
         self.num_to_keep = -1
         self.timeout = None
-        self.__plugins = {}
+
+        from ben10.foundation.odict import odict
+        self.__plugins = odict() # Use odict to maintain order
 
 
     # Plugins --------------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ class JenkinsJobGenerator(object):
         from ben10.foundation.types_ import Flatten
         plugins = [p for p in Flatten(self.__plugins.itervalues()) if p.TYPE == type_]
 
-        # Sort plugins because some might required a defined order among them
+        # Sort plugins because some might require a defined order among them
         return sorted(plugins)
 
 
@@ -209,6 +210,7 @@ class JenkinsJobGenerator(object):
         :param str config_file:
             The configuration filename.
         '''
+        from ben10.filesystem._filesystem import CreateFile
         CreateFile(config_filename, self.GetContent())
 
 
