@@ -785,7 +785,7 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     @_SkipIfFailTestEmpty
-    def testVariables(self):
+    def testMatrix(self):
         ci_contents = Dedent(
             '''
             planet-earth:build_shell_commands:
@@ -805,22 +805,27 @@ class TestJenkinsXmlJobGenerator(object):
         )
         repository = Repository(url='http://fake.git', branch='not_master')
 
-        # This test should create two jobs_done_jobs from their variations
+        # This test should create two jobs based on the given matrix
         jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
 
         job_generator = JenkinsXmlJobGenerator()
+
         for jd_file in jobs_done_jobs:
             JobGeneratorConfigurator.Configure(job_generator, jd_file)
             jenkins_job = job_generator.GetJobs()
 
             planet = jd_file.matrix_row['planet']
+
+            # Matrix affects the jobs name, but single value rows are left out
+            assert jenkins_job.name == 'fake-not_master-%(planet)s' % locals()
+
             self._AssertDiff(
                 jenkins_job.xml,
                 Dedent(
                     '''
                     @@ @@
                     -  <assignedNode>fake</assignedNode>
-                    +  <assignedNode>fake-europa-%(planet)s</assignedNode>
+                    +  <assignedNode>fake-%(planet)s</assignedNode>
                     @@ @@
                     -  <builders/>
                     +  <builders>

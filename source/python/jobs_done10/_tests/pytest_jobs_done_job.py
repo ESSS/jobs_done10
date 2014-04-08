@@ -49,7 +49,7 @@ class Test(object):
         )
         jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY)
 
-        # Two possible variations (mercury-europa and venus-europa)
+        # Two possible jobs based on matrix (mercury and venus)
         assert len(jobs_done_jobs) == 2
 
         def CheckCommonValues(jobs_done_job):
@@ -71,7 +71,10 @@ class Test(object):
         mercury_job = jobs_done_jobs[0] if jobs_done_jobs[0].matrix_row['planet'] == 'mercury' else jobs_done_jobs[1]
         venus_job = jobs_done_jobs[0] if jobs_done_jobs[0].matrix_row['planet'] == 'venus' else jobs_done_jobs[1]
 
+        assert mercury_job.matrix == {'moon': ['europa'], 'planet': ['mercury', 'venus']}
         assert mercury_job.matrix_row == {'moon': 'europa', 'planet': 'mercury'}
+
+        assert venus_job.matrix == {'moon': ['europa'], 'planet': ['mercury', 'venus']}
         assert venus_job.matrix_row == {'moon': 'europa', 'planet': 'venus'}
 
         # In this case, our commands use some replacement variables, including variables defined in

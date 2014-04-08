@@ -90,13 +90,19 @@ class JenkinsXmlJobGenerator(object):
         self.repository = repository
 
 
-    @Implements(IJobGenerator.SetMatrixRow)
-    def SetMatrixRow(self, matrix_row):
+    @Implements(IJobGenerator.SetMatrix)
+    def SetMatrix(self, matrix, matrix_row):
         self.__jjgen.label_expression = self.repository.name
         self.__jjgen.job_name = self.GetJobGroup(self.repository)
 
         if matrix_row:
-            row_representation = '-'.join([i[1] for i in sorted(matrix_row.items())])
+            row_representation = '-'.join([
+                value for key, value \
+                in sorted(matrix_row.items()) \
+
+                # Matrix rows with only one possible value do not affect the representation
+                if len(matrix[key]) > 1
+            ])
 
             self.__jjgen.label_expression += '-' + row_representation
             self.__jjgen.job_name += '-' + row_representation
