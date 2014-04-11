@@ -41,24 +41,17 @@ class IJobGenerator(Interface):
         '''
 
 
-    def SetMatrixRow(self, matrix_row):
+    def SetMatrix(self, matrix, matrix_row):
         '''
-        Sets current matrix_row of this job.
+        Sets current matrix and matrix_row of this job.
 
-        Variations are any option unknown to a JobsDoneJob, and are used to represent possible
-        variations of a job. They can be used, for example, to create jobs for multiple platforms
-        from a single JobsDoneJob.
+        :param dict(str,list(str)) matrix:
+            .. seealso::
+                JobsDoneJob
 
-        This will set a single build variation, with the values for the current variation being
-        built.
-
-        :param dict(str,str) variation:
-            Dictionary mapping variation name to value.
-            e.g.
-                variation = {'planet' : 'earth'}
-
-        .. seealso::
-            JobsDoneJob
+        :param dict(str,str) matrix_row:
+            .. seealso::
+                JobsDoneJob
         '''
 
 
@@ -87,7 +80,7 @@ class JobGeneratorConfigurator(object):
         '''
         generator.SetRepository(jobs_done_job.repository)
         generator.Reset()
-        generator.SetMatrixRow(jobs_done_job.matrix_row)
+        generator.SetMatrix(jobs_done_job.matrix, jobs_done_job.matrix_row)
 
         for option in jobs_done_job.GENERATOR_OPTIONS:
             option_value = getattr(jobs_done_job, option)

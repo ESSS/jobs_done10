@@ -20,7 +20,8 @@ class Test(object):
             def SetRepository(self, repository):
                 assert repository.url == 'http://repo.git'
 
-            def SetMatrixRow(self, matrix_row):
+            def SetMatrix(self, matrix, matrix_row):
+                assert matrix == {'id':[1,2,3]}
                 assert matrix_row == {'id':1}
 
             def SetBuildBatchCommands(self, commands):
@@ -30,18 +31,19 @@ class Test(object):
                 pass
 
         jobs_done_job = JobsDoneJob()
+        jobs_done_job.matrix = {'id':[1,2,3]}
         jobs_done_job.matrix_row = {'id':1}
         jobs_done_job.repository = Repository(url='http://repo.git')
 
         generator = MyGenerator()
 
         # Test basic calls
-        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrixRow=1, SetBuildBatchCommands=0):
+        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=0):
             JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
         # Set some more values to jobs_done_job, and make sure it is called
         jobs_done_job.build_batch_commands = ['command']
-        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrixRow=1, SetBuildBatchCommands=1):
+        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=1):
             JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
         # Try calling a missing option

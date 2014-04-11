@@ -105,7 +105,7 @@ class JobsDoneJob(object):
 
     def __init__(self):
         '''
-        :ivar dict matrix_row:
+        :ivar dict(str,str) matrix_row:
             A dict that represents a single row from this file's `matrix`.
 
             .. seealso:: `matrix`@PARSEABLE_OPTIONS
@@ -404,7 +404,7 @@ class JobsDoneFileTypeError(TypeError):
 #===================================================================================================
 class UnmatchableConditionError(ValueError):
     '''
-    Raised when declaring a condition that can never be matches based on available matrix variations.
+    Raised when declaring a condition that can never be matches based on available matrix rows.
 
     :ivar str option:
         Option with a condition that can't be matched.
@@ -416,5 +416,5 @@ class UnmatchableConditionError(ValueError):
 
         ValueError.__init__(
             self,
-            'Condition "%s" can never be matched based on possible matrix variations.' % option
+            'Condition "%s" can never be matched based on possible matrix rows.' % option
         )
