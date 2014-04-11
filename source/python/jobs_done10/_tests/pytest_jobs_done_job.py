@@ -93,6 +93,33 @@ class Test(object):
         assert venus_job.label_expression == 'planet-venus&&moon-europa'
 
 
+    def testBranchFlags(self):
+        ci_contents = Dedent(
+            '''
+            branch-master:build_shell_commands:
+            - "master.sh"
+
+            branch-milky_way:build_batch_commands:
+            - "milky_way.bat"
+            '''
+        )
+
+        jd_file = JobsDoneJob.CreateFromYAML(
+            ci_contents,
+            repository=Repository(url='https://space.git', branch='milky_way')
+        )[0]
+        assert jd_file.build_shell_commands == None
+        assert jd_file.build_batch_commands == ['milky_way.bat']
+
+
+        jd_file = JobsDoneJob.CreateFromYAML(
+            ci_contents,
+            repository=Repository(url='https://space.git', branch='master')
+        )[0]
+        assert jd_file.build_shell_commands == ['master.sh']
+        assert jd_file.build_batch_commands == None
+
+
     def testMatrixAndFlags(self):
         ci_contents = Dedent(
             '''
@@ -150,24 +177,6 @@ class Test(object):
                 assert jd_file.junit_patterns == ['junit*.xml']
                 assert jd_file.build_batch_commands == ['windows command: win32']
                 assert jd_file.build_shell_commands == None
-
-
-    def testCreateMatrixRows(self):
-        matrix_rows = JobsDoneJob.CreateMatrixRows(
-            {
-            'platform' :
-                [
-                'redhat64,linux',
-                'win32,windows',
-                'win64,windows',
-                ]
-            }
-        )
-        assert map(str, matrix_rows) == [
-            "<MatrixRow platform-redhat64 platform-linux>",
-            "<MatrixRow platform-win32 platform-windows>",
-            "<MatrixRow platform-win64 platform-windows>",
-        ]
 
 
     def testBranchPatterns(self):
