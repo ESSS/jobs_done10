@@ -839,6 +839,34 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     @_SkipIfFailTestEmpty
+    def testMatrixSingleValueOnly(self):
+        ci_contents = Dedent(
+            '''
+            matrix:
+                planet:
+                - earth
+
+                moon:
+                - europa
+            '''
+        )
+        repository = Repository(url='http://fake.git', branch='not_master')
+
+        # This test should create two jobs based on the given matrix
+        jd_file = JobsDoneJob.CreateFromYAML(ci_contents, repository)[0]
+        job_generator = JenkinsXmlJobGenerator()
+
+        JobGeneratorConfigurator.Configure(job_generator, jd_file)
+        jenkins_job = job_generator.GetJobs()
+
+        # Matrix usually affects the jobs name, but single value rows are left out
+        assert jenkins_job.name == 'fake-not_master'
+
+        # XML should have no diff too, because single values do not affect label_expression
+        self._AssertDiff(jenkins_job.xml, '')
+
+
+    @_SkipIfFailTestEmpty
     def testDisplayName(self):
         self._DoTest(
             ci_contents=Dedent(

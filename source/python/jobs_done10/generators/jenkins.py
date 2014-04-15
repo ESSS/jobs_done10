@@ -104,8 +104,9 @@ class JenkinsXmlJobGenerator(object):
                 if len(matrix[key]) > 1
             ])
 
-            self.__jjgen.label_expression += '-' + row_representation
-            self.__jjgen.job_name += '-' + row_representation
+            if row_representation: # Might be empty
+                self.__jjgen.label_expression += '-' + row_representation
+                self.__jjgen.job_name += '-' + row_representation
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
