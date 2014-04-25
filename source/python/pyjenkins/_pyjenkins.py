@@ -493,7 +493,7 @@ class XUnitPublisher(BaseJenkinsJobGeneratorPlugin):
             if not pattern:
                 continue
             plugin_xml = xml_factory['xunit/types/' + pattern_plugin]
-            plugin_xml['pattern'] = ' '.join(pattern)
+            plugin_xml['pattern'] = ','.join(pattern)
             plugin_xml['skipNoTestFiles'] = 'true'
             plugin_xml['failIfNotNew'] = 'false'
             plugin_xml['deleteOutputFiles'] = 'true'

@@ -341,6 +341,7 @@ class TestJenkinsXmlJobGenerator(object):
                 '''
                 junit_patterns:
                 - "junit*.xml"
+                - "others.xml"
                 '''
             ),
             expected_diff=Dedent(
@@ -351,7 +352,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <xunit>
                 +      <types>
                 +        <JUnitType>
-                +          <pattern>junit*.xml</pattern>
+                +          <pattern>junit*.xml,others.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
                 +          <failIfNotNew>false</failIfNotNew>
                 +          <deleteOutputFiles>true</deleteOutputFiles>
