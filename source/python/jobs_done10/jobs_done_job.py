@@ -18,36 +18,36 @@ class JobsDoneJob(object):
     # Options that should be forwarded to generators. These are set in JobsDoneJob instances
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
-        # list(str): Patterns to match when looking for boosttest results.
+        # Patterns to match when looking for boosttest results.
         'boosttest_patterns':list,
 
-        # list(str): Batch script commands used to build a project.
+        # Batch script commands used to build a project.
         'build_batch_commands':list,
 
-        # list(str): Shell script commands used to build a project.
+        # Shell script commands used to build a project.
         'build_shell_commands':list,
 
-        # str: Time based triggers for job (Jenkins)
+        # Time based triggers for job (Jenkins)
         'cron':str,
 
-        # str: Regex pattern to be matched from a job output and used as job description. (Jenkins)
+        # Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':str,
 
-        # str: The format for the job display name.
+        # The format for the job display name.
         'display_name':str,
 
-        # list(str): List of patterns to match when looking for jsunit test results.
+        # List of patterns to match when looking for jsunit test results.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
         'jsunit_patterns':list,
 
-        # list(str): List of patterns to match when looking for junit test results.
+        # List of patterns to match when looking for junit test results.
         'junit_patterns':list,
 
-        # str: An "label expression" that is used to match slave nodes.
+        # A "label expression" that is used to match slave nodes.
         'label_expression':str,
 
-        # str: Notifies Stash when a build passes
+        # Notifies Stash when a build passes
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
@@ -60,6 +60,9 @@ class JobsDoneJob(object):
         # e.g.
         #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
         'parameters':list,
+
+        # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
+        'scm_poll':str,
 
         # Job timeout in minutes
         'timeout' : str

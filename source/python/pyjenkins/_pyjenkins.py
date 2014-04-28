@@ -630,3 +630,26 @@ class Cron(BaseJenkinsJobGeneratorPlugin):
     def Create(self, xml_factory):
         xml_factory['hudson.triggers.TimerTrigger/spec'] = self.schedule
 
+
+
+#===================================================================================================
+# SCMPoll
+#===================================================================================================
+@PyJenkinsPlugin('scm-poll')
+class SMCPoll(BaseJenkinsJobGeneratorPlugin):
+    '''
+    Configures a job to poll SCM based on a schedule, and trigger a build if there are changes
+
+    :ivar str schedule:
+        Cron configurations using a format employed by Jenkins.
+    '''
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_TRIGGER
+
+    def __init__(self, schedule):
+        self.schedule = schedule
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        xml_factory['hudson.triggers.SCMTrigger/spec'] = self.schedule

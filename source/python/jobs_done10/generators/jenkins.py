@@ -182,6 +182,10 @@ class JenkinsXmlJobGenerator(object):
                     )
 
 
+    def SetScmPoll(self, schedule):
+        self.__jjgen.CreatePlugin("scm-poll", schedule)
+
+
     def SetTimeout(self, timeout):
         self.__jjgen.CreatePlugin("timeout", timeout)
 

@@ -927,6 +927,31 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    @_SkipIfFailTestEmpty
+    def testSCMPoll(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                scm_poll: |
+                       # Everyday at 22 pm
+                       0 22 * * *
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <triggers/>
+                +  <triggers>
+                +    <hudson.triggers.SCMTrigger>
+                +      <spec># Everyday at 22 pm
+                +0 22 * * *</spec>
+                +    </hudson.triggers.SCMTrigger>
+                +  </triggers>
+                '''
+            ),
+        )
+
+
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
