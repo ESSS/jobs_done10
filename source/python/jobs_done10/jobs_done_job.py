@@ -305,7 +305,7 @@ class JobsDoneJob(object):
         facts.update(extra_facts)
 
         def _Match(condition):
-            variable_name, variable_value = condition.split('-')
+            variable_name, variable_value = condition.split('-', 1)
             fact_values = facts[variable_name]
             return fact_values is cls._MATCH_ANY or variable_value in fact_values
 
