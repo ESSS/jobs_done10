@@ -6,6 +6,7 @@ This includes a generator, job publishers, constants and command line interface 
 from __future__ import absolute_import
 from ben10.foundation.bunch import Bunch
 from ben10.foundation.decorators import Implements
+from ben10.foundation.memoize import Memoize
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_generator import IJobGenerator
 
@@ -21,10 +22,14 @@ class JenkinsJob(Bunch):
     :cvar str name:
         Job name
 
+    :cvar Repository repository:
+        Repository that this job belongs to
+
     :cvar str xml:
         Job XML contents
     '''
     name = None
+    repository = None
     xml = None
 
 
@@ -78,8 +83,12 @@ class JenkinsXmlJobGenerator(object):
         return repository.name + '-' + repository.branch
 
 
-    def GetJobs(self):
-        return JenkinsJob(name=self.__jjgen.job_name, xml=self.__jjgen.GetContent())
+    def GetJob(self):
+        return JenkinsJob(
+            name=self.__jjgen.job_name,
+            repository=self.repository,
+            xml=self.__jjgen.GetContent(),
+        )
 
 
     #===============================================================================================
@@ -104,7 +113,7 @@ class JenkinsXmlJobGenerator(object):
                 if len(matrix[key]) > 1
             ])
 
-            if row_representation: # Might be empty
+            if row_representation:  # Might be empty
                 self.__jjgen.label_expression += '-' + row_representation
                 self.__jjgen.job_name += '-' + row_representation
 
@@ -198,28 +207,28 @@ class JenkinsJobPublisher(object):
     '''
     Publishes `JenkinsJob`s
     '''
-    def __init__(self, job_group, jobs):
+    def __init__(self, repository, jobs):
         '''
-        :param str job_group:
-            Group to which these jobs belong to.
-
-            This is used find and delete/update jobs that belong to the same group during upload.
+        :param Repository repository:
+            Repository used for these jobs. Used to find other jobs in the same url/branch to be
+            updated or deleted.
 
         :param list(JenkinsJob) jobs:
-            List of jobs to be published. They must all belong to the same `job_group` (name must
-            start with `job_group`)
+            List of jobs to be published.
         '''
-        self.job_group = job_group
+        for job in jobs:
+            assert job.repository == repository, +\
+                'All published jobs must belong to the given `repository`'
+
+        self.repository = repository
         self.jobs = dict((job.name, job) for job in jobs)
 
-        for job_name in self.jobs.keys():
-            assert job_name.startswith(job_group)
 
 
     def PublishToUrl(self, url, username=None, password=None):
         '''
         Publishes new jobs, updated existing jobs, and delete jobs that belong to the same
-        `self.job_group` but were not updated.
+        repository/branch but were not updated.
 
         :param str url:
             Jenkins instance URL where jobs will be uploaded to.
@@ -233,27 +242,27 @@ class JenkinsJobPublisher(object):
         :return tuple(list(str),list(str),list(str)):
             Tuple with lists of {new, updated, deleted} job names (sorted alphabetically)
         '''
-        # Push to url using jenkins_api
         import jenkins
-        jenkins = jenkins.Jenkins(url, username, password)
+        jenkins_api = jenkins.Jenkins(url, username, password)
 
+        # Get all jobs
         job_names = set(self.jobs.keys())
+        matching_jobs = self._GetMatchingJobs(jenkins_api)
 
-        all_jobs = set([str(job['name']) for job in jenkins.get_jobs()])
-        matching_jobs = set([job for job in all_jobs if job.startswith(self.job_group)])
-
+        # Find all new/updated/deleted jobs
         new_jobs = job_names.difference(matching_jobs)
         updated_jobs = job_names.intersection(matching_jobs)
         deleted_jobs = matching_jobs.difference(job_names)
 
+        # Process everything
         for job_name in new_jobs:
-            jenkins.create_job(job_name, self.jobs[job_name].xml)
+            jenkins_api.create_job(job_name, self.jobs[job_name].xml)
 
         for job_name in updated_jobs:
-            jenkins.reconfig_job(job_name, self.jobs[job_name].xml)
+            jenkins_api.reconfig_job(job_name, self.jobs[job_name].xml)
 
         for job_name in deleted_jobs:
-            jenkins.delete_job(job_name)
+            jenkins_api.delete_job(job_name)
 
         return map(sorted, (new_jobs, updated_jobs, deleted_jobs))
 
@@ -272,6 +281,61 @@ class JenkinsJobPublisher(object):
                 filename=os.path.join(output_directory, job.name),
                 contents=job.xml
             )
+
+
+    def _GetMatchingJobs(self, jenkins_api):
+        '''
+        Filter jobs that belong to the same repository/branch as a `job` being published
+
+        :param jenkins_api:
+            .. seealso:: self._GetJenkinsJobBranch
+
+        :return set(str):
+            Names of all Jenkins jobs that match `job` repository name and branch
+        '''
+        jenkins_jobs = set([str(job['name']) for job in jenkins_api.get_jobs()])
+
+        matching_jobs = set()
+
+        for jenkins_job in jenkins_jobs:
+            # Filter jobs that belong to this repository (this would be safer to do reading SCM
+            # information, but a lot more expensive
+            if not jenkins_job.startswith(self.repository.name):
+                continue
+
+            jenkins_job_branch = self._GetJenkinsJobBranch(jenkins_api, jenkins_job)
+            if jenkins_job_branch == self.repository.branch:
+                matching_jobs.add(jenkins_job)
+
+        return matching_jobs
+
+
+    @Memoize
+    def _GetJenkinsJobBranch(self, jenkins_api, jenkins_job):
+        '''
+        :param jenkins.Jenkins jenkins_api:
+            Configured API from python_jenkins that give access to Jenkins data at a host
+
+        :param str jenkins_job:
+            Name of a job in jenkins
+
+        :return str:
+            Name of `jenkins_job`s branch
+
+        .. note::
+            This function was separated to make use of Memoize cacheing, avoiding multiple queries
+            to the same jenkins job config.xml
+        '''
+        from xml.etree import ElementTree
+
+        # Read config to see if this job is in the same branch
+        config = jenkins_api.get_job_config(jenkins_job)
+
+        # We should be able to get this information from jenkins API, but it seems that git
+        # plugin for Jenkins has a bug that prevents its data from being shown in the API
+        # https://issues.jenkins-ci.org/browse/JENKINS-14588
+        return ElementTree.fromstring(config).find(
+            'scm/branches/hudson.plugins.git.BranchSpec/name').text
 
 
 
@@ -299,8 +363,8 @@ def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, 
         .. seealso:: JenkinsJobPublisher.PublishToUrl
 
     '''
-    job_group, jobs = GetJobsFromFile(repository, jobs_done_file_contents)
-    publisher = JenkinsJobPublisher(job_group, jobs)
+    jobs = GetJobsFromFile(repository, jobs_done_file_contents)
+    publisher = JenkinsJobPublisher(repository, jobs)
 
     return publisher.PublishToUrl(url, username, password)
 
@@ -313,7 +377,10 @@ def GetJobsFromDirectory(directory='.'):
     :param directory:
         Directory where we'll extract information to generate `JenkinsJob`s
 
-    :return set(JenkinsJob)
+    :return tuple(Repository,set(JenkinsJob))
+        Repository information for the given directory, and jobs obtained from this directory.
+
+        .. seealso:: GetJobsFromFile
     '''
     from ben10.filesystem import FileNotFoundError, GetFileContents
     from jobs_done10.git import Git
@@ -332,7 +399,7 @@ def GetJobsFromDirectory(directory='.'):
     except FileNotFoundError:
         jobs_done_file_contents = None
 
-    return GetJobsFromFile(repository, jobs_done_file_contents)
+    return repository, GetJobsFromFile(repository, jobs_done_file_contents)
 
 
 
@@ -352,15 +419,14 @@ def GetJobsFromFile(repository, jobs_done_file_contents):
     from jobs_done10.jobs_done_job import JobsDoneJob
 
     jenkins_generator = JenkinsXmlJobGenerator()
-    job_group = jenkins_generator.GetJobGroup(repository)
 
     jobs = []
     jobs_done_jobs = JobsDoneJob.CreateFromYAML(jobs_done_file_contents, repository)
     for jobs_done_job in jobs_done_jobs:
         JobGeneratorConfigurator.Configure(jenkins_generator, jobs_done_job)
-        jobs.append(jenkins_generator.GetJobs())
+        jobs.append(jenkins_generator.GetJob())
 
-    return job_group, jobs
+    return jobs
 
 
 
@@ -388,14 +454,11 @@ def ConfigureCommandLineInterface(jobs_done_application):
 
         :param password: Jenkins password.
         '''
-        directory = '.'
-
-        job_group, jobs = GetJobsFromDirectory(directory)
-
         console_.Print('Publishing jobs in "<white>%s</>"' % url)
 
-        new_jobs, updated_jobs, deleted_jobs = JenkinsJobPublisher(job_group, jobs).PublishToUrl(
-            url, username, password)
+        repository, jobs = GetJobsFromDirectory()
+        publisher = JenkinsJobPublisher(repository, jobs)
+        new_jobs, updated_jobs, deleted_jobs = publisher.PublishToUrl(url, username, password)
 
         for job in new_jobs:
             console_.Print('<green>NEW</> - ' + job)
@@ -412,10 +475,10 @@ def ConfigureCommandLineInterface(jobs_done_application):
 
         :param output_directory: Directory to output job xmls instead of uploading to `url`.
         '''
-        directory = '.'
-        job_group, jobs = GetJobsFromDirectory(directory)
-
         console_.Print('Saving jobs in "%s"' % output_directory)
-        publisher = JenkinsJobPublisher(job_group, jobs)
+
+        jobs = GetJobsFromDirectory()
+        publisher = JenkinsJobPublisher(jobs)
         publisher.PublishToDirectory(output_directory)
+
         console_.ProgressOk()
