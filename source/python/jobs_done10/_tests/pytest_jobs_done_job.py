@@ -101,6 +101,9 @@ class Test(object):
 
             branch-milky_way:build_batch_commands:
             - "milky_way.bat"
+
+            branch-with-hyphens-in-name:build_batch_commands:
+            - "crazy.bat"
             '''
         )
 
