@@ -813,7 +813,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         for jd_file in jobs_done_jobs:
             JobGeneratorConfigurator.Configure(job_generator, jd_file)
-            jenkins_job = job_generator.GetJobs()
+            jenkins_job = job_generator.GetJob()
 
             planet = jd_file.matrix_row['planet']
 
@@ -858,7 +858,7 @@ class TestJenkinsXmlJobGenerator(object):
         job_generator = JenkinsXmlJobGenerator()
 
         JobGeneratorConfigurator.Configure(job_generator, jd_file)
-        jenkins_job = job_generator.GetJobs()
+        jenkins_job = job_generator.GetJob()
 
         # Matrix usually affects the jobs name, but single value rows are left out
         assert jenkins_job.name == 'fake-not_master'
@@ -965,7 +965,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         job_generator = JenkinsXmlJobGenerator()
         JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
-        jenkins_job = job_generator.GetJobs()
+        jenkins_job = job_generator.GetJob()
 
         self._AssertDiff(jenkins_job.xml, expected_diff)
 
@@ -1023,9 +1023,7 @@ class TestJenkinsActions(object):
     _REPOSITORY = Repository(url='http://space.git', branch='branch')
 
     def testGetJobsFromFile(self, embed_data):
-        job_group, jobs = GetJobsFromFile(self._REPOSITORY, self._JOBS_DONE_FILE_CONTENTS)
-
-        assert job_group == self._REPOSITORY.name + '-' + self._REPOSITORY.branch
+        jobs = GetJobsFromFile(self._REPOSITORY, self._JOBS_DONE_FILE_CONTENTS)
         assert len(jobs) == 3
 
 
@@ -1040,11 +1038,10 @@ class TestJenkinsActions(object):
         git.CreateLocalBranch(repo_path, self._REPOSITORY.branch)
         CreateFile(os.path.join(repo_path, '.gitignore'), '')
         git.Add(repo_path, '.')
-        git.Commit(repo_path, 'First commitAdded jobs_done file')
+        git.Commit(repo_path, 'First commit')
 
         # If there is no jobs_done file, we should get zero jobs
-        job_group, jobs = GetJobsFromDirectory(repo_path)
-        assert job_group == 'space-branch'
+        _repository, jobs = GetJobsFromDirectory(repo_path)
         assert len(jobs) == 0
 
         # Create jobs_done file
@@ -1052,8 +1049,7 @@ class TestJenkinsActions(object):
         git.Add(repo_path, '.')
         git.Commit(repo_path, 'Added jobs_done file')
 
-        job_group, jobs = GetJobsFromDirectory(repo_path)
-        assert job_group == self._REPOSITORY.name + '-' + self._REPOSITORY.branch
+        _repository, jobs = GetJobsFromDirectory(repo_path)
         assert len(jobs) == 3
 
 
@@ -1130,14 +1126,14 @@ class TestJenkinsPublisher(object):
 
 
     def _GetPublisher(self):
-        job_group = 'space-milky_way'
+        repository = Repository(url='http://server/space.git', branch='milky_way')
         jobs = [
-            JenkinsJob(name='space-milky_way-jupiter', xml='jupiter'),
-            JenkinsJob(name='space-milky_way-mercury', xml='mercury'),
-            JenkinsJob(name='space-milky_way-venus', xml='venus'),
+            JenkinsJob(name='space-milky_way-jupiter', xml='jupiter', repository=repository),
+            JenkinsJob(name='space-milky_way-mercury', xml='mercury', repository=repository),
+            JenkinsJob(name='space-milky_way-venus', xml='venus', repository=repository),
         ]
 
-        return JenkinsJobPublisher(job_group, jobs)
+        return JenkinsJobPublisher(repository, jobs)
 
 
     def _MockJenkinsAPI(self, monkeypatch):
@@ -1156,6 +1152,21 @@ class TestJenkinsPublisher(object):
                     {'name' : u'space-milky_way-mercury'},
                     {'name' : u'space-milky_way-saturn'},
                 ]
+
+            def get_job_config(self, job_name):
+                return Dedent(
+                    '''
+                    <project>
+                        <scm>
+                            <branches>
+                                <hudson.plugins.git.BranchSpec>
+                                    <name>milky_way</name>
+                                </hudson.plugins.git.BranchSpec>
+                            </branches>
+                        </scm>
+                    </project>
+                    '''
+                )
 
             def create_job(self, name, xml):
                 self.NEW_JOBS.add(name)
