@@ -84,6 +84,10 @@ class JenkinsXmlJobGenerator(object):
 
 
     def GetJob(self):
+        '''
+        :return JenkinsJob:
+            Job created by this generator.
+        '''
         return JenkinsJob(
             name=self.__jjgen.job_name,
             repository=self.repository,
@@ -288,7 +292,7 @@ class JenkinsJobPublisher(object):
         Filter jobs that belong to the same repository/branch as a `job` being published
 
         :param jenkins_api:
-            .. seealso:: self._GetJenkinsJobBranch
+            Configured API from python_jenkins that give access to Jenkins data at a host.
 
         :return set(str):
             Names of all Jenkins jobs that match `job` repository name and branch
@@ -314,7 +318,7 @@ class JenkinsJobPublisher(object):
     def _GetJenkinsJobBranch(self, jenkins_api, jenkins_job):
         '''
         :param jenkins.Jenkins jenkins_api:
-            Configured API from python_jenkins that give access to Jenkins data at a host
+            Configured API from python_jenkins that give access to Jenkins data at a host.
 
         :param str jenkins_job:
             Name of a job in jenkins
