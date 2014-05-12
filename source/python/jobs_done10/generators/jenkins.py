@@ -46,6 +46,8 @@ class JenkinsXmlJobGenerator(object):
     def __init__(self):
         # Initialize some variables
         self.__jjgen = None
+        self.__scm_plugin = None
+
         self.repository = None
 
 
@@ -59,7 +61,7 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.description = "<!-- Managed by Job's Done -->"
 
         # Configure git SCM
-        self.__jjgen.CreatePlugin(
+        self.__scm_plugin = self.__jjgen.CreatePlugin(
             'git',
             url=self.repository.url,
             target_dir=self.repository.name,
@@ -120,6 +122,23 @@ class JenkinsXmlJobGenerator(object):
             if row_representation:  # Might be empty
                 self.__jjgen.label_expression += '-' + row_representation
                 self.__jjgen.job_name += '-' + row_representation
+
+
+    def SetAdditionalScms(self, scms):
+        # Convert our default scm plugin to MultiSCM
+        self.__scm_plugin.multi_scm = True
+
+        from jobs_done10.repository import Repository
+        for scm in scms:
+            if 'git' in scm:
+                repository = Repository(url=scm['git']['url'], branch=scm['git']['branch'])
+                self.__jjgen.CreatePlugin(
+                    'git',
+                    url=repository.url,
+                    target_dir=repository.name,
+                    branch=repository.branch,
+                    multi_scm=True,
+                )
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
@@ -338,8 +357,26 @@ class JenkinsJobPublisher(object):
         # We should be able to get this information from jenkins API, but it seems that git
         # plugin for Jenkins has a bug that prevents its data from being shown in the API
         # https://issues.jenkins-ci.org/browse/JENKINS-14588
-        return ElementTree.fromstring(config).find(
-            'scm/branches/hudson.plugins.git.BranchSpec/name').text
+        root = ElementTree.fromstring(config)
+
+        # Try for single SCM
+        name_element = root.find('scm/branches/hudson.plugins.git.BranchSpec/name')
+        if name_element is not None:
+            return name_element.text.strip()
+
+        # If the above was not found, we might be dealing with multiple repositories
+        scms = root.findall('scm/scms/hudson.plugins.git.GitSCM')
+
+        # Process them all until we find the SCM for the correct repository
+        for scm in scms:
+            url = scm.find('userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url').text.strip()
+
+            if url == self.repository.url:
+                return scm.find('branches/hudson.plugins.git.BranchSpec/name').text.strip()
+        else:
+            raise RuntimeError(
+                'Could not find SCM for repository "%s" in job "%s"' % (self.repository.url, jenkins_job)
+            )
 
 
 

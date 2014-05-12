@@ -85,7 +85,7 @@ class JenkinsJobGenerator(object):
         self.timeout = None
 
         from ben10.foundation.odict import odict
-        self.__plugins = odict() # Use odict to maintain order
+        self.__plugins = odict()  # Use odict to maintain order
 
 
     # Plugins --------------------------------------------------------------------------------------
@@ -177,8 +177,8 @@ class JenkinsJobGenerator(object):
             i_parameter_plugin.Create(xml_factory)
 
         # Configure SCM
-        for i_publisher_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_SCM):
-            i_publisher_plugin.Create(xml_factory)
+        for i_scm_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_SCM):
+            i_scm_plugin.Create(xml_factory)
 
         xml_factory['blockBuildWhenDownstreamBuilding'] = 'false'
         xml_factory['blockBuildWhenUpstreamBuilding'] = 'false'
@@ -193,8 +193,8 @@ class JenkinsJobGenerator(object):
             i_publisher_plugin.Create(publishers_xml)
 
         build_wrappers_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER]
-        for i_publisher_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER):
-            i_publisher_plugin.Create(build_wrappers_xml)
+        for i_build_wrapper_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER):
+            i_build_wrapper_plugin.Create(build_wrappers_xml)
 
         triggers_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_TRIGGER]
         for i_trigger_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_TRIGGER):
@@ -280,6 +280,9 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
     :ivar str refspec:
         "A refspec controls the remote refs to be retrieved and how they map to local refs."
         Default to "+refs/heads/*:refs/remotes/origin/*"
+
+    :ivar bool multi_scm:
+        If True, uses syntax for multiple repositories.
     '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -292,44 +295,36 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         target_dir=None,
         branch='master',
         remote='origin',
-        refspec='+refs/heads/*:refs/remotes/origin/*'):
+        refspec='+refs/heads/*:refs/remotes/origin/*',
+        multi_scm=False):
 
         self.url = url
         self.target_dir = target_dir
         self.branch = branch
         self.remote = remote
         self.refspec = refspec
+        self.multi_scm = multi_scm
 
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        xml_factory['scm@class'] = 'hudson.plugins.git.GitSCM'
-        xml_factory['scm/configVersion'] = '2'
-        xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name'] = self.remote
-        xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec'] = self.refspec
-        xml_factory['scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url'] = self.url
-        xml_factory['scm/branches/hudson.plugins.git.BranchSpec/name'] = self.branch
-        xml_factory['scm/excludedUsers']
-        xml_factory['scm/buildChooser@class'] = 'hudson.plugins.git.util.DefaultBuildChooser'
-        xml_factory['scm/disableSubmodules'] = 'false'
-        xml_factory['scm/recursiveSubmodules'] = 'false'
-        xml_factory['scm/doGenerateSubmoduleConfigurations'] = 'false'
-        xml_factory['scm/authorOrCommitter'] = 'false'
-        xml_factory['scm/clean'] = 'false'
-        xml_factory['scm/wipeOutWorkspace'] = 'false'
-        xml_factory['scm/pruneBranches'] = 'false'
-        xml_factory['scm/remotePoll'] = 'false'
-        xml_factory['scm/gitTool'] = 'Default'
-        xml_factory['scm/submoduleCfg@class'] = 'list'
-        xml_factory['scm/relativeTargetDir'] = self.target_dir
-        xml_factory['scm/reference']
-        xml_factory['scm/gitConfigName']
-        xml_factory['scm/gitConfigEmail']
-        xml_factory['scm/scmName']
+        if self.multi_scm:
+            xml_factory['scm@class'] = 'org.jenkinsci.plugins.multiplescms.MultiSCM'
+            scm_config = xml_factory['scm/scms/hudson.plugins.git.GitSCM+']
+        else:
+            xml_factory['scm@class'] = 'hudson.plugins.git.GitSCM'
+            scm_config = xml_factory['scm']
+
+        scm_config['configVersion'] = '2'
+        scm_config['userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name'] = self.remote
+        scm_config['userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec'] = self.refspec
+        scm_config['userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url'] = self.url
+        scm_config['branches/hudson.plugins.git.BranchSpec/name'] = self.branch
+        scm_config['relativeTargetDir'] = self.target_dir
 
         # Checkout to local branch is done twice to work with different versions of plugin (2.0+, 1.5)
-        xml_factory['scm/extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
-        xml_factory['scm/localBranch'] = self.branch
+        scm_config['extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
+        scm_config['localBranch'] = self.branch
 
 
 

@@ -58,23 +58,7 @@ class TestJenkinsXmlJobGenerator(object):
                 <name>not_master</name>
               </hudson.plugins.git.BranchSpec>
             </branches>
-            <excludedUsers/>
-            <buildChooser class="hudson.plugins.git.util.DefaultBuildChooser"/>
-            <disableSubmodules>false</disableSubmodules>
-            <recursiveSubmodules>false</recursiveSubmodules>
-            <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
-            <authorOrCommitter>false</authorOrCommitter>
-            <clean>false</clean>
-            <wipeOutWorkspace>false</wipeOutWorkspace>
-            <pruneBranches>false</pruneBranches>
-            <remotePoll>false</remotePoll>
-            <gitTool>Default</gitTool>
-            <submoduleCfg class="list"/>
             <relativeTargetDir>fake</relativeTargetDir>
-            <reference/>
-            <gitConfigName/>
-            <gitConfigEmail/>
-            <scmName/>
             <extensions>
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
@@ -952,6 +936,92 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    @_SkipIfFailTestEmpty
+    def testMultipleSCMs(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                additional_scms:
+                - git:
+                    url: http://some_url.git
+                    branch: my_branch
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <scm class="hudson.plugins.git.GitSCM">
+                -    <configVersion>2</configVersion>
+                -    <userRemoteConfigs>
+                -      <hudson.plugins.git.UserRemoteConfig>
+                -        <name>origin</name>
+                -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                -        <url>http://fake.git</url>
+                -      </hudson.plugins.git.UserRemoteConfig>
+                -    </userRemoteConfigs>
+                -    <branches>
+                -      <hudson.plugins.git.BranchSpec>
+                -        <name>not_master</name>
+                -      </hudson.plugins.git.BranchSpec>
+                -    </branches>
+                -    <relativeTargetDir>fake</relativeTargetDir>
+                -    <extensions>
+                -      <hudson.plugins.git.extensions.impl.LocalBranch>
+                +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
+                +    <scms>
+                +      <hudson.plugins.git.GitSCM>
+                +        <configVersion>2</configVersion>
+                +        <userRemoteConfigs>
+                +          <hudson.plugins.git.UserRemoteConfig>
+                +            <name>origin</name>
+                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                +            <url>http://fake.git</url>
+                +          </hudson.plugins.git.UserRemoteConfig>
+                +        </userRemoteConfigs>
+                +        <branches>
+                +          <hudson.plugins.git.BranchSpec>
+                +            <name>not_master</name>
+                +          </hudson.plugins.git.BranchSpec>
+                +        </branches>
+                +        <relativeTargetDir>fake</relativeTargetDir>
+                +        <extensions>
+                +          <hudson.plugins.git.extensions.impl.LocalBranch>
+                +            <localBranch>not_master</localBranch>
+                +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +        </extensions>
+                @@ @@
+                -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -    </extensions>
+                -    <localBranch>not_master</localBranch>
+                +      </hudson.plugins.git.GitSCM>
+                +      <hudson.plugins.git.GitSCM>
+                +        <configVersion>2</configVersion>
+                +        <userRemoteConfigs>
+                +          <hudson.plugins.git.UserRemoteConfig>
+                +            <name>origin</name>
+                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                +            <url>http://some_url.git</url>
+                +          </hudson.plugins.git.UserRemoteConfig>
+                +        </userRemoteConfigs>
+                +        <branches>
+                +          <hudson.plugins.git.BranchSpec>
+                +            <name>my_branch</name>
+                +          </hudson.plugins.git.BranchSpec>
+                +        </branches>
+                +        <relativeTargetDir>some_url</relativeTargetDir>
+                +        <extensions>
+                +          <hudson.plugins.git.extensions.impl.LocalBranch>
+                +            <localBranch>my_branch</localBranch>
+                +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +        </extensions>
+                +        <localBranch>my_branch</localBranch>
+                +      </hudson.plugins.git.GitSCM>
+                +    </scms>
+                '''
+            ),
+        )
+
+
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
@@ -1154,19 +1224,70 @@ class TestJenkinsPublisher(object):
                 ]
 
             def get_job_config(self, job_name):
-                return Dedent(
-                    '''
-                    <project>
-                        <scm>
+                # Test with single, and multiple scms
+                if job_name == 'space-milky_way-mercury':
+                    return Dedent(
+                        '''
+                        <project>
+                          <scm>
+                            <userRemoteConfigs>
+                              <hudson.plugins.git.UserRemoteConfig>
+                                <url>
+                                  http://server/space.git
+                                </url>
+                              </hudson.plugins.git.UserRemoteConfig>
+                            </userRemoteConfigs>
                             <branches>
-                                <hudson.plugins.git.BranchSpec>
-                                    <name>milky_way</name>
-                                </hudson.plugins.git.BranchSpec>
+                              <hudson.plugins.git.BranchSpec>
+                                <name>milky_way</name>
+                              </hudson.plugins.git.BranchSpec>
                             </branches>
-                        </scm>
-                    </project>
-                    '''
-                )
+                          </scm>
+                        </project>
+                        '''
+                    )
+                elif job_name == 'space-milky_way-saturn':
+                    return Dedent(
+                        '''
+                        <project>
+                          <scm>
+                            <scms>
+                              <!-- One of the SCMs is the one for space -->
+                              <hudson.plugins.git.GitSCM>
+                                <userRemoteConfigs>
+                                  <hudson.plugins.git.UserRemoteConfig>
+                                    <url>
+                                      http://server/space.git
+                                    </url>
+                                  </hudson.plugins.git.UserRemoteConfig>
+                                </userRemoteConfigs>
+                                <branches>
+                                  <hudson.plugins.git.BranchSpec>
+                                    <name>milky_way</name>
+                                  </hudson.plugins.git.BranchSpec>
+                                </branches>
+                              </hudson.plugins.git.GitSCM>
+
+                              <!-- But a job might have multiple SCMs, we don't care about those -->
+                              <hudson.plugins.git.GitSCM>
+                                <userRemoteConfigs>
+                                  <hudson.plugins.git.UserRemoteConfig>
+                                    <url>
+                                      http://server/space_dependencie.git
+                                    </url>
+                                  </hudson.plugins.git.UserRemoteConfig>
+                                </userRemoteConfigs>
+                                <branches>
+                                  <hudson.plugins.git.BranchSpec>
+                                    <name>other_branch</name>
+                                  </hudson.plugins.git.BranchSpec>
+                                </branches>
+                              </hudson.plugins.git.GitSCM>
+                            </scms>
+                          </scm>
+                        </project>
+                        '''
+                    )
 
             def create_job(self, name, xml):
                 self.NEW_JOBS.add(name)
