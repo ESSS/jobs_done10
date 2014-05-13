@@ -481,8 +481,8 @@ def ConfigureCommandLineInterface(jobs_done_application):
         '''
         console_.Print('Saving jobs in "%s"' % output_directory)
 
-        jobs = GetJobsFromDirectory()
-        publisher = JenkinsJobPublisher(jobs)
+        repository, jobs = GetJobsFromDirectory()
+        publisher = JenkinsJobPublisher(repository, jobs)
         publisher.PublishToDirectory(output_directory)
 
         console_.ProgressOk()
