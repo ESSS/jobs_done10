@@ -18,6 +18,9 @@ class JobsDoneJob(object):
     # Options that should be forwarded to generators. These are set in JobsDoneJob instances
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
+        # Additional repositories to be used in a job.
+        'additional_scms':list,
+
         # Patterns to match when looking for boosttest results.
         'boosttest_patterns':list,
 
