@@ -323,7 +323,8 @@ class JenkinsJobPublisher(object):
         for jenkins_job in jenkins_jobs:
             # Filter jobs that belong to this repository (this would be safer to do reading SCM
             # information, but a lot more expensive
-            if not jenkins_job.startswith(self.repository.name):
+            common_prefix = self.repository.name + '-' + self.repository.branch
+            if not jenkins_job.startswith(common_prefix):
                 continue
 
             jenkins_job_branch = self._GetJenkinsJobBranch(jenkins_api, jenkins_job)
