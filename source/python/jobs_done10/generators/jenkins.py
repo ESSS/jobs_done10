@@ -425,7 +425,7 @@ def GetJobsFromDirectory(directory='.'):
         .. seealso:: GetJobsFromFile
     '''
     from ben10.filesystem import FileNotFoundError, GetFileContents
-    from jobs_done10.git import Git
+    from gitit.git import Git
     from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME
     from jobs_done10.repository import Repository
     import os

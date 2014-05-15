@@ -1,8 +1,8 @@
 from ben10.filesystem import CreateDirectory, CreateFile, GetFileContents, ListFiles
 from ben10.foundation.string import Dedent
+from gitit.git import Git
 from jobs_done10.generators.jenkins import (GetJobsFromDirectory, GetJobsFromFile, JenkinsJob,
     JenkinsJobPublisher, JenkinsXmlJobGenerator, UploadJobsFromFile)
-from jobs_done10.git import Git
 from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneJob
 from jobs_done10.repository import Repository
