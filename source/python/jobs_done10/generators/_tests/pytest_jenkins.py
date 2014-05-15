@@ -7,7 +7,6 @@ from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneJob
 from jobs_done10.repository import Repository
 import difflib
-import functools
 import jenkins
 import os
 import pytest
@@ -76,40 +75,9 @@ class TestJenkinsXmlJobGenerator(object):
     )
 
 
-    def testEmpty(self):
-        '''
-        Tests the most basic YAML possible (created from no ci_contents at all)
-
-        If this test fails, tests marked with @_SkipIfFailTestEmpty will be skipped.
-        '''
-        self._DoTest(ci_contents='', expected_diff='')
-
-
-    def _SkipIfFailTestEmpty(original_test):  # @NoSelf
-        '''
-        Decorator that skips tests if self.testEmpty fails.
-
-        This is useful because if a change is made to the most basic YAML possible (created from
-        no ci_contents at all), all tests would fail, polluting the output.
-
-        Fixing testEmpty should make other tests run again.
-        '''
-        @functools.wraps(original_test)
-        def testFunc(self, *args, **kwargs):
-            try:
-                self.testEmpty()
-            except:  # pragma: no cover
-                pytest.skip('Skipping until testEmpty is fixed.')
-                return
-            return original_test(self, *args, **kwargs)
-
-        return testFunc
-
-
     #===============================================================================================
     # Tests
     #===============================================================================================
-    @_SkipIfFailTestEmpty
     def testChoiceParameters(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -146,7 +114,6 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
-    @_SkipIfFailTestEmpty
     def testMultipleChoiceParameters(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -200,7 +167,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testStringParameters(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -231,7 +197,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testMultipleStringParameters(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -271,7 +236,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testParametersMaintainOrder(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -318,7 +282,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testJUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -358,7 +321,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testTimeout(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -381,7 +343,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testJSUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -420,7 +381,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testMulitpleTestResults(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -468,7 +428,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testBuildBatchCommand(self):
         # works with a single command
         self._DoTest(
@@ -544,7 +503,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testBuildShellCommand(self):
         # works with a single command
         self._DoTest(
@@ -620,7 +578,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testDescriptionSetter(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -645,7 +602,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testNotifyStash(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -673,7 +629,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testNotifyStashServerDefault(self):
         '''
         When given no parameters, use the default Stash configurations set in the Jenkins server
@@ -700,7 +655,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testNotifyStashIncompleteParameters(self):
         with pytest.raises(ValueError) as e:
             self._DoTest(
@@ -716,7 +670,6 @@ class TestJenkinsXmlJobGenerator(object):
         assert str(e.value) == 'Must pass "username" when passing "password"'
 
 
-    @_SkipIfFailTestEmpty
     def testNotifyStashWithTests(self):
         '''
         When we have both notify_stash, and some test pattern, we have to make sure that the output
@@ -769,7 +722,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testMatrix(self):
         ci_contents = Dedent(
             '''
@@ -823,7 +775,6 @@ class TestJenkinsXmlJobGenerator(object):
             )
 
 
-    @_SkipIfFailTestEmpty
     def testMatrixSingleValueOnly(self):
         ci_contents = Dedent(
             '''
@@ -851,7 +802,6 @@ class TestJenkinsXmlJobGenerator(object):
         self._AssertDiff(jenkins_job.xml, '')
 
 
-    @_SkipIfFailTestEmpty
     def testDisplayName(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -868,7 +818,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testLabelExpression(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -886,7 +835,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testCron(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -911,7 +859,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testSCMPoll(self):
         self._DoTest(
             ci_contents=Dedent(
@@ -936,7 +883,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    @_SkipIfFailTestEmpty
     def testMultipleSCMs(self):
         self._DoTest(
             ci_contents=Dedent(

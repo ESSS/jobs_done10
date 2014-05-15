@@ -224,6 +224,24 @@ class Test(object):
         jobs = JobsDoneJob.CreateFromYAML(jd_file_contents, repository=self._REPOSITORY)
         assert len(jobs) == 3
 
+        # Branch patterns can also be filtered using matrix
+        # e.g., mars only has jobs in master
+        jd_file_contents = base_contents + Dedent(
+            '''
+            planet-mars:branch_patterns:
+            - "master"
+
+            planet-earth:branch_patterns:
+            - ".*"
+
+            planet-venus:branch_patterns:
+            - ".*"
+            '''
+        )
+        jobs = JobsDoneJob.CreateFromYAML(jd_file_contents, repository=self._REPOSITORY)
+        assert len(jobs) == 2
+
+
 
     def testUnknownOption(self):
         # Unknown options should fail
