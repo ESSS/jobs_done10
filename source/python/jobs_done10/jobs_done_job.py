@@ -19,7 +19,7 @@ class JobsDoneJob(object):
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
         # Additional repositories to be used in a job.
-        'additional_scms':list,
+        'additional_repositories':list,
 
         # Patterns to match when looking for boosttest results.
         'boosttest_patterns':list,

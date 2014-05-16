@@ -124,19 +124,19 @@ class JenkinsXmlJobGenerator(object):
                 self.__jjgen.job_name += '-' + row_representation
 
 
-    def SetAdditionalScms(self, scms):
+    def SetAdditionalRepositories(self, repositories):
         # Convert our default scm plugin to MultiSCM
         self.__scm_plugin.multi_scm = True
 
         from jobs_done10.repository import Repository
-        for scm in scms:
-            if 'git' in scm:
-                repository = Repository(url=scm['git']['url'], branch=scm['git']['branch'])
+        for repo in repositories:
+            if 'git' in repo:
+                repo = Repository(url=repo['git']['url'], branch=repo['git']['branch'])
                 self.__jjgen.CreatePlugin(
                     'git',
-                    url=repository.url,
-                    target_dir=repository.name,
-                    branch=repository.branch,
+                    url=repo.url,
+                    target_dir=repo.name,
+                    branch=repo.branch,
                     multi_scm=True,
                 )
 

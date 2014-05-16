@@ -941,7 +941,7 @@ class TestJenkinsXmlJobGenerator(object):
         self._DoTest(
             ci_contents=Dedent(
                 '''
-                additional_scms:
+                additional_repositories:
                 - git:
                     url: http://some_url.git
                     branch: my_branch
