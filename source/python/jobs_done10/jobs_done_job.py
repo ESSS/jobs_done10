@@ -178,14 +178,9 @@ class JobsDoneJob(object):
         yaml_contents = yaml_contents.strip()
 
         # Load yaml
-        jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader) or {}
-
-        # Check if this branch is acceptable (matches anything in branch_patterns)
-        import re
-        branch_patterns = jd_data.get('branch_patterns', ['.*'])
-        if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
+        jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader)
+        if not jd_data:
             return []
-
 
         # Search for unknown options and type errors
         for option_name, option_value in jd_data.iteritems():
@@ -214,19 +209,13 @@ class JobsDoneJob(object):
                 if not any(matches):
                     raise UnmatchableConditionError(option_name)
 
-
+        import re
         jobs_done_jobs = []
         for matrix_row in matrix_rows:
             jobs_done_job = JobsDoneJob()
-            jobs_done_jobs.append(jobs_done_job)
 
             jobs_done_job.repository = repository
             jobs_done_job.matrix_row = matrix_row.simple_dict
-
-            if not jd_data:
-                # Handling for empty jobs, they still are valid since we don't know what a generator
-                # will do with them, maybe fill it with defaults
-                continue
 
             # Re-read jd_data replacing all matrix variables with their values in the current
             # matrix_row and special replacement variables 'branch' and 'name', based on repository.
@@ -252,6 +241,11 @@ class JobsDoneJob(object):
 
                 # If all conditions are met, set this option in the job.
                 setattr(jobs_done_job, option_name, option_value)
+
+            # Only create this job if this branch is acceptable (matches anything in branch_patterns)
+            branch_patterns = jobs_done_job.branch_patterns or ['.*']
+            if any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
+                jobs_done_jobs.append(jobs_done_job)
 
         return jobs_done_jobs
 
