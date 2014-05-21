@@ -11,16 +11,26 @@ branch_patterns:
 - master
 - fb-.*
 
+
+additional_repositories:
+- git:
+    url: "ssh://git@eden.fln.esss.com.br:7999/esss/ben10.git"
+    branch: "{branch}"
+
+
 junit_patterns:
 - "**/build/{dist}-{platform}-tests/*.xml"
+- "ben10/pytest.xml"
 
 platform-windows:build_batch_commands:
-- "%AA_AASIMAR_AA% -t project.update jobs_done10 --projects-dir=%WORKSPACE% --dependencies-only --sources=head --binaries=none"
-- "%AA_AASIMAR_AA% -t project.build jobs_done10 --projects-dir=%WORKSPACE% --dist={dist} --platform={platform}"
+- |
+  %AA_AASIMAR_AA_CONFIG% --dependencies-file=jobs_done10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --shared-dir=W:/Shared4Jobs --reset-env --load-env=git || goto :eof
+  %AA_AASIMAR_AA% project.build jobs_done10 -d || goto :eof
 
 platform-linux:build_shell_commands:
-- "$AA_AASIMAR_AA -t project.update jobs_done10 --projects-dir=$WORKSPACE --dependencies-only --sources=head --binaries=none"
-- "$AA_AASIMAR_AA -t project.build jobs_done10 --projects-dir=$WORKSPACE --dist={dist} --platform={platform}"
+- |
+  $AA_AASIMAR_AA_CONFIG --dependencies-file=jobs_done10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --shared-dir=$HOME/Shared4Jobs --reset-env --load-env=git
+  $AA_AASIMAR_AA project.build jobs_done10 -d
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
