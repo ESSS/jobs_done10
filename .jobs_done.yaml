@@ -11,12 +11,10 @@ branch_patterns:
 - master
 - fb-.*
 
-
 additional_repositories:
 - git:
     url: "ssh://git@eden.fln.esss.com.br:7999/esss/ben10.git"
-    branch: "{branch}"
-
+    branch: "master"
 
 junit_patterns:
 - "**/build/{dist}-{platform}-tests/*.xml"
@@ -25,12 +23,12 @@ junit_patterns:
 platform-windows:build_batch_commands:
 - |
   %AA_AASIMAR_AA_CONFIG% --dependencies-file=jobs_done10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --shared-dir=W:/Shared4Jobs --reset-env --load-env=git || goto :eof
-  %AA_AASIMAR_AA% project.build jobs_done10 -d || goto :eof
+  %AA_AASIMAR_AA% project.build jobs_done10 || goto :eof
 
 platform-linux:build_shell_commands:
 - |
   $AA_AASIMAR_AA_CONFIG --dependencies-file=jobs_done10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --shared-dir=$HOME/Shared4Jobs --reset-env --load-env=git
-  $AA_AASIMAR_AA project.build jobs_done10 -d
+  $AA_AASIMAR_AA project.build jobs_done10
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
