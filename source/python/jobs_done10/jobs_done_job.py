@@ -236,7 +236,7 @@ class JobsDoneJob(object):
                     option_name = option_name.split(':')[-1]
 
                     # Skip this option if any condition is not met
-                    if not cls._MatchConditions(conditions, matrix_row.full_dict, branch=repository.branch):
+                    if not cls._MatchConditions(conditions, matrix_row.full_dict, branch=[repository.branch]):
                         continue
 
                 # If all conditions are met, set this option in the job.
@@ -273,6 +273,8 @@ class JobsDoneJob(object):
             fact_dicts = {'planet' : ['terra', 'earth'], 'moon' : cls._MATCH_ANY}
             extra_facts = {'branch' : 'master'}
 
+            There are multiple possible values for 'planet' because the user can define aliases.
+            
             This would match for the given conditions:
                 ['planet-terra']
                 ['planet-terra', 'branch-master']
@@ -282,6 +284,7 @@ class JobsDoneJob(object):
             And not match:
                 ['planet-mars']
                 ['planet-earth', 'branch-release']
+                
 
         :param list(str) conditions:
             A list of conditions in the form 'name-value'.
@@ -295,6 +298,7 @@ class JobsDoneJob(object):
         :return boolean:
             Returns True if all the given conditions matches the given facts.
         '''
+        import re
         # Assemble facts
         facts = {}
         for fact_dict in fact_dicts:
@@ -302,9 +306,9 @@ class JobsDoneJob(object):
         facts.update(extra_facts)
 
         def _Match(condition):
-            variable_name, variable_value = condition.split('-', 1)
+            variable_name, match_mask = condition.split('-', 1)
             fact_values = facts[variable_name]
-            return fact_values is cls._MATCH_ANY or variable_value in fact_values
+            return fact_values is cls._MATCH_ANY or any(re.match(match_mask, fact) for fact in fact_values)
 
         return all(map(_Match, conditions))
 
