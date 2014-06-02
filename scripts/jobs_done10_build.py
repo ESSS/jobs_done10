@@ -12,5 +12,6 @@ class JobsDone10BuildCommand(BuildCommand):
 
     @Override(BuildCommand.EvBuild)
     def EvBuild(self, args):
+        self.BuildDependencies()
         self.Clean()
         self.RunTests(jobs=8, xml=True, verbose=1)

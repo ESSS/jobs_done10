@@ -152,6 +152,31 @@ class Test(object):
                 assert jd_file.build_shell_commands == None
 
 
+    def testMatrixAndRegexFlags(self):
+        ci_contents = Dedent(
+            '''
+            platform-win.*:junit_patterns:
+            - "junit*.xml"
+
+            platform-(?!windows):build_shell_commands:
+            - "{platform} command"
+
+            matrix:
+                platform:
+                - linux
+                - windows
+            '''
+        )
+        for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
+            if jd_file.matrix_row['platform'] == 'linux':
+                assert jd_file.junit_patterns == None
+                assert jd_file.build_batch_commands == None
+                assert jd_file.build_shell_commands == ['linux command']
+            else:
+                assert jd_file.junit_patterns == ['junit*.xml']
+                assert jd_file.build_shell_commands == None
+
+
     def testMatrixAndExtraFlags(self):
         ci_contents = Dedent(
             '''
