@@ -169,6 +169,26 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.display_name = display_name
 
 
+    def SetEmailNotification(self, args):
+        if isinstance(args, basestring):
+            # If args is a single string, use default options and just set email
+            self.__jjgen.CreatePlugin(
+                "email-notification",
+                recipients=args.split(),
+                notify_every_build=False,
+                notify_individuals=False
+            )
+        else:
+            # We got a dict
+            from ben10.foundation.types_ import Boolean
+            self.__jjgen.CreatePlugin(
+                "email-notification",
+                recipients=args.get('recipients', '').split(),
+                notify_every_build=Boolean(args.get('notify_every_build', 'false')),
+                notify_individuals=Boolean(args.get('notify_individuals', 'false')),
+            )
+
+
     def SetJunitPatterns(self, junit_patterns):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns

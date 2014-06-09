@@ -648,3 +648,51 @@ class SMCPoll(BaseJenkinsJobGeneratorPlugin):
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         xml_factory['hudson.triggers.SCMTrigger/spec'] = self.schedule
+
+
+
+#===================================================================================================
+# EmailNotification
+#===================================================================================================
+@PyJenkinsPlugin('email-notification')
+class EmailNotification(BaseJenkinsJobGeneratorPlugin):
+    '''
+    Sends emails for failed builds.
+    '''
+
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
+
+    def __init__(self, recipients, notify_every_build, notify_individuals):
+        '''
+        :ivar list(str) recipients:
+            List of recipients receivers that will be informed of failed builds
+
+        :ivar bool notify_every_build:
+            If True, every failed build is notified (even when previous executions failed too)
+
+        :ivar bool notify_individuals:
+            If True, notifies individuals who broke the build.
+
+            From Jenkins:
+
+            If this option is checked, the notification e-mail will be sent to individuals who have
+            committed changes for the broken build (by assuming that those changes broke the build).
+
+            If e-mail addresses are also specified in the recipient list, then both the individuals
+            as well as the specified addresses get the notification e-mail.
+
+            If the recipient list is empty, then only the individuals will receive e-mails.
+        '''
+        self.recipients = recipients
+        self.notify_every_build = notify_every_build
+        self.notify_individuals = notify_individuals
+
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        mailer = xml_factory['hudson.tasks.Mailer']
+        mailer['recipients'] = ' '.join(self.recipients)
+        mailer['dontNotifyEveryUnstableBuild'] = 'false' if self.notify_every_build else 'true'
+        mailer['sendToIndividuals'] = 'true' if self.notify_individuals else 'false'

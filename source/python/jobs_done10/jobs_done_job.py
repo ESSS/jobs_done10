@@ -40,6 +40,9 @@ class JobsDoneJob(object):
         # The format for the job display name.
         'display_name':str,
 
+        # Emails to be sent out for failed builds
+        'email_notification':(dict, str),
+
         # List of patterns to match when looking for jsunit test results.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
         'jsunit_patterns':list,
@@ -274,7 +277,7 @@ class JobsDoneJob(object):
             extra_facts = {'branch' : 'master'}
 
             There are multiple possible values for 'planet' because the user can define aliases.
-            
+
             This would match for the given conditions:
                 ['planet-terra']
                 ['planet-terra', 'branch-master']
@@ -284,7 +287,7 @@ class JobsDoneJob(object):
             And not match:
                 ['planet-mars']
                 ['planet-earth', 'branch-release']
-                
+
 
         :param list(str) conditions:
             A list of conditions in the form 'name-value'.
