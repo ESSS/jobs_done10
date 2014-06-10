@@ -968,6 +968,57 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+
+    def testEmailNotification(self):
+        # Test dict syntax
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                email_notification:
+                  recipients: user@company.com other@company.com
+                  notify_every_build: true
+                  notify_individuals: true
+
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <hudson.tasks.Mailer>
+                +      <recipients>user@company.com other@company.com</recipients>
+                +      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+                +      <sendToIndividuals>true</sendToIndividuals>
+                +    </hudson.tasks.Mailer>
+                +  </publishers>
+                '''
+            ),
+        )
+
+        # Test string syntax
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                email_notification: user@company.com other@company.com
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <publishers/>
+                +  <publishers>
+                +    <hudson.tasks.Mailer>
+                +      <recipients>user@company.com other@company.com</recipients>
+                +      <dontNotifyEveryUnstableBuild>true</dontNotifyEveryUnstableBuild>
+                +      <sendToIndividuals>false</sendToIndividuals>
+                +    </hudson.tasks.Mailer>
+                +  </publishers>
+                '''
+            ),
+        )
+
+
     def _DoTest(self, ci_contents, expected_diff):
         '''
         :param str ci_contents:
