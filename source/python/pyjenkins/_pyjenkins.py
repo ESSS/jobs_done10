@@ -658,6 +658,25 @@ class SMCPoll(BaseJenkinsJobGeneratorPlugin):
 class EmailNotification(BaseJenkinsJobGeneratorPlugin):
     '''
     Sends emails for failed builds.
+
+    :ivar list(str) recipients:
+        List of recipients receivers that will be informed of failed builds
+
+    :ivar bool notify_every_build:
+        If True, every failed build is notified (even when previous executions failed too)
+
+    :ivar bool notify_individuals:
+        If True, notifies individuals who broke the build.
+
+        From Jenkins:
+
+        If this option is checked, the notification e-mail will be sent to individuals who have
+        committed changes for the broken build (by assuming that those changes broke the build).
+
+        If e-mail addresses are also specified in the recipient list, then both the individuals
+        as well as the specified addresses get the notification e-mail.
+
+        If the recipient list is empty, then only the individuals will receive e-mails.
     '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -665,26 +684,6 @@ class EmailNotification(BaseJenkinsJobGeneratorPlugin):
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
 
     def __init__(self, recipients, notify_every_build, notify_individuals):
-        '''
-        :ivar list(str) recipients:
-            List of recipients receivers that will be informed of failed builds
-
-        :ivar bool notify_every_build:
-            If True, every failed build is notified (even when previous executions failed too)
-
-        :ivar bool notify_individuals:
-            If True, notifies individuals who broke the build.
-
-            From Jenkins:
-
-            If this option is checked, the notification e-mail will be sent to individuals who have
-            committed changes for the broken build (by assuming that those changes broke the build).
-
-            If e-mail addresses are also specified in the recipient list, then both the individuals
-            as well as the specified addresses get the notification e-mail.
-
-            If the recipient list is empty, then only the individuals will receive e-mails.
-        '''
         self.recipients = recipients
         self.notify_every_build = notify_every_build
         self.notify_individuals = notify_individuals
@@ -696,3 +695,50 @@ class EmailNotification(BaseJenkinsJobGeneratorPlugin):
         mailer['recipients'] = ' '.join(self.recipients)
         mailer['dontNotifyEveryUnstableBuild'] = 'false' if self.notify_every_build else 'true'
         mailer['sendToIndividuals'] = 'true' if self.notify_individuals else 'false'
+
+
+
+#===================================================================================================
+# WorkspaceCleanup
+#===================================================================================================
+@PyJenkinsPlugin('workspace-cleanup')
+class WorkspaceCleanup(BaseJenkinsJobGeneratorPlugin):
+    '''
+    Cleans up files in the workspace before running a build.
+
+    The Jenkins plugins supports cleanup after build, but this is not implemented here yet.
+
+    :ivar list(str) include_patterns:
+        List of patterns for files to be deleted.
+
+    :ivar list(str) exclude_patterns:
+        List of patterns for files that must not be deleted.
+    '''
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER
+
+    def __init__(self, include_patterns=None, exclude_patterns=None):
+
+        if include_patterns is None:
+            include_patterns = []
+        if exclude_patterns is None:
+            exclude_patterns = []
+
+        self.include_patterns = include_patterns
+        self.exclude_patterns = exclude_patterns
+
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        cleanup = xml_factory['hudson.plugins.ws__cleanup.PreBuildCleanup']
+
+        if self.include_patterns or self.exclude_patterns:
+            for pattern in self.include_patterns:
+                pattern_tag = cleanup['patterns/hudson.plugins.ws__cleanup.Pattern+']
+                pattern_tag['pattern'] = pattern
+                pattern_tag['type'] = 'INCLUDE'
+            for pattern in self.exclude_patterns:
+                pattern_tag = cleanup['patterns/hudson.plugins.ws__cleanup.Pattern+']
+                pattern_tag['pattern'] = pattern
+                pattern_tag['type'] = 'EXCLUDE'

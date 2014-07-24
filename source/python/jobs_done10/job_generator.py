@@ -70,7 +70,7 @@ class JobGeneratorConfigurator(object):
         '''
         This simply iterates over data and calls a series of functions in a generator. Functions
         called are determined by options in `jobs_done_job` by converting the option names to camel case.
-            e.g.: option 'junit_patterns' will trigger a call to generator.AddJunitPatterns
+            e.g.: option 'junit_patterns' will trigger a call to generator.SetJunitPatterns
 
         :param IJobGenerator generator:
             Generator being configured.
