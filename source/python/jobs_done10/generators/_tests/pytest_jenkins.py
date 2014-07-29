@@ -295,6 +295,7 @@ class TestJenkinsXmlJobGenerator(object):
                 '''
                 @@ @@
                 -  <publishers/>
+                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
                 +      <types>
@@ -315,6 +316,20 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>junit*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>others.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
                 '''
             ),
 
@@ -355,6 +370,7 @@ class TestJenkinsXmlJobGenerator(object):
                 '''
                 @@ @@
                 -  <publishers/>
+                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
                 +      <types>
@@ -375,6 +391,16 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
                 '''
             ),
 
@@ -396,6 +422,7 @@ class TestJenkinsXmlJobGenerator(object):
                 '''
                 @@ @@
                 -  <publishers/>
+                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
                 +      <types>
@@ -423,6 +450,20 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>junit*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>boosttest*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
                 '''
             ),
         )
@@ -692,6 +733,7 @@ class TestJenkinsXmlJobGenerator(object):
                 '''
                 @@ @@
                 -  <publishers/>
+                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
                 +      <types>
@@ -717,6 +759,16 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <stashUserPassword>pass</stashUserPassword>
                 +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
                 '''
             ),
         )

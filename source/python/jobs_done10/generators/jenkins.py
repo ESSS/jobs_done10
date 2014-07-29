@@ -145,6 +145,9 @@ class JenkinsXmlJobGenerator(object):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.boost_patterns = boosttest_patterns
 
+        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
+        workspace_cleanup_plugin.include_patterns += boosttest_patterns
+
 
     def SetBuildBatchCommands(self, build_batch_commands):
         for command in build_batch_commands:
@@ -193,10 +196,16 @@ class JenkinsXmlJobGenerator(object):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns
 
+        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
+        workspace_cleanup_plugin.include_patterns += junit_patterns
+
 
     def SetJsunitPatterns(self, jsunit_patterns):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.jsunit_patterns = jsunit_patterns
+
+        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
+        workspace_cleanup_plugin.include_patterns += jsunit_patterns
 
 
     def SetLabelExpression(self, label_expression):
