@@ -62,6 +62,9 @@ class TestJenkinsXmlJobGenerator(object):
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
+              <hudson.plugins.git.extensions.impl.CloneOption>
+                <shallow>true</shallow>
+              </hudson.plugins.git.extensions.impl.CloneOption>
             </extensions>
             <localBranch>not_master</localBranch>
           </scm>
@@ -986,9 +989,15 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>not_master</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>true</shallow>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -      <hudson.plugins.git.extensions.impl.CloneOption>
+                -        <shallow>true</shallow>
+                -      </hudson.plugins.git.extensions.impl.CloneOption>
                 -    </extensions>
                 -    <localBranch>not_master</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1011,6 +1020,9 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>true</shallow>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 +        <localBranch>my_branch</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1095,6 +1107,9 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -      <hudson.plugins.git.extensions.impl.CloneOption>
+                -        <shallow>true</shallow>
+                -      </hudson.plugins.git.extensions.impl.CloneOption>
                 -    </extensions>
                 -    <localBranch>not_master</localBranch>
                 +      </hudson.plugins.git.GitSCM>

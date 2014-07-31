@@ -317,7 +317,7 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         branch='master',
         remote='origin',
         refspec='+refs/heads/*:refs/remotes/origin/*',
-        shallow_clone=False,
+        shallow_clone=True,
         recursive_submodules=False,
         multi_scm=False):
         self.url = url

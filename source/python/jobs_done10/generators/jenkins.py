@@ -262,8 +262,12 @@ class JenkinsXmlJobGenerator(object):
         plugin.url = repo.url
         plugin.branch = repo.branch
         plugin.target_dir = git_options.get('target-dir', repo.name)
-        plugin.shallow_clone = Boolean(git_options.get('shallow-clone', 'false'))
-        plugin.recursive_submodules = Boolean(git_options.get('recursive-submodules', 'false'))
+
+        if 'shallow-clone' in git_options:
+            plugin.shallow_clone = Boolean(git_options['shallow-clone'])
+
+        if 'recursive-submodules' in git_options:
+            plugin.recursive_submodules = Boolean(git_options['recursive-submodules'])
 
 
 
