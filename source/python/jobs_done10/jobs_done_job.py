@@ -43,6 +43,10 @@ class JobsDoneJob(object):
         # Emails to be sent out for failed builds
         'email_notification':(dict, str),
 
+        # Additional git options.
+        # Uses same options available for git repos under `additional_repositories`
+        'git':dict,
+
         # List of patterns to match when looking for jsunit test results.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
         'jsunit_patterns':list,

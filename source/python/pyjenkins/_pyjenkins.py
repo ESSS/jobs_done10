@@ -159,12 +159,12 @@ class JenkinsJobGenerator(object):
         xml_factory['description'] = self.description
         if self.display_name != '':
             xml_factory['displayName'] = self.display_name % self.__dict__
-        xml_factory['keepDependencies'] = 'false'
-        xml_factory['blockBuildWhenDownstreamBuilding'] = 'false'
-        xml_factory['blockBuildWhenUpstreamBuilding'] = 'false'
-        xml_factory['concurrentBuild'] = 'false'
+        xml_factory['keepDependencies'] = _ToString(False)
+        xml_factory['blockBuildWhenDownstreamBuilding'] = _ToString(False)
+        xml_factory['blockBuildWhenUpstreamBuilding'] = _ToString(False)
+        xml_factory['concurrentBuild'] = _ToString(False)
         xml_factory['assignedNode'] = self.label_expression % self.__dict__
-        xml_factory['canRoam'] = 'false'
+        xml_factory['canRoam'] = _ToString(False)
 
         # Log Rotator
         xml_factory['logRotator/daysToKeep'] = self.days_to_keep
@@ -180,9 +180,9 @@ class JenkinsJobGenerator(object):
         for i_scm_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_SCM):
             i_scm_plugin.Create(xml_factory)
 
-        xml_factory['blockBuildWhenDownstreamBuilding'] = 'false'
-        xml_factory['blockBuildWhenUpstreamBuilding'] = 'false'
-        xml_factory['concurrentBuild'] = 'false'
+        xml_factory['blockBuildWhenDownstreamBuilding'] = _ToString(False)
+        xml_factory['blockBuildWhenUpstreamBuilding'] = _ToString(False)
+        xml_factory['concurrentBuild'] = _ToString(False)
 
         builders_xml = xml_factory[IJenkinsJobGeneratorPlugin.TYPE_BUILDER]
         for i_builder_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_BUILDER):
@@ -213,6 +213,20 @@ class JenkinsJobGenerator(object):
         from ben10.filesystem._filesystem import CreateFile
         CreateFile(config_filename, self.GetContent())
 
+
+
+#===================================================================================================
+# _ToString
+#===================================================================================================
+def _ToString(boolean):
+    '''
+    :param bool boolean:
+        True or False
+
+    :return str:
+        `boolean` representation as a string used by Jenkins XML
+    '''
+    return str(boolean).lower()
 
 
 #===================================================================================================
@@ -281,6 +295,13 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         "A refspec controls the remote refs to be retrieved and how they map to local refs."
         Default to "+refs/heads/*:refs/remotes/origin/*"
 
+    :ivar bool shallow_clone:
+        Perform shallow clone, so that git will not download history of the project, saving time and
+        disk space when you just want to access the latest version of a repository.
+
+    :ivar bool recursive_submodules:
+        Retrieve all submodules recursively (uses '--recursive' option which requires git>=1.6.5)
+
     :ivar bool multi_scm:
         If True, uses syntax for multiple repositories.
     '''
@@ -291,18 +312,21 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
 
     def __init__(
         self,
-        url,
+        url=None,
         target_dir=None,
         branch='master',
         remote='origin',
         refspec='+refs/heads/*:refs/remotes/origin/*',
+        shallow_clone=False,
+        recursive_submodules=False,
         multi_scm=False):
-
         self.url = url
         self.target_dir = target_dir
         self.branch = branch
         self.remote = remote
         self.refspec = refspec
+        self.shallow_clone = shallow_clone
+        self.recursive_submodules = recursive_submodules
         self.multi_scm = multi_scm
 
 
@@ -320,11 +344,19 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         scm_config['userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec'] = self.refspec
         scm_config['userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url'] = self.url
         scm_config['branches/hudson.plugins.git.BranchSpec/name'] = self.branch
-        scm_config['relativeTargetDir'] = self.target_dir
+
+        if self.target_dir:
+            scm_config['relativeTargetDir'] = self.target_dir
 
         # Checkout to local branch is done twice to work with different versions of plugin (2.0+, 1.5)
         scm_config['extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch'] = self.branch
         scm_config['localBranch'] = self.branch
+
+        if self.recursive_submodules:
+            scm_config['extensions/hudson.plugins.git.extensions.impl.SubmoduleOption/recursiveSubmodules'] = _ToString(self.recursive_submodules)
+
+        if self.shallow_clone:
+            scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow'] = _ToString(self.shallow_clone)
 
 
 
@@ -401,7 +433,7 @@ class DescriptionSetterPublisher(BaseJenkinsJobGeneratorPlugin):
     def Create(self, xml_factory):
         xml_factory['hudson.plugins.descriptionsetter.DescriptionSetterPublisher/regexp'] = self.regexp
         xml_factory['hudson.plugins.descriptionsetter.DescriptionSetterPublisher/regexpForFailed'] = self.regexp
-        xml_factory['hudson.plugins.descriptionsetter.DescriptionSetterPublisher/setForMatrix'] = 'false'
+        xml_factory['hudson.plugins.descriptionsetter.DescriptionSetterPublisher/setForMatrix'] = _ToString(False)
 
 
 
@@ -489,10 +521,10 @@ class XUnitPublisher(BaseJenkinsJobGeneratorPlugin):
                 continue
             plugin_xml = xml_factory['xunit/types/' + pattern_plugin]
             plugin_xml['pattern'] = ','.join(pattern)
-            plugin_xml['skipNoTestFiles'] = 'true'
-            plugin_xml['failIfNotNew'] = 'false'
-            plugin_xml['deleteOutputFiles'] = 'true'
-            plugin_xml['stopProcessingIfError'] = 'true'
+            plugin_xml['skipNoTestFiles'] = _ToString(True)
+            plugin_xml['failIfNotNew'] = _ToString(False)
+            plugin_xml['deleteOutputFiles'] = _ToString(True)
+            plugin_xml['stopProcessingIfError'] = _ToString(True)
 
         xml_factory['xunit/thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableThreshold'] = '0'
         xml_factory['xunit/thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableNewThreshold'] = '0'
@@ -522,7 +554,7 @@ class Timeout(BaseJenkinsJobGeneratorPlugin):
     def Create(self, xml_factory):
         build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
         build_timeout_wrapper['timeoutMinutes'] = str(self.timeout)
-        build_timeout_wrapper['failBuild'] = 'true'
+        build_timeout_wrapper['failBuild'] = _ToString(True)
 
 
 
@@ -693,8 +725,8 @@ class EmailNotification(BaseJenkinsJobGeneratorPlugin):
     def Create(self, xml_factory):
         mailer = xml_factory['hudson.tasks.Mailer']
         mailer['recipients'] = ' '.join(self.recipients)
-        mailer['dontNotifyEveryUnstableBuild'] = 'false' if self.notify_every_build else 'true'
-        mailer['sendToIndividuals'] = 'true' if self.notify_individuals else 'false'
+        mailer['dontNotifyEveryUnstableBuild'] = _ToString(False) if self.notify_every_build else _ToString(True)
+        mailer['sendToIndividuals'] = _ToString(True) if self.notify_individuals else _ToString(False)
 
 
 

@@ -128,17 +128,11 @@ class JenkinsXmlJobGenerator(object):
         # Convert our default scm plugin to MultiSCM
         self.__scm_plugin.multi_scm = True
 
-        from jobs_done10.repository import Repository
-        for repo in repositories:
-            if 'git' in repo:
-                repo = Repository(url=repo['git']['url'], branch=repo['git']['branch'])
-                self.__jjgen.CreatePlugin(
-                    'git',
-                    url=repo.url,
-                    target_dir=repo.name,
-                    branch=repo.branch,
-                    multi_scm=True,
-                )
+        for repo_options in repositories:
+            if 'git' in repo_options:
+                plugin = self.__jjgen.CreatePlugin('git')
+                plugin.multi_scm = True
+                self._SetGitOptions(plugin, repo_options['git'])
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
@@ -192,6 +186,10 @@ class JenkinsXmlJobGenerator(object):
             )
 
 
+    def SetGit(self, git_options):
+        self._SetGitOptions(self.__scm_plugin, git_options)
+
+
     def SetJunitPatterns(self, junit_patterns):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.junit_patterns = junit_patterns
@@ -213,8 +211,6 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetNotifyStash(self, args):
-        assert isinstance(args, (basestring, dict)), '"args" must be a string or dict.'
-
         if isinstance(args, basestring):
             # Happens when no parameter is given, indicating we want to use the default
             # configuration set in the Jenkins server
@@ -249,6 +245,25 @@ class JenkinsXmlJobGenerator(object):
 
     def SetTimeout(self, timeout):
         self.__jjgen.CreatePlugin("timeout", timeout)
+
+
+    # Internal functions ---------------------------------------------------------------------------
+    def _SetGitOptions(self, plugin, git_options):
+        # Try to construct a Repository option from `git_options`, but fallback to current plugin
+        # configuration if those options are not available
+        from ben10.foundation.types_ import Boolean
+        from jobs_done10.repository import Repository
+
+        repo = Repository(
+            url=git_options.get('url', plugin.url),
+            branch=git_options.get('branch', plugin.branch)
+        )
+
+        plugin.url = repo.url
+        plugin.branch = repo.branch
+        plugin.target_dir = git_options.get('target-dir', repo.name)
+        plugin.shallow_clone = Boolean(git_options.get('shallow-clone', 'false'))
+        plugin.recursive_submodules = Boolean(git_options.get('recursive-submodules', 'false'))
 
 
 
