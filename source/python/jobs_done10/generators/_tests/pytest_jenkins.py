@@ -935,7 +935,7 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    def testMultipleSCMs(self):
+    def testAdditionalRepositories(self):
         self._DoTest(
             ci_contents=Dedent(
                 '''
@@ -1007,6 +1007,139 @@ class TestJenkinsXmlJobGenerator(object):
                 +          </hudson.plugins.git.BranchSpec>
                 +        </branches>
                 +        <relativeTargetDir>some_url</relativeTargetDir>
+                +        <extensions>
+                +          <hudson.plugins.git.extensions.impl.LocalBranch>
+                +            <localBranch>my_branch</localBranch>
+                +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +        </extensions>
+                +        <localBranch>my_branch</localBranch>
+                +      </hudson.plugins.git.GitSCM>
+                +    </scms>
+                '''
+            ),
+        )
+
+
+    def testGitOptions(self):
+        # Include some extra options
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                git:
+                  target-dir: "main_application"
+                  recursive-submodules: true
+                  shallow-clone: true
+
+                additional_repositories:
+                - git:
+                    url: http://some_url.git
+                    branch: my_branch
+                    target-dir: "other_dir"
+                    recursive-submodules: true
+                    shallow-clone: true
+                - git:
+                    url: http://another_url.git
+                    branch: my_branch
+                    target-dir: ""
+                    recursive-submodules: false
+                    shallow-clone: false
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <scm class="hudson.plugins.git.GitSCM">
+                -    <configVersion>2</configVersion>
+                -    <userRemoteConfigs>
+                -      <hudson.plugins.git.UserRemoteConfig>
+                -        <name>origin</name>
+                -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                -        <url>http://fake.git</url>
+                -      </hudson.plugins.git.UserRemoteConfig>
+                -    </userRemoteConfigs>
+                -    <branches>
+                -      <hudson.plugins.git.BranchSpec>
+                -        <name>not_master</name>
+                -      </hudson.plugins.git.BranchSpec>
+                -    </branches>
+                -    <relativeTargetDir>fake</relativeTargetDir>
+                -    <extensions>
+                -      <hudson.plugins.git.extensions.impl.LocalBranch>
+                +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
+                +    <scms>
+                +      <hudson.plugins.git.GitSCM>
+                +        <configVersion>2</configVersion>
+                +        <userRemoteConfigs>
+                +          <hudson.plugins.git.UserRemoteConfig>
+                +            <name>origin</name>
+                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                +            <url>http://fake.git</url>
+                +          </hudson.plugins.git.UserRemoteConfig>
+                +        </userRemoteConfigs>
+                +        <branches>
+                +          <hudson.plugins.git.BranchSpec>
+                +            <name>not_master</name>
+                +          </hudson.plugins.git.BranchSpec>
+                +        </branches>
+                +        <relativeTargetDir>main_application</relativeTargetDir>
+                +        <extensions>
+                +          <hudson.plugins.git.extensions.impl.LocalBranch>
+                +            <localBranch>not_master</localBranch>
+                +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +            <recursiveSubmodules>true</recursiveSubmodules>
+                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>true</shallow>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
+                +        </extensions>
+                @@ @@
+                -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -    </extensions>
+                -    <localBranch>not_master</localBranch>
+                +      </hudson.plugins.git.GitSCM>
+                +      <hudson.plugins.git.GitSCM>
+                +        <configVersion>2</configVersion>
+                +        <userRemoteConfigs>
+                +          <hudson.plugins.git.UserRemoteConfig>
+                +            <name>origin</name>
+                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                +            <url>http://some_url.git</url>
+                +          </hudson.plugins.git.UserRemoteConfig>
+                +        </userRemoteConfigs>
+                +        <branches>
+                +          <hudson.plugins.git.BranchSpec>
+                +            <name>my_branch</name>
+                +          </hudson.plugins.git.BranchSpec>
+                +        </branches>
+                +        <relativeTargetDir>other_dir</relativeTargetDir>
+                +        <extensions>
+                +          <hudson.plugins.git.extensions.impl.LocalBranch>
+                +            <localBranch>my_branch</localBranch>
+                +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +            <recursiveSubmodules>true</recursiveSubmodules>
+                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>true</shallow>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
+                +        </extensions>
+                +        <localBranch>my_branch</localBranch>
+                +      </hudson.plugins.git.GitSCM>
+                +      <hudson.plugins.git.GitSCM>
+                +        <configVersion>2</configVersion>
+                +        <userRemoteConfigs>
+                +          <hudson.plugins.git.UserRemoteConfig>
+                +            <name>origin</name>
+                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+                +            <url>http://another_url.git</url>
+                +          </hudson.plugins.git.UserRemoteConfig>
+                +        </userRemoteConfigs>
+                +        <branches>
+                +          <hudson.plugins.git.BranchSpec>
+                +            <name>my_branch</name>
+                +          </hudson.plugins.git.BranchSpec>
+                +        </branches>
                 +        <extensions>
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
