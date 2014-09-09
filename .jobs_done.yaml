@@ -37,3 +37,5 @@ description_regex: "HUDSON DESCRIPTION\\: (.*)"
 notify_stash:
 
 display_name: "[{branch}] {name} {dist}-{platform}"
+
+label_expression: "dist-{dist} && {platform} && {name}"
