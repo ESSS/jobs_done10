@@ -460,7 +460,7 @@ class StashNotifier(BaseJenkinsJobGeneratorPlugin):
     # StashNotifier must always be the last plugin when compared to other plugins, to make sure that
     # things such as test result publisher are executed before this, otherwise, builds with failed
     # tests might be reported as successful to Stash.
-    PRIORITY = 1
+    PRIORITY = 2
 
     def __init__(self, url='', username='', password=''):
         self.url = url
@@ -714,6 +714,10 @@ class EmailNotification(BaseJenkinsJobGeneratorPlugin):
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_PUBLISHER
+
+    # EmailNotification has to be at the end of the plugin list, because we need to allow other
+    # plugins (such as xunit) to fail a build before sending emails.
+    PRIORITY = 1
 
     def __init__(self, recipients, notify_every_build, notify_individuals):
         self.recipients = recipients

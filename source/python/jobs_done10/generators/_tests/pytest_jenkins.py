@@ -1203,6 +1203,69 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
+    def testEmailNotificationWithTests(self):
+        '''
+        When we have both email_notification, and some test pattern, we have to make sure that the
+        output jenkins job xml places the email_notification publisher AFTER the test publisher,
+        otherwise builds with failed tests might be reported as successful via email
+        '''
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                email_notification:
+                  recipients: user@company.com other@company.com
+                  notify_every_build: true
+                  notify_individuals: true
+
+                jsunit_patterns:
+                - "jsunit*.xml"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <publishers/>
+                -  <buildWrappers/>
+                +  <publishers>
+                +    <xunit>
+                +      <types>
+                +        <JSUnitPluginType>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <skipNoTestFiles>true</skipNoTestFiles>
+                +          <failIfNotNew>false</failIfNotNew>
+                +          <deleteOutputFiles>true</deleteOutputFiles>
+                +          <stopProcessingIfError>true</stopProcessingIfError>
+                +        </JSUnitPluginType>
+                +      </types>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
+                +    </xunit>
+                +    <hudson.tasks.Mailer>
+                +      <recipients>user@company.com other@company.com</recipients>
+                +      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
+                +      <sendToIndividuals>true</sendToIndividuals>
+                +    </hudson.tasks.Mailer>
+                +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>jsunit*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
+                '''
+            ),
+        )
+
+
 
     def _DoTest(self, ci_contents, expected_diff):
         '''
