@@ -1,5 +1,5 @@
 from aasimar10.shared_commands import BuildCommand
-from coilib50.basic.override import Override
+from ben10.foundation.decorators import Override
 
 
 
