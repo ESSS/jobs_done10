@@ -200,7 +200,7 @@ class JenkinsJobGenerator(object):
         for i_trigger_plugin in self.ListPlugins(IJenkinsJobGeneratorPlugin.TYPE_TRIGGER):
             i_trigger_plugin.Create(triggers_xml)
 
-        return xml_factory.GetContent(xml_header=True)
+        return xml_factory.GetContents(xml_header=True)
 
 
     def CreateConfigFile(self, config_filename):
