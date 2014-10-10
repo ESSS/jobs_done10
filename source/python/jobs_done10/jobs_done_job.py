@@ -75,7 +75,11 @@ class JobsDoneJob(object):
         'scm_poll':str,
 
         # Job timeout in minutes
-        'timeout' : str
+        'timeout' : str,
+
+        # Custom workspace. To maintain the same location as the default workspace prefix it with
+        # "workspace/"
+        'custom_workspace' : str,
     }
 
     # All parsed options

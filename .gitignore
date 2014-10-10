@@ -7,3 +7,4 @@ __pycache__
 /pip/
 *.egg-info
 /.pypirc
+/.idea/

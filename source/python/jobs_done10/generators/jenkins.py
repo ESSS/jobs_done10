@@ -247,6 +247,10 @@ class JenkinsXmlJobGenerator(object):
         self.__jjgen.CreatePlugin("timeout", timeout)
 
 
+    def SetCustomWorkspace(self, custom_workspace):
+        self.__jjgen.custom_workspace = custom_workspace
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetGitOptions(self, plugin, git_options):
         # Try to construct a Repository option from `git_options`, but fallback to current plugin

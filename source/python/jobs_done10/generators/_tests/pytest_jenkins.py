@@ -358,6 +358,22 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    def testCustomWorkspace(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                custom_workspace: workspace/WS
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <customWorkspace>workspace/WS</customWorkspace>
+                '''
+            ),
+        )
+
+
     def testJSUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(

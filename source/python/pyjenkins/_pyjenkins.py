@@ -79,6 +79,7 @@ class JenkinsJobGenerator(object):
         self.job_name = job_name
         self.description = ''
         self.display_name = ''
+        self.custom_workspace = ''
         self.label_expression = self.DEFAULT_LABEL_EXPRESSION
         self.days_to_keep = 7
         self.num_to_keep = -1
@@ -157,6 +158,8 @@ class JenkinsJobGenerator(object):
         xml_factory = XmlFactory('project')
         xml_factory['actions']
         xml_factory['description'] = self.description
+        if self.custom_workspace != '':
+            xml_factory['customWorkspace'] = self.custom_workspace % self.__dict__
         if self.display_name != '':
             xml_factory['displayName'] = self.display_name % self.__dict__
         xml_factory['keepDependencies'] = _ToString(False)
