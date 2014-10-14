@@ -259,15 +259,18 @@ class JenkinsXmlJobGenerator(object):
         from jobs_done10.repository import Repository
 
         repo = Repository(
-            url=git_options.get('url', plugin.url),
-            branch=git_options.get('branch', plugin.branch)
+            url=git_options.pop('url', plugin.url),
+            branch=git_options.pop('branch', plugin.branch)
         )
 
         plugin.url = repo.url
         plugin.branch = repo.branch
-        plugin.target_dir = git_options.get('target-dir', repo.name)
-        plugin.shallow_clone = Boolean(git_options.get('shallow-clone', 'false'))
-        plugin.recursive_submodules = Boolean(git_options.get('recursive-submodules', 'false'))
+        plugin.target_dir = git_options.pop('target_dir', repo.name)
+        plugin.shallow_clone = Boolean(git_options.pop('shallow_clone', 'false'))
+        plugin.recursive_submodules = Boolean(git_options.pop('recursive_submodules', 'false'))
+
+        if git_options:
+            raise RuntimeError('Received unknown git options: %s' % git_options.keys())
 
 
 

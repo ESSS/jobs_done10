@@ -1037,28 +1037,41 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     def testGitOptions(self):
+        # Test unknown options
+        with pytest.raises(RuntimeError) as e:
+            self._DoTest(
+                ci_contents=Dedent(
+                    '''
+                    git:
+                      unknown: ""
+                    '''
+                ),
+                expected_diff=''
+            )
+        assert str(e.value) == "Received unknown git options: ['unknown']"
+
         # Include some extra options
         self._DoTest(
             ci_contents=Dedent(
                 '''
                 git:
-                  target-dir: "main_application"
-                  recursive-submodules: true
-                  shallow-clone: true
+                  target_dir: "main_application"
+                  recursive_submodules: true
+                  shallow_clone: true
 
                 additional_repositories:
                 - git:
                     url: http://some_url.git
                     branch: my_branch
-                    target-dir: "other_dir"
-                    recursive-submodules: true
-                    shallow-clone: true
+                    target_dir: "other_dir"
+                    recursive_submodules: true
+                    shallow_clone: true
                 - git:
                     url: http://another_url.git
                     branch: my_branch
-                    target-dir: ""
-                    recursive-submodules: false
-                    shallow-clone: false
+                    target_dir: ""
+                    recursive_submodules: false
+                    shallow_clone: false
                 '''
             ),
             expected_diff=Dedent(
