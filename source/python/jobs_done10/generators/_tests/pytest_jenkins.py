@@ -560,6 +560,30 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    def testBuildPythonCommand(self):
+        # works with a single command
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                build_python_commands:
+                - print 'hello'
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <builders/>
+                +  <builders>
+                +    <hudson.plugins.python.Python>
+                +      <command>print 'hello'</command>
+                +    </hudson.plugins.python.Python>
+                +  </builders>
+                '''
+            ),
+
+        )
+
+
     def testBuildShellCommand(self):
         # works with a single command
         self._DoTest(

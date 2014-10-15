@@ -30,6 +30,9 @@ class JobsDoneJob(object):
         # Shell script commands used to build a project.
         'build_shell_commands':list,
 
+        # Python commands used to build a project.
+        'build_python_commands':list,
+
         # Time based triggers for job (Jenkins)
         'cron':str,
 

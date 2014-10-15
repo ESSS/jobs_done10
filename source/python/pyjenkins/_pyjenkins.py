@@ -389,6 +389,33 @@ class ShellBuilder(BaseJenkinsJobGeneratorPlugin):
 
 
 #===================================================================================================
+# PythonBuilder
+#===================================================================================================
+@PyJenkinsPlugin('python')
+class PythonBuilder(BaseJenkinsJobGeneratorPlugin):
+    '''
+    A jenkins-job-generator plugin that adds a python commands to build steps.
+
+    Requires https://wiki.jenkins-ci.org/display/JENKINS/Python+Plugin
+
+    :ivar list(str) command_lines:
+        Command lines to execute.
+    '''
+
+    ImplementsInterface(IJenkinsJobGeneratorPlugin)
+
+    TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILDER
+
+    def __init__(self, command):
+        self.command = command
+
+    @Implements(IJenkinsJobGeneratorPlugin.Create)
+    def Create(self, xml_factory):
+        xml_factory['hudson.plugins.python.Python+/command'] = self.command
+
+
+
+#===================================================================================================
 # BatchBuilder
 #===================================================================================================
 @PyJenkinsPlugin('batch')

@@ -152,6 +152,10 @@ class JenkinsXmlJobGenerator(object):
         for command in build_shell_commands:
             self.__jjgen.CreatePlugin("shell", command)
 
+    def SetBuildPythonCommands(self, build_shell_commands):
+        for command in build_shell_commands:
+            self.__jjgen.CreatePlugin("python", command)
+
 
     def SetCron(self, schedule):
         self.__jjgen.CreatePlugin("cron", schedule)
