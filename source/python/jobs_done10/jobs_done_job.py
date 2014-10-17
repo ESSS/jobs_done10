@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # Name of jobs_done file, repositories must contain this file in their root dir to be able to
 # create jobs.
 import yaml
@@ -34,17 +35,17 @@ class JobsDoneJob(object):
         'build_python_commands':list,
 
         # Time based triggers for job (Jenkins)
-        'cron':str,
+        'cron':unicode,
 
         # Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
-        'description_regex':str,
+        'description_regex':unicode,
 
         # The format for the job display name.
-        'display_name':str,
+        'display_name':unicode,
 
         # Emails to be sent out for failed builds
-        'email_notification':(dict, str),
+        'email_notification':(dict, unicode),
 
         # Additional git options.
         # Uses same options available for git repos under `additional_repositories`
@@ -58,13 +59,13 @@ class JobsDoneJob(object):
         'junit_patterns':list,
 
         # A "label expression" that is used to match slave nodes.
-        'label_expression':str,
+        'label_expression':unicode,
 
         # Notifies Stash when a build passes
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
-        'notify_stash':(dict, str),
+        'notify_stash':(dict, unicode),
 
         # Definition of parameters available to this job.
         # Uses jenkins-job-builder syntax parsed by yaml.
@@ -75,20 +76,20 @@ class JobsDoneJob(object):
         'parameters':list,
 
         # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
-        'scm_poll':str,
+        'scm_poll':unicode,
 
         # Job timeout in minutes
-        'timeout' : str,
+        'timeout' : unicode,
 
         # Custom workspace. To maintain the same location as the default workspace prefix it with
         # "workspace/"
-        'custom_workspace' : str,
+        'custom_workspace' : unicode,
     }
 
     # All parsed options
     PARSEABLE_OPTIONS = GENERATOR_OPTIONS.copy()
     PARSEABLE_OPTIONS.update({
-        # list(str) branch_patterns:
+        # list(unicode) branch_patterns:
         #    A list of regexes to matcvh against branch names.
         #    Jobs for a branch will only be created if any of this pattern matches that name.
         #    .. note:: Uses python `re` syntax.
@@ -125,7 +126,7 @@ class JobsDoneJob(object):
 
     def __init__(self):
         '''
-        :ivar dict(str,str) matrix_row:
+        :ivar dict(unicode,unicode) matrix_row:
             A dict that represents a single row from this file's `matrix`.
 
             .. seealso:: `matrix`@PARSEABLE_OPTIONS
@@ -153,7 +154,7 @@ class JobsDoneJob(object):
         - name: Name of the repository for which we are creating jobs
         - branch: Name of the repository branch for which we are creating jobs
 
-        :param str yaml_contents:
+        :param unicode yaml_contents:
             Contents of a jobs_done file, in YAML format.
 
         :param Repository repository:
@@ -192,9 +193,11 @@ class JobsDoneJob(object):
         yaml_contents = yaml_contents.strip()
 
         # Load yaml
-        jd_data = yaml.load(yaml_contents, Loader=cls._JobsDoneYamlLoader)
+        jd_data = yaml.load(yaml_contents, Loader=yaml.loader.BaseLoader)
         if not jd_data:
             return []
+
+        print repr(jd_data)
 
         # Search for unknown options and type errors
         for option_name, option_value in jd_data.iteritems():
@@ -267,7 +270,7 @@ class JobsDoneJob(object):
     @classmethod
     def CreateFromFile(cls, filename, repository):
         '''
-        :param str filename:
+        :param unicode filename:
             Path to a jobs_done file
 
         :param repository:
@@ -300,13 +303,13 @@ class JobsDoneJob(object):
                 ['planet-earth', 'branch-release']
 
 
-        :param list(str) conditions:
+        :param list(unicode) conditions:
             A list of conditions in the form 'name-value'.
 
-        :param list(dict(str,list(str))) fact_dicts:
+        :param list(dict(unicode,list(unicode))) fact_dicts:
             A list of dictionary of facts, in the form {name:list(value)} or {name:cls._MATCH_ANY}
 
-        :param dict(str,list(str)) extra_facts:
+        :param dict(unicode,list(unicode)) extra_facts:
             Additional facts passed as kwargs that are appended to received `fact_dicts`
 
         :return boolean:
@@ -331,11 +334,11 @@ class JobsDoneJob(object):
         '''
         Holds a combination of matrix values.
 
-        :ivar dict(str,list(str)) full_dict:
+        :ivar dict(unicode,list(unicode)) full_dict:
             Maps names to a list of values.
             The first value represents the main value, all others are considered aliases
 
-        :ivar dict(str,str) simple_dict:
+        :ivar dict(unicode,unicode) simple_dict:
             Maps names to the main value. .. seealso:: `full_dict`
         '''
 
@@ -343,10 +346,10 @@ class JobsDoneJob(object):
             '''
             Create a matrix-row instance from a matrix-dict and a value tuple.
 
-            :param list(str) names:
+            :param list(unicode) names:
                 List of variables names.
 
-            :param list(str) values:
+            :param list(unicode) values:
                 List of values assumed by this row.
                 One value for each name in names parameter.
             '''
@@ -355,11 +358,11 @@ class JobsDoneJob(object):
             self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.iteritems())
 
 
-        def __str__(self):
+        def __unicode__(self):
             '''
             String representation for tests.
 
-            :return str:
+            :return unicode:
             '''
             result = []
             for i_name, i_values in self.full_dict.iteritems():
@@ -375,7 +378,7 @@ class JobsDoneJob(object):
 
             Inspired on http://stackoverflow.com/a/3873734/1209622
 
-            :param dict(str:tuple) matrix_dict:
+            :param dict(unicode:tuple) matrix_dict:
                 A dictionary mapping names to values.
             '''
             import itertools as it
@@ -386,15 +389,6 @@ class JobsDoneJob(object):
             return [JobsDoneJob._MatrixRow(names, v) for v in value_combinations]
 
 
-    class _JobsDoneYamlLoader(yaml.loader.BaseLoader):
-        '''
-        Custom loader that treats everything as ascii strings
-        '''
-        def construct_scalar(self, *args, **kwargs):
-            value = yaml.loader.BaseLoader.construct_scalar(self, *args, **kwargs)
-            return value.encode('ascii')
-
-
 
 #===================================================================================================
 # UnknownJobsDoneJobOption
@@ -403,7 +397,7 @@ class UnknownJobsDoneFileOption(RuntimeError):
     '''
     Raised when parsing an unknown option.
 
-    :ivar str option_name:
+    :ivar unicode option_name:
         Name of the unknown option.
     '''
     def __init__(self, option_name):
@@ -411,7 +405,7 @@ class UnknownJobsDoneFileOption(RuntimeError):
         RuntimeError.__init__(
             self,
             'Received unknown option "%s".\n\nAvailable options are:\n%s' % \
-            (option_name, '\n'.join('- ' + o for o in sorted(JobsDoneJob.PARSEABLE_OPTIONS)))
+            (str(option_name), '\n'.join('- ' + str(o) for o in sorted(JobsDoneJob.PARSEABLE_OPTIONS)))
         )
 
 
@@ -423,19 +417,19 @@ class JobsDoneFileTypeError(TypeError):
     '''
     Raised when parsing an option with a bad type.
 
-    :ivar str option_name:
+    :ivar unicode option_name:
         Name of the option that was set with a bad type
 
     :ivar type obtained_type:
         Obtained (bad) type
         e.g.
-            list, str
+            list, unicode
 
     :ivar iter(type) accepted_types:
         Accepted (good) types
         e.g.
             (list,)
-            (dict, str)
+            (dict, unicode)
     '''
     def __init__(self, option_name, obtained_type, accepted_types):
         self.option_name = option_name
@@ -457,7 +451,7 @@ class UnmatchableConditionError(ValueError):
     '''
     Raised when declaring a condition that can never be matches based on available matrix rows.
 
-    :ivar str option:
+    :ivar unicode option:
         Option with a condition that can't be matched.
         e.g.:
             'planet-pluto:junit_patterns'

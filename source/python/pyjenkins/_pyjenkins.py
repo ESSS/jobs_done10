@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.foundation.decorators import Implements
 from ben10.interface import ImplementsInterface, Interface
 
@@ -48,16 +49,16 @@ class JenkinsJobGenerator(object):
 
         print job_generator.GetContent()
 
-    :ivar str job_name:
+    :ivar unicode job_name:
         Determines the job name
 
-    :ivar str description:
+    :ivar unicode description:
         The job description.
 
-    :ivar str display_name:
+    :ivar unicode display_name:
         The job display-name. This value can use attribute replacement such as %(name)s
 
-    :ivar str label_expression:
+    :ivar unicode label_expression:
         This must match the execution nodes configuration in order to be built on that node.
 
     :ivar int days_to_keep:
@@ -151,7 +152,7 @@ class JenkinsJobGenerator(object):
         '''
         Returns the configuration file XML contents.
 
-        :return str:
+        :return unicode:
         '''
         from xml_factory import XmlFactory
 
@@ -210,7 +211,7 @@ class JenkinsJobGenerator(object):
         '''
         Create the job configuration file with the given filename.
 
-        :param str config_file:
+        :param unicode config_file:
             The configuration filename.
         '''
         from ben10.filesystem._filesystem import CreateFile
@@ -226,10 +227,10 @@ def _ToString(boolean):
     :param bool boolean:
         True or False
 
-    :return str:
+    :return unicode:
         `boolean` representation as a string used by Jenkins XML
     '''
-    return str(boolean).lower()
+    return unicode(boolean).lower()
 
 
 #===================================================================================================
@@ -261,7 +262,7 @@ def PyJenkinsPlugin(plugin_name):
     '''
     Decorator for plugin classes
 
-    :param str plugin_name:
+    :param unicode plugin_name:
         Name of the plugin, used in `JenkinsJobGenerator.AddPlugin`
     '''
     def PluginDecorator(plugin_class):
@@ -279,22 +280,22 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a git SCM in the generation.
 
-    :ivar str url:
+    :ivar unicode url:
         The git repository URL.
 
-    :ivar str target_dir:
+    :ivar unicode target_dir:
         The target directory for the working copy.
         Defaults to "" which means that the workspace directory will be the working copy.
 
-    :ivar str branch:
+    :ivar unicode branch:
         The branch to build.
         Default to "master"
 
-    :ivar str remote:
+    :ivar unicode remote:
         The name of the git remote to configure.
         Default to "origin"
 
-    :ivar str refspec:
+    :ivar unicode refspec:
         "A refspec controls the remote refs to be retrieved and how they map to local refs."
         Default to "+refs/heads/*:refs/remotes/origin/*"
 
@@ -371,7 +372,7 @@ class ShellBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a shell (linux) command shell.
 
-    :ivar list(str) command_lines:
+    :ivar list(unicode) command_lines:
         Command lines to execute.
     '''
 
@@ -398,7 +399,7 @@ class PythonBuilder(BaseJenkinsJobGeneratorPlugin):
 
     Requires https://wiki.jenkins-ci.org/display/JENKINS/Python+Plugin
 
-    :ivar list(str) command_lines:
+    :ivar list(unicode) command_lines:
         Command lines to execute.
     '''
 
@@ -423,7 +424,7 @@ class BatchBuilder(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that adds a batch (windows) command.
 
-    :ivar list(str) command_lines:
+    :ivar list(unicode) command_lines:
         Command lines to execute.
     '''
 
@@ -448,7 +449,7 @@ class DescriptionSetterPublisher(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures the description-setter.
 
-    :ivar str regexp:
+    :ivar unicode regexp:
         Regular expression (Java) for the description setter.
     '''
 
@@ -475,12 +476,12 @@ class StashNotifier(BaseJenkinsJobGeneratorPlugin):
     '''
     Notifies Stash instances when a build passes
 
-    :ivar str url:
+    :ivar unicode url:
         Stash URL
 
-    :ivar str username:
+    :ivar unicode username:
 
-    :ivar str password:
+    :ivar unicode password:
     '''
 
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -518,13 +519,13 @@ class XUnitPublisher(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures the unit-test publisher.
 
-    :ivar str boost_patterns:
+    :ivar unicode boost_patterns:
         File patterns to find Boost-Test files.
 
-    :ivar str jsunit_patterns:
+    :ivar unicode jsunit_patterns:
         File patterns to find JSUnit files.
 
-    :ivar str junit_patterns:
+    :ivar unicode junit_patterns:
         File patterns to find JUnit files.
     '''
 
@@ -583,7 +584,7 @@ class Timeout(BaseJenkinsJobGeneratorPlugin):
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
         build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
-        build_timeout_wrapper['timeoutMinutes'] = str(self.timeout)
+        build_timeout_wrapper['timeoutMinutes'] = unicode(self.timeout)
         build_timeout_wrapper['failBuild'] = _ToString(True)
 
 
@@ -596,13 +597,13 @@ class ChoiceParameter(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures a choice parameter.
 
-    :ivar str name:
+    :ivar unicode name:
         The name of the parameter. Usually PARAM_XXX
 
-    :ivar str description:
+    :ivar unicode description:
         The description of the parameter
 
-    :ivar list(str) choices:
+    :ivar list(unicode) choices:
         List of possible values. The first is the default.
     '''
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -635,13 +636,13 @@ class StringParameter(BaseJenkinsJobGeneratorPlugin):
     '''
     A jenkins-job-generator plugin that configures a string parameter.
 
-    :ivar str name:
+    :ivar unicode name:
         The name of the parameter. Usually PARAM_XXX
 
-    :ivar str description:
+    :ivar unicode description:
         The description of the parameter
 
-    :ivar str default:
+    :ivar unicode default:
         Default value for parameter.
 
     '''
@@ -673,7 +674,7 @@ class Cron(BaseJenkinsJobGeneratorPlugin):
     '''
     Configures a job to run based on a schedule
 
-    :ivar str schedule:
+    :ivar unicode schedule:
         Cron configurations using a format employed by Jenkins.
     '''
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -697,7 +698,7 @@ class SMCPoll(BaseJenkinsJobGeneratorPlugin):
     '''
     Configures a job to poll SCM based on a schedule, and trigger a build if there are changes
 
-    :ivar str schedule:
+    :ivar unicode schedule:
         Cron configurations using a format employed by Jenkins.
     '''
     ImplementsInterface(IJenkinsJobGeneratorPlugin)
@@ -721,7 +722,7 @@ class EmailNotification(BaseJenkinsJobGeneratorPlugin):
     '''
     Sends emails for failed builds.
 
-    :ivar list(str) recipients:
+    :ivar list(unicode) recipients:
         List of recipients receivers that will be informed of failed builds
 
     :ivar bool notify_every_build:
@@ -774,10 +775,10 @@ class WorkspaceCleanup(BaseJenkinsJobGeneratorPlugin):
 
     The Jenkins plugins supports cleanup after build, but this is not implemented here yet.
 
-    :ivar list(str) include_patterns:
+    :ivar list(unicode) include_patterns:
         List of patterns for files to be deleted.
 
-    :ivar list(str) exclude_patterns:
+    :ivar list(unicode) exclude_patterns:
         List of patterns for files that must not be deleted.
     '''
     ImplementsInterface(IJenkinsJobGeneratorPlugin)

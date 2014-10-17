@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.filesystem import CreateFile
 from ben10.foundation.string import Dedent
 from jobs_done10.jobs_done_job import (JobsDoneFileTypeError, JobsDoneJob,
@@ -302,7 +303,7 @@ class Test(object):
 
         assert e.value.option_name == 'build_batch_commands'
         assert e.value.accepted_types == [JobsDoneJob.PARSEABLE_OPTIONS['build_batch_commands']]
-        assert e.value.obtained_type == str
+        assert e.value.obtained_type == unicode
 
 
     def testCreateFromFile(self, embed_data):

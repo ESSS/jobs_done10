@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from aasimar10.shared_commands import BuildCommand
 from ben10.foundation.decorators import Override
 

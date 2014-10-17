@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.interface import Interface
 
 
@@ -45,11 +46,11 @@ class IJobGenerator(Interface):
         '''
         Sets current matrix and matrix_row of this job.
 
-        :param dict(str,list(str)) matrix:
+        :param dict(unicode,list(unicode)) matrix:
             .. seealso::
                 JobsDoneJob
 
-        :param dict(str,str) matrix_row:
+        :param dict(unicode,unicode) matrix_row:
             .. seealso::
                 JobsDoneJob
         '''

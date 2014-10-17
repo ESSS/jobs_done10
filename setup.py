@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from setuptools import find_packages, setup
 
 setup(

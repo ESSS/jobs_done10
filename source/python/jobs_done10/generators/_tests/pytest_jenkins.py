@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.filesystem import CreateDirectory, CreateFile, GetFileContents, ListFiles
 from ben10.foundation.string import Dedent
 from gitit.git import Git
@@ -748,7 +749,7 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff=None
             )
-        assert str(e.value) == 'Must pass "username" when passing "password"'
+        assert unicode(e.value) == 'Must pass "username" when passing "password"'
 
 
     def testNotifyStashWithTests(self):
@@ -1072,7 +1073,7 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff=''
             )
-        assert str(e.value) == "Received unknown git options: ['unknown']"
+        assert unicode(e.value) == "Received unknown git options: ['unknown']"
 
         # Include some extra options
         self._DoTest(
@@ -1322,10 +1323,10 @@ class TestJenkinsXmlJobGenerator(object):
 
     def _DoTest(self, ci_contents, expected_diff):
         '''
-        :param str ci_contents:
+        :param unicode ci_contents:
             Contents of JobsDoneJob used for this test
 
-        :param str expected_diff:
+        :param unicode expected_diff:
             Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_XML.
         '''
         repository = Repository(url='http://fake.git', branch='not_master')
@@ -1341,7 +1342,7 @@ class TestJenkinsXmlJobGenerator(object):
     def _AssertDiff(self, obtained_xml, expected_diff):
         diff = ''.join(difflib.unified_diff(
             self.BASIC_EXPECTED_XML.splitlines(1),
-            str(obtained_xml).splitlines(1),
+            unicode(obtained_xml).splitlines(1),
             n=0,
         ))
         diff = '\n'.join(diff.splitlines()[2:])

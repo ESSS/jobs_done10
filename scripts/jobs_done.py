@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from clikit.app import App
 from jobs_done10.generators.jenkins import ConfigureCommandLineInterface
 

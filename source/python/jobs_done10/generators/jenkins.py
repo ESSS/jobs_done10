@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 '''
 Module containing everything related to Jenkins in jobs_done10.
 
@@ -19,13 +20,13 @@ class JenkinsJob(Bunch):
     '''
     Represents a Jenkins job.
 
-    :cvar str name:
+    :cvar unicode name:
         Job name
 
     :cvar Repository repository:
         Repository that this job belongs to
 
-    :cvar str xml:
+    :cvar unicode xml:
         Job XML contents
     '''
     name = None
@@ -79,7 +80,7 @@ class JenkinsXmlJobGenerator(object):
         :param Repository repository:
             A repository that can contain jobs
 
-        :returns str:
+        :returns unicode:
             Job group for the given repository
         '''
         return repository.name + '-' + repository.branch
@@ -274,7 +275,7 @@ class JenkinsXmlJobGenerator(object):
         plugin.recursive_submodules = Boolean(git_options.pop('recursive_submodules', 'false'))
 
         if git_options:
-            raise RuntimeError('Received unknown git options: %s' % git_options.keys())
+            raise RuntimeError('Received unknown git options: %s' % map(str, git_options.keys()))
 
 
 
@@ -308,16 +309,16 @@ class JenkinsJobPublisher(object):
         Publishes new jobs, updated existing jobs, and delete jobs that belong to the same
         repository/branch but were not updated.
 
-        :param str url:
+        :param unicode url:
             Jenkins instance URL where jobs will be uploaded to.
 
-        :param str username:
+        :param unicode username:
             Jenkins username.
 
-        :param str password:
+        :param unicode password:
             Jenkins password.
 
-        :return tuple(list(str),list(str),list(str)):
+        :return tuple(list(unicode),list(unicode),list(unicode)):
             Tuple with lists of {new, updated, deleted} job names (sorted alphabetically)
         '''
         import jenkins
@@ -349,7 +350,7 @@ class JenkinsJobPublisher(object):
         '''
         Publishes jobs to a directory. Each job creates a file with its name and xml contents.
 
-        :param str output_directory:
+        :param unicode output_directory:
              Target directory for outputting job .xmls
         '''
         from ben10.filesystem import CreateFile
@@ -368,10 +369,10 @@ class JenkinsJobPublisher(object):
         :param jenkins_api:
             Configured API from python_jenkins that give access to Jenkins data at a host.
 
-        :return set(str):
+        :return set(unicode):
             Names of all Jenkins jobs that match `job` repository name and branch
         '''
-        jenkins_jobs = set([str(job['name']) for job in jenkins_api.get_jobs()])
+        jenkins_jobs = set([unicode(job['name']) for job in jenkins_api.get_jobs()])
 
         matching_jobs = set()
 
@@ -395,10 +396,10 @@ class JenkinsJobPublisher(object):
         :param jenkins.Jenkins jenkins_api:
             Configured API from python_jenkins that give access to Jenkins data at a host.
 
-        :param str jenkins_job:
+        :param unicode jenkins_job:
             Name of a job in jenkins
 
-        :return str:
+        :return unicode:
             Name of `jenkins_job`s branch
 
         .. note::
@@ -447,13 +448,13 @@ def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, 
     :param jobs_done_file_contents:
         .. seealso:: GetJobsFromFile
 
-    :param str url:
+    :param unicode url:
         URL of a Jenkins sevrer instance where jobs will be uploaded
 
-    :param str|None username:
+    :param unicode|None username:
         Username for Jenkins server.
 
-    :param str|None password:
+    :param unicode|None password:
         Password for Jenkins server.
 
     :returns:
@@ -507,7 +508,7 @@ def GetJobsFromFile(repository, jobs_done_file_contents):
     :param Repository repository:
         .. seealso:: Repository
 
-    :param str|None jobs_done_file_contents:
+    :param unicode|None jobs_done_file_contents:
         .. seealso:: JobsDoneJob.CreateFromYAML
 
     :return set(JenkinsJob)

@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.interface import ImplementsInterface
 from jobs_done10.job_generator import (IJobGenerator, JobGeneratorAttributeError,
     JobGeneratorConfigurator)

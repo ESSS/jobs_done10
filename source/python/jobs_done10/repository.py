@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from ben10.foundation.bunch import Bunch
 
 
@@ -9,13 +10,13 @@ class Repository(Bunch):
     '''
     Represents a source control repository used in a continuous integration job.
 
-    :cvar str url:
+    :cvar unicode url:
         Repository clone URL
 
-    :cvar str branch:
+    :cvar unicode branch:
         Branch used in a particular job
 
-    :cvar str name:
+    :cvar unicode name:
         Repository name, determined from URL.
 
         e.g.
