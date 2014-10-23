@@ -1,10 +1,9 @@
-from __future__ import unicode_literals
 '''
 Module containing everything related to Jenkins in jobs_done10.
 
 This includes a generator, job publishers, constants and command line interface commands.
 '''
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 from ben10.foundation.bunch import Bunch
 from ben10.foundation.decorators import Implements
 from ben10.foundation.memoize import Memoize
@@ -430,10 +429,10 @@ class JenkinsJobPublisher(object):
 
             if url == self.repository.url:
                 return scm.find('branches/hudson.plugins.git.BranchSpec/name').text.strip()
-        else:
-            raise RuntimeError(
-                'Could not find SCM for repository "%s" in job "%s"' % (self.repository.url, jenkins_job)
-            )
+
+        raise RuntimeError(
+            'Could not find SCM for repository "%s" in job "%s"' % (self.repository.url, jenkins_job)
+        )
 
 
 

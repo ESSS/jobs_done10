@@ -112,7 +112,7 @@ class Test(object):
             ci_contents,
             repository=Repository(url='https://space.git', branch='milky_way')
         )[0]
-        assert jd_file.build_shell_commands == None
+        assert jd_file.build_shell_commands is None
         assert jd_file.build_batch_commands == ['milky_way.bat']
 
 
@@ -121,7 +121,7 @@ class Test(object):
             repository=Repository(url='https://space.git', branch='master')
         )[0]
         assert jd_file.build_shell_commands == ['master.sh']
-        assert jd_file.build_batch_commands == None
+        assert jd_file.build_batch_commands is None
 
 
     def testMatrixAndFlags(self):
@@ -144,13 +144,13 @@ class Test(object):
         )
         for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
             if jd_file.matrix_row['platform'] == 'linux':
-                assert jd_file.junit_patterns == None
-                assert jd_file.build_batch_commands == None
+                assert jd_file.junit_patterns is None
+                assert jd_file.build_batch_commands is None
                 assert jd_file.build_shell_commands == ['linux command']
             else:
                 assert jd_file.junit_patterns == ['junit*.xml']
                 assert jd_file.build_batch_commands == ['windows command']
-                assert jd_file.build_shell_commands == None
+                assert jd_file.build_shell_commands is None
 
 
     def testMatrixAndRegexFlags(self):
@@ -170,12 +170,12 @@ class Test(object):
         )
         for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
             if jd_file.matrix_row['platform'] == 'linux':
-                assert jd_file.junit_patterns == None
-                assert jd_file.build_batch_commands == None
+                assert jd_file.junit_patterns is None
+                assert jd_file.build_batch_commands is None
                 assert jd_file.build_shell_commands == ['linux command']
             else:
                 assert jd_file.junit_patterns == ['junit*.xml']
-                assert jd_file.build_shell_commands == None
+                assert jd_file.build_shell_commands is None
 
 
     def testMatrixAndExtraFlags(self):
@@ -199,13 +199,13 @@ class Test(object):
         )
         for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
             if jd_file.matrix_row['platform'] == 'redhat64':
-                assert jd_file.junit_patterns == None
-                assert jd_file.build_batch_commands == None
+                assert jd_file.junit_patterns is None
+                assert jd_file.build_batch_commands is None
                 assert jd_file.build_shell_commands == ['linux command: redhat64']
             if jd_file.matrix_row['platform'] == 'win32':
                 assert jd_file.junit_patterns == ['junit*.xml']
                 assert jd_file.build_batch_commands == ['windows command: win32']
-                assert jd_file.build_shell_commands == None
+                assert jd_file.build_shell_commands is None
 
 
     def testBranchPatterns(self):

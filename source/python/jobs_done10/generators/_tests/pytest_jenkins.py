@@ -1391,7 +1391,7 @@ class TestJenkinsActions(object):
 
     _REPOSITORY = Repository(url='http://space.git', branch='branch')
 
-    def testGetJobsFromFile(self, embed_data):
+    def testGetJobsFromFile(self):
         jobs = GetJobsFromFile(self._REPOSITORY, self._JOBS_DONE_FILE_CONTENTS)
         assert len(jobs) == 3
 

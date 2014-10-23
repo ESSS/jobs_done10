@@ -197,8 +197,6 @@ class JobsDoneJob(object):
         if not jd_data:
             return []
 
-        print repr(jd_data)
-
         # Search for unknown options and type errors
         for option_name, option_value in jd_data.iteritems():
             option_name = option_name.rsplit(':', 1)[-1]

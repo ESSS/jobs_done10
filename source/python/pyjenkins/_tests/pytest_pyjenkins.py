@@ -9,17 +9,17 @@ import os
 #===================================================================================================
 # Test
 #===================================================================================================
-class Test:
+class Test(object):
 
     def testCreateConfigFile(self, embed_data):
         config_filename = embed_data['testCreateConfigFile.xml']
 
-        assert os.path.isfile(config_filename) == False
+        assert not os.path.isfile(config_filename)
 
         job_generator = JenkinsJobGenerator('job-name')
         job_generator.CreateConfigFile(config_filename)
 
-        assert os.path.isfile(config_filename) == True
+        assert os.path.isfile(config_filename)
 
         assert GetFileContents(config_filename) == Dedent(
             '''

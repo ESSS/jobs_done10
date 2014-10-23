@@ -14,8 +14,8 @@ import pytest
 #===================================================================================================
 class Test(object):
 
-    def testJobGeneratorConfigurator(self, monkeypatch):
-        class MyGenerator():
+    def testJobGeneratorConfigurator(self):
+        class MyGenerator(object):
             ImplementsInterface(IJobGenerator)
 
             def SetRepository(self, repository):
