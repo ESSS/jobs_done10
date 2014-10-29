@@ -375,6 +375,22 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    def testAuthToken(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                auth_token: my_token
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <authToken>my_token</authToken>
+                '''
+            ),
+        )
+
+
     def testJSUnitPatterns(self):
         self._DoTest(
             ci_contents=Dedent(

@@ -135,6 +135,10 @@ class JenkinsXmlJobGenerator(object):
                 self._SetGitOptions(plugin, repo_options['git'])
 
 
+    def SetAuthToken(self, auth_token):
+        self.__jjgen.auth_token = auth_token
+
+
     def SetBoosttestPatterns(self, boosttest_patterns):
         xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
         xunit_plugin.boost_patterns = boosttest_patterns
