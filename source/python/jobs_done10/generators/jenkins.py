@@ -53,20 +53,31 @@ class JenkinsXmlJobGenerator(object):
 
     @Implements(IJobGenerator.Reset)
     def Reset(self):
-        from pyjenkins import JenkinsJobGenerator as PyJenkinsJobGenerator
+        from xml_factory import XmlFactory
 
-        self.__jjgen = PyJenkinsJobGenerator(self.repository.name)
-
-        # Configure description
-        self.__jjgen.description = "<!-- Managed by Job's Done -->"
+        self.xml = XmlFactory('project')
+        self.xml['description'] = "<!-- Managed by Job's Done -->"
+        self.xml['keepDependencies'] = xmls(False)
+        self.xml['logRotator/daysToKeep'] = 7
+        self.xml['logRotator/numToKeep'] = -1
+        self.xml['logRotator/artifactDaysToKeep'] = -1
+        self.xml['logRotator/artifactNumToKeep'] = -1
+        self.xml['blockBuildWhenDownstreamBuilding'] = xmls(False)
+        self.xml['blockBuildWhenUpstreamBuilding'] = xmls(False)
+        self.xml['concurrentBuild'] = xmls(False)
+        self.xml['canRoam'] = xmls(False)
 
         # Configure git SCM
-        self.__scm_plugin = self.__jjgen.CreatePlugin(
-            'git',
+        self.git = self.xml['scm']
+        self.git['@class'] = 'hudson.plugins.git.GitSCM'
+
+        self.SetGit(dict(
             url=self.repository.url,
             target_dir=self.repository.name,
             branch=self.repository.branch
-        )
+        ))
+
+        self.job_name = None
 
 
     @classmethod
@@ -90,11 +101,21 @@ class JenkinsXmlJobGenerator(object):
         :return JenkinsJob:
             Job created by this generator.
         '''
+        # Mailer must always be at the end of the XML contents, otherwise Jenkins might try to
+        # send emails before checking if tests passed.
+        publishers = self.xml.root.find('publishers')
+        if publishers is not None:
+            mailer = publishers.find('hudson.tasks.Mailer')
+            if mailer is not None:
+                publishers.remove(mailer)
+                publishers.append(mailer)
+
         return JenkinsJob(
-            name=self.__jjgen.job_name,
+            name=self.job_name,
             repository=self.repository,
-            xml=self.__jjgen.GetContent(),
+            xml=self.xml.GetContents(xml_header=True)
         )
+
 
 
     #===============================================================================================
@@ -107,8 +128,8 @@ class JenkinsXmlJobGenerator(object):
 
     @Implements(IJobGenerator.SetMatrix)
     def SetMatrix(self, matrix, matrix_row):
-        self.__jjgen.label_expression = self.repository.name
-        self.__jjgen.job_name = self.GetJobGroup(self.repository)
+        label_expression = self.repository.name
+        self.job_name = self.GetJobGroup(self.repository)
 
         if matrix_row:
             row_representation = '-'.join([
@@ -120,172 +141,248 @@ class JenkinsXmlJobGenerator(object):
             ])
 
             if row_representation:  # Might be empty
-                self.__jjgen.label_expression += '-' + row_representation
-                self.__jjgen.job_name += '-' + row_representation
+                label_expression += '-' + row_representation
+                self.job_name += '-' + row_representation
+
+        self.SetLabelExpression(label_expression)
 
 
     def SetAdditionalRepositories(self, repositories):
-        # Convert our default scm plugin to MultiSCM
-        self.__scm_plugin.multi_scm = True
+        # Remove current git configuration from xml
+        self.xml.root.remove(self.git.root)
 
-        for repo_options in repositories:
-            if 'git' in repo_options:
-                plugin = self.__jjgen.CreatePlugin('git')
-                plugin.multi_scm = True
-                self._SetGitOptions(plugin, repo_options['git'])
+        # Create a MultiSCM block
+        multi_scm = self.xml['scm']
+        multi_scm['@class'] = 'org.jenkinsci.plugins.multiplescms.MultiSCM'
+
+        # Add the current git implementation to multi_scm
+        self.git.root.attrib = {}
+        self.git.root.tag = 'hudson.plugins.git.GitSCM'
+        multi_scm['scms'].root.append(self.git.root)
+
+        # Replace main git with the one inside multi_scm
+        self.git = multi_scm['scms/hudson.plugins.git.GitSCM']
+
+        # Add additional repositories
+        for repo in repositories:
+            self.SetGit(repo['git'], git_xml=multi_scm['scms/hudson.plugins.git.GitSCM+'])
+
 
 
     def SetAuthToken(self, auth_token):
-        self.__jjgen.auth_token = auth_token
+        self.xml['authToken'] = auth_token
 
 
     def SetBoosttestPatterns(self, boosttest_patterns):
-        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
-        xunit_plugin.boost_patterns = boosttest_patterns
-
-        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
-        workspace_cleanup_plugin.include_patterns += boosttest_patterns
+        self._SetXunit('BoostTestJunitHudsonTestType', boosttest_patterns)
 
 
     def SetBuildBatchCommands(self, build_batch_commands):
         for command in build_batch_commands:
-            self.__jjgen.CreatePlugin("batch", command)
+            self.xml['builders/hudson.tasks.BatchFile+/command'] = command
 
 
     def SetBuildShellCommands(self, build_shell_commands):
         for command in build_shell_commands:
-            self.__jjgen.CreatePlugin("shell", command)
+            self.xml['builders/hudson.tasks.Shell+/command'] = command
+
 
     def SetBuildPythonCommands(self, build_shell_commands):
         for command in build_shell_commands:
-            self.__jjgen.CreatePlugin("python", command)
+            self.xml['builders/hudson.plugins.python.Python+/command'] = command
 
 
     def SetCron(self, schedule):
-        self.__jjgen.CreatePlugin("cron", schedule)
+        self.xml['triggers/hudson.triggers.TimerTrigger/spec'] = schedule
 
 
     def SetDescriptionRegex(self, description_regex):
-        if description_regex:
-            self.__jjgen.CreatePlugin("description-setter", description_regex)
+        description_setter = self.xml['publishers/hudson.plugins.descriptionsetter.DescriptionSetterPublisher']
+        description_setter['regexp'] = description_regex
+        description_setter['regexpForFailed'] = description_regex
+        description_setter['setForMatrix'] = xmls(False)
 
 
     def SetDisplayName(self, display_name):
-        self.__jjgen.display_name = display_name
+        self.xml['displayName'] = display_name
 
 
-    def SetEmailNotification(self, args):
-        if isinstance(args, basestring):
-            # If args is a single string, use default options and just set email
-            self.__jjgen.CreatePlugin(
-                "email-notification",
-                recipients=args.split(),
-                notify_every_build=False,
-                notify_individuals=False
-            )
+    def SetEmailNotification(self, notification_info):
+        mailer = self.xml['publishers/hudson.tasks.Mailer']
+
+        # Handle short mode where user only gives a list of recipients
+        if isinstance(notification_info, basestring):
+            notification_info = {'recipients' : notification_info}
+
+        mailer['recipients'] = notification_info.pop('recipients')
+
+        notify_every_build = notification_info.pop('notify_every_build', xmls(False))
+        if notify_every_build in ['False', 'false']:
+            mailer['dontNotifyEveryUnstableBuild'] = xmls(True)
         else:
-            # We got a dict
-            from ben10.foundation.types_ import Boolean
-            self.__jjgen.CreatePlugin(
-                "email-notification",
-                recipients=args.get('recipients', '').split(),
-                notify_every_build=Boolean(args.get('notify_every_build', 'false')),
-                notify_individuals=Boolean(args.get('notify_individuals', 'false')),
-            )
+            mailer['dontNotifyEveryUnstableBuild'] = xmls(False)
+        mailer['sendToIndividuals'] = xmls(notification_info.pop('notify_individuals', xmls(False)))
+
+        self._CheckUnknownOptions('email_notification', notification_info)
 
 
-    def SetGit(self, git_options):
-        self._SetGitOptions(self.__scm_plugin, git_options)
+    def SetGit(self, git_options, git_xml=None):
+        '''
+        Sets git options
+
+        :param dict git_options:
+            Options that will be set in git
+
+        :param None|xml_factory._xml_factory.XmlFactory git_xml:
+            Target XmlFactory object to set options.
+            If None, will use the main project's Xml (`self.git`)
+        '''
+        from ben10.foundation.types_ import AsList
+
+        if git_xml is None:
+            git_xml = self.git
+
+        git_xml['configVersion'] = '2'
+
+        def _Set(option, xml_path, default=None):
+            value = git_options.pop(option, default)
+            if value is not None:
+                for xml_path in AsList(xml_path):
+                    git_xml[xml_path] = value
+
+        # Git branch option is set in many places
+        branch_paths = [
+            'branches/hudson.plugins.git.BranchSpec/name',  # Branch being built
+            'extensions/hudson.plugins.git.extensions.impl.LocalBranch/localBranch',  # Checkout to local branch (GitPlugin 2.0+)
+            'localBranch',  # Checkout to local branch (GitPlugin 1.5)
+        ]
+
+        # Set all options
+        _Set('target_dir', 'relativeTargetDir')
+        _Set('remote', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name', default='origin')
+        _Set('refspec', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec', default='+refs/heads/*:refs/remotes/origin/*')
+        _Set('url', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url')
+        _Set('branch', branch_paths)
+        _Set('recursive_submodules', 'extensions/hudson.plugins.git.extensions.impl.SubmoduleOption/recursiveSubmodules', default=xmls(False))
+        _Set('shallow_clone', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow', default=xmls(False))
+        _Set('reference', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/reference', default=xmls(False))
+        _Set('timeout', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/timeout', default=xmls(False))
+
+        self._CheckUnknownOptions('git', git_options)
 
 
     def SetJunitPatterns(self, junit_patterns):
-        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
-        xunit_plugin.junit_patterns = junit_patterns
-
-        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
-        workspace_cleanup_plugin.include_patterns += junit_patterns
+        self._SetXunit('JUnitType', junit_patterns)
 
 
     def SetJsunitPatterns(self, jsunit_patterns):
-        xunit_plugin = self.__jjgen.ObtainPlugin("xunit")
-        xunit_plugin.jsunit_patterns = jsunit_patterns
-
-        workspace_cleanup_plugin = self.__jjgen.ObtainPlugin('workspace-cleanup')
-        workspace_cleanup_plugin.include_patterns += jsunit_patterns
+        self._SetXunit('JSUnitPluginType', jsunit_patterns)
 
 
     def SetLabelExpression(self, label_expression):
-        self.__jjgen.label_expression = label_expression
+        self.xml['assignedNode'] = label_expression
 
 
     def SetNotifyStash(self, args):
+        notifier = self.xml['publishers/org.jenkinsci.plugins.stashNotifier.StashNotifier']
+
         if isinstance(args, basestring):
-            # Happens when no parameter is given, indicating we want to use the default
-            # configuration set in the Jenkins server
-            self.__jjgen.CreatePlugin("stash-notifier")
+            # Happens when no parameter is given, we just set the URL and assume that
+            # username/password if the default configuration set in Jenkins server
+            notifier['stashServerBaseUrl'] = args
         else:  # dict
-            # Using parameters
-            self.__jjgen.CreatePlugin("stash-notifier", **args)
+            notifier['stashServerBaseUrl'] = args.pop('url')
+            notifier['stashUserName'] = args.pop('username', '')
+            notifier['stashUserPassword'] = args.pop('password', '')
+
+            self._CheckUnknownOptions('notify_stash', args)
 
 
     def SetParameters(self, parameters):
+        parameters_xml = self.xml['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions']
         for i_parameter in parameters:
             for name, j_dict  in i_parameter.iteritems():
                 if name == 'choice':
-                    self.__jjgen.CreatePlugin(
-                        "choice-parameter",
-                        param_name=j_dict['name'],
-                        description=j_dict['description'],
-                        choices=j_dict['choices'],
-                    )
+                    p = parameters_xml['hudson.model.ChoiceParameterDefinition+']
+                    p['choices@class'] = 'java.util.Arrays$ArrayList'
+                    p['choices/a@class'] = 'string-array'
+                    for k_choice in j_dict['choices']:
+                        p['choices/a/string+'] = k_choice
+
                 elif name == 'string':
-                    self.__jjgen.CreatePlugin(
-                        "string-parameter",
-                        param_name=j_dict['name'],
-                        description=j_dict['description'],
-                        default=j_dict['default'],
-                    )
+                    p = parameters_xml['hudson.model.StringParameterDefinition+']
+                    if j_dict['default']:
+                        p['defaultValue'] = j_dict['default']
+
+                # Common options
+                p['name'] = j_dict['name']
+                p['description'] = j_dict['description']
 
 
     def SetScmPoll(self, schedule):
-        self.__jjgen.CreatePlugin("scm-poll", schedule)
+        self.xml['triggers/hudson.triggers.SCMTrigger/spec'] = schedule
 
 
     def SetTimeout(self, timeout):
-        from pyjenkins import Timeout
-        self.__jjgen.CreatePlugin("timeout", timeout, strategy=Timeout.ABSOLUTE)
+        timeout_xml = self.xml['buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper']
+        timeout_xml['timeoutMinutes'] = unicode(timeout)
+        timeout_xml['failBuild'] = xmls(True)
 
 
     def SetTimeoutNoActivity(self, timeout):
-        from pyjenkins import Timeout
-        self.__jjgen.CreatePlugin("timeout", timeout, strategy=Timeout.NO_ACTIVITY)
+        timeout_xml = self.xml['buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper']
+        timeout_xml['strategy@class'] = 'hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy'
+        timeout_xml['strategy/timeoutSecondsString'] = timeout
+        timeout_xml['operationList/hudson.plugins.build__timeout.operations.FailOperation']
 
 
     def SetCustomWorkspace(self, custom_workspace):
-        self.__jjgen.custom_workspace = custom_workspace
+        self.xml['customWorkspace'] = custom_workspace
 
 
     # Internal functions ---------------------------------------------------------------------------
-    def _SetGitOptions(self, plugin, git_options):
-        # Try to construct a Repository option from `git_options`, but fallback to current plugin
-        # configuration if those options are not available
-        from ben10.foundation.types_ import Boolean
-        from jobs_done10.repository import Repository
+    def _SetXunit(self, xunit_type, patterns):
+        # Set common xunit patterns
+        xunit = self.xml['publishers/xunit']
+        xunit['thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableThreshold'] = '0'
+        xunit['thresholds/org.jenkinsci.plugins.xunit.threshold.FailedThreshold/unstableNewThreshold'] = '0'
+        xunit['thresholdMode'] = '1'
 
-        repo = Repository(
-            url=git_options.pop('url', plugin.url),
-            branch=git_options.pop('branch', plugin.branch)
-        )
+        # Set patterns for the given type
+        xunit_type_xml = xunit['types/' + xunit_type]
+        xunit_type_xml['pattern'] = ','.join(patterns)
+        xunit_type_xml['skipNoTestFiles'] = xmls(True)
+        xunit_type_xml['failIfNotNew'] = xmls(False)
+        xunit_type_xml['deleteOutputFiles'] = xmls(True)
+        xunit_type_xml['stopProcessingIfError'] = xmls(True)
 
-        plugin.url = repo.url
-        plugin.branch = repo.branch
-        plugin.target_dir = git_options.pop('target_dir', repo.name)
-        plugin.reference = git_options.pop('reference', None)
-        plugin.timeout = git_options.pop('timeout', None)
-        plugin.recursive_submodules = Boolean(git_options.pop('recursive_submodules', 'false'))
+        # Add a cleanup sequence to delete all test results when a build starts
+        cleanup = self.xml['buildWrappers/hudson.plugins.ws__cleanup.PreBuildCleanup']
+        for pattern in patterns:
+            pattern_tag = cleanup['patterns/hudson.plugins.ws__cleanup.Pattern+']
+            pattern_tag['pattern'] = pattern
+            pattern_tag['type'] = 'INCLUDE'
 
-        if git_options:
-            raise RuntimeError('Received unknown git options: %s' % map(str, git_options.keys()))
+
+    def _CheckUnknownOptions(self, configuration_name, options_dict):
+        if len(options_dict) > 0:
+            raise RuntimeError('Received unknown %s options: %s' % (configuration_name, options_dict.keys()))
+
+
+
+#===================================================================================================
+# Utils
+#===================================================================================================
+def _AsXmlString(boolean):
+    '''
+    :param bool boolean:
+        True or False
+
+    :return unicode:
+        `boolean` representation as a string used by Jenkins XML
+    '''
+    return unicode(boolean).lower()
+xmls = _AsXmlString
 
 
 
