@@ -37,6 +37,10 @@ class JobsDoneJob(object):
         # Time based triggers for job (Jenkins)
         'cron':unicode,
 
+        # Custom workspace. To maintain the same location as the default workspace prefix it with
+        # "workspace/"
+        'custom_workspace' : unicode,
+
         # Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
         'description_regex':unicode,
@@ -80,10 +84,6 @@ class JobsDoneJob(object):
 
         # Job timeout in minutes
         'timeout' : unicode,
-
-        # Custom workspace. To maintain the same location as the default workspace prefix it with
-        # "workspace/"
-        'custom_workspace' : unicode,
     }
 
     # All parsed options
