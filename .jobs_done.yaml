@@ -30,6 +30,10 @@ platform-linux:build_shell_commands:
   $AA_AASIMAR_AA_CONFIG --dependencies-file=ben10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --reset-env --load-env=git
   $AA_AASIMAR_AA project.build jobs_done10
 
+scm_poll: |
+  # build every 2 hours between 2h and 20h
+  H 2-20/2 * * *
+
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
 notify_stash:
