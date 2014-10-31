@@ -22,6 +22,9 @@ class JobsDoneJob(object):
         # Additional repositories to be used in a job.
         'additional_repositories':list,
 
+        # Job authentication token used to execute it remotely.
+        'auth_token':unicode,
+
         # Patterns to match when looking for boosttest results.
         'boosttest_patterns':list,
 
