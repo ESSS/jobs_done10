@@ -308,6 +308,17 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         Perform shallow clone, so that git will not download history of the project, saving time and
         disk space when you just want to access the latest version of a repository.
 
+    :ivar unicode reference:
+        Specify a folder containing a repository that will be used by Git as a reference during
+        clone operations.
+
+        This option will be ignored if the folder is not available on the master or slave where the
+        clone is being executed.
+
+    :ivar int timeout:
+        Specify a timeout (in minutes) for clone and fetch operations.
+        This option overrides the default timeout defined in Jenkins.
+
     :ivar bool recursive_submodules:
         Retrieve all submodules recursively (uses '--recursive' option which requires git>=1.6.5)
 
@@ -327,6 +338,8 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         remote='origin',
         refspec='+refs/heads/*:refs/remotes/origin/*',
         shallow_clone=False,
+        reference=None,
+        timeout=None,
         recursive_submodules=False,
         multi_scm=False):
         self.url = url
@@ -335,6 +348,8 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         self.remote = remote
         self.refspec = refspec
         self.shallow_clone = shallow_clone
+        self.reference = reference
+        self.timeout = timeout
         self.recursive_submodules = recursive_submodules
         self.multi_scm = multi_scm
 
@@ -366,6 +381,12 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
 
         if self.shallow_clone:
             scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow'] = _ToString(self.shallow_clone)
+
+        if self.reference:
+            scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/reference'] = self.reference
+
+        if self.timeout:
+            scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/timeout'] = unicode(self.timeout)
 
 
 
