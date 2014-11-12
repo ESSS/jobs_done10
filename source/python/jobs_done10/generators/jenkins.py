@@ -275,6 +275,8 @@ class JenkinsXmlJobGenerator(object):
         plugin.branch = repo.branch
         plugin.target_dir = git_options.pop('target_dir', repo.name)
         plugin.shallow_clone = Boolean(git_options.pop('shallow_clone', 'false'))
+        plugin.reference = git_options.pop('reference', None)
+        plugin.timeout = git_options.pop('timeout', None)
         plugin.recursive_submodules = Boolean(git_options.pop('recursive_submodules', 'false'))
 
         if git_options:

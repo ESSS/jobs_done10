@@ -1099,6 +1099,8 @@ class TestJenkinsXmlJobGenerator(object):
                   target_dir: "main_application"
                   recursive_submodules: true
                   shallow_clone: true
+                  reference: "/home/reference.git"
+                  timeout: 30
 
                 additional_repositories:
                 - git:
@@ -1161,6 +1163,8 @@ class TestJenkinsXmlJobGenerator(object):
                 +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
                 +          <hudson.plugins.git.extensions.impl.CloneOption>
                 +            <shallow>true</shallow>
+                +            <reference>/home/reference.git</reference>
+                +            <timeout>30</timeout>
                 +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 @@ @@

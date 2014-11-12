@@ -216,16 +216,16 @@ class JobsDoneJob(object):
         matrix_rows = cls._MatrixRow.CreateFromDict(jd_data.get('matrix', {}))
 
         # Raise an error if a condition can never be matched
-        for option_name, option_value in jd_data.iteritems():
-            if ':' in option_name:
-                conditions = option_name.split(':')[:-1]
+        for yaml_dict in cls._IterDicts(jd_data):
+            for key, _value in yaml_dict.iteritems():
+                if ':' in key:
+                    conditions = key.split(':')[:-1]
 
-                matches = []
-                for row in matrix_rows:
-                    matches.append(cls._MatchConditions(conditions, row.full_dict, branch=cls._MATCH_ANY))
-
-                if not any(matches):
-                    raise UnmatchableConditionError(option_name)
+                    for row in matrix_rows:
+                        if cls._MatchConditions(conditions, row.full_dict, branch=cls._MATCH_ANY):
+                            break
+                    else:
+                        raise UnmatchableConditionError(key)
 
         import re
         jobs_done_jobs = []
@@ -246,18 +246,22 @@ class JobsDoneJob(object):
             formatted_jd_string = jd_string.format(**format_dict)
             jd_formatted_data = yaml.load(formatted_jd_string)
 
+            # Re-write formatted_data dict ignoring/replacing dict keys based on matrix
+            for yaml_dict in cls._IterDicts(jd_formatted_data):
+                for key, option_value in yaml_dict.items():
+                    if ':' in key:
+                        conditions = key.split(':')[:-1]
+                        option_name = key.split(':')[-1]
+
+                        # Remove the key with condition text
+                        del yaml_dict[key]
+
+                        # If the condition matches, add the new key (containing just the option_name)
+                        if cls._MatchConditions(conditions, matrix_row.full_dict, branch=[repository.branch]):
+                            yaml_dict[option_name] = option_value
+
+            # Set surviving options in job.
             for option_name, option_value in jd_formatted_data.iteritems():
-
-                # Check for option conditions
-                if ':' in option_name:
-                    conditions = option_name.split(':')[:-1]
-                    option_name = option_name.split(':')[-1]
-
-                    # Skip this option if any condition is not met
-                    if not cls._MatchConditions(conditions, matrix_row.full_dict, branch=[repository.branch]):
-                        continue
-
-                # If all conditions are met, set this option in the job.
                 setattr(jobs_done_job, option_name, option_value)
 
             # Only create this job if this branch is acceptable (matches anything in branch_patterns)
@@ -389,6 +393,30 @@ class JobsDoneJob(object):
             value_combinations = it.product(*matrix_dict.values())
             return [JobsDoneJob._MatrixRow(names, v) for v in value_combinations]
 
+
+    @classmethod
+    def _IterDicts(cls, obj):
+        '''
+        Iterates over all dicts in an object.
+
+        Works recursively for lists and dicts.
+
+        :param object obj:
+
+        :yield dict:
+            Dicts found by iterating over `obj`
+        '''
+        if isinstance(obj, dict):
+            yield obj
+
+            for sub_obj in obj.itervalues():
+                for x in cls._IterDicts(sub_obj):
+                    yield x
+
+        if isinstance(obj, list):
+            for sub_obj in obj:
+                for x in cls._IterDicts(sub_obj):
+                    yield x
 
 
 #===================================================================================================

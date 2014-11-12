@@ -208,6 +208,37 @@ class Test(object):
                 assert jd_file.build_shell_commands is None
 
 
+    def testMatrixAndFlagsForSubDicts(self):
+        ci_contents = Dedent(
+            '''
+            git:
+              platform-windows:shallow: true
+              platform-linux:shallow: false
+
+            additional_repositories:
+            - git:
+                  platform-windows:shallow: true
+                  platform-linux:shallow: false
+
+            matrix:
+                platform:
+                - linux
+                - windows
+            '''
+        )
+        for jd_file in JobsDoneJob.CreateFromYAML(ci_contents, repository=self._REPOSITORY):
+            if jd_file.matrix_row['platform'] == 'linux':
+                assert jd_file.git == {'shallow' : 'false'}
+                assert jd_file.additional_repositories == [
+                    {'git' : {'shallow' : 'false'}}
+                ]
+            else:
+                assert jd_file.git == {'shallow' : 'true'}
+                assert jd_file.additional_repositories == [
+                    {'git' : {'shallow' : 'true'}}
+                ]
+
+
     def testBranchPatterns(self):
         base_contents = Dedent(
             '''
@@ -359,6 +390,39 @@ class Test(object):
             JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
 
         assert e.value.option == 'planet-pluto:junit_patterns'
+
+
+    def testUnmatchableSubCondition(self):
+        contents = Dedent(
+            '''
+            git:
+                planet-pluto:shallow: true
+
+            matrix:
+                planet:
+                - earth
+            '''
+        )
+        with pytest.raises(UnmatchableConditionError) as e:
+            JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
+            assert e.value.option == 'planet-pluto:shallow'
+
+
+        contents = Dedent(
+            '''
+            additional_repositories:
+            - git:
+                planet-pluto:shallow: true
+
+            matrix:
+                planet:
+                - earth
+            '''
+        )
+        with pytest.raises(UnmatchableConditionError) as e:
+            JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
+            assert e.value.option == 'planet-pluto:shallow'
+
 
     def testStripFile(self):
         '''
