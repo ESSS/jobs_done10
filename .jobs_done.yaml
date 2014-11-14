@@ -22,12 +22,12 @@ junit_patterns:
 
 platform-windows:build_batch_commands:
 - |
-  %AA_AASIMAR_AA_CONFIG% --dependencies-file=ben10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --reset-env --load-env=git || goto :eof
+  %AA_AASIMAR_AA_CONFIG% --aasimar-ref=origin/master --dist-ref=origin/master --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --reset-env --load-env=git || goto :eof
   %AA_AASIMAR_AA% project.build jobs_done10 || goto :eof
 
 platform-linux:build_shell_commands:
 - |
-  $AA_AASIMAR_AA_CONFIG --dependencies-file=ben10/dependencies.ini --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --reset-env --load-env=git
+  $AA_AASIMAR_AA_CONFIG --aasimar-ref=origin/master --dist-ref=origin/master --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --reset-env --load-env=git
   $AA_AASIMAR_AA project.build jobs_done10
 
 scm_poll: |
