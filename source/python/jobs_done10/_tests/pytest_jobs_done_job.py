@@ -62,6 +62,7 @@ class Test(object):
                     'name': 'PARAM',
                     'choices': ['choice_1', 'choice_2'],
                     'description': 'Description',
+
                 }
             }]
 

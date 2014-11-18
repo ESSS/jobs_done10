@@ -11,10 +11,16 @@ branch_patterns:
 - master
 - fb-.*
 
+git:
+  shallow_clone: true
+  reference: "$AA_SYSTEM_REF_REPOS/{name}"
+
 additional_repositories:
 - git:
     url: "ssh://git@eden.fln.esss.com.br:7999/esss/ben10.git"
     branch: "master"
+    shallow_clone: true
+    reference: "$AA_SYSTEM_REF_REPOS/ben10"
 
 junit_patterns:
 - "**/build/{dist}-{platform}-tests/*.xml"
