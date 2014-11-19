@@ -13,6 +13,8 @@ class JobsDone10BuildCommand(BuildCommand):
 
     @Override(BuildCommand.EvBuild)
     def EvBuild(self, args):
-        self.BuildDependencies()
+        if not self.opts.sub_build:
+            self.BuildDependencies()
+
         self.Clean()
         self.RunTests(jobs=6, xml=True, verbose=1)
