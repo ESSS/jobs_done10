@@ -304,10 +304,6 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         "A refspec controls the remote refs to be retrieved and how they map to local refs."
         Default to "+refs/heads/*:refs/remotes/origin/*"
 
-    :ivar bool shallow_clone:
-        Perform shallow clone, so that git will not download history of the project, saving time and
-        disk space when you just want to access the latest version of a repository.
-
     :ivar unicode reference:
         Specify a folder containing a repository that will be used by Git as a reference during
         clone operations.
@@ -337,7 +333,6 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         branch='master',
         remote='origin',
         refspec='+refs/heads/*:refs/remotes/origin/*',
-        shallow_clone=False,
         reference=None,
         timeout=None,
         recursive_submodules=False,
@@ -347,7 +342,6 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
         self.branch = branch
         self.remote = remote
         self.refspec = refspec
-        self.shallow_clone = shallow_clone
         self.reference = reference
         self.timeout = timeout
         self.recursive_submodules = recursive_submodules
@@ -378,9 +372,6 @@ class GitBuilder(BaseJenkinsJobGeneratorPlugin):
 
         if self.recursive_submodules:
             scm_config['extensions/hudson.plugins.git.extensions.impl.SubmoduleOption/recursiveSubmodules'] = _ToString(self.recursive_submodules)
-
-        if self.shallow_clone:
-            scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow'] = _ToString(self.shallow_clone)
 
         if self.reference:
             scm_config['extensions/hudson.plugins.git.extensions.impl.CloneOption/reference'] = self.reference

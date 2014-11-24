@@ -1098,7 +1098,6 @@ class TestJenkinsXmlJobGenerator(object):
                 git:
                   target_dir: "main_application"
                   recursive_submodules: true
-                  shallow_clone: true
                   reference: "/home/reference.git"
                   timeout: 30
 
@@ -1108,13 +1107,11 @@ class TestJenkinsXmlJobGenerator(object):
                     branch: my_branch
                     target_dir: "other_dir"
                     recursive_submodules: true
-                    shallow_clone: true
                 - git:
                     url: http://another_url.git
                     branch: my_branch
                     target_dir: ""
                     recursive_submodules: false
-                    shallow_clone: false
                 '''
             ),
             expected_diff=Dedent(
@@ -1162,7 +1159,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +            <recursiveSubmodules>true</recursiveSubmodules>
                 +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
                 +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <shallow>true</shallow>
                 +            <reference>/home/reference.git</reference>
                 +            <timeout>30</timeout>
                 +          </hudson.plugins.git.extensions.impl.CloneOption>
@@ -1194,9 +1190,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
                 +            <recursiveSubmodules>true</recursiveSubmodules>
                 +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <shallow>true</shallow>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 +        <localBranch>my_branch</localBranch>
                 +      </hudson.plugins.git.GitSCM>
