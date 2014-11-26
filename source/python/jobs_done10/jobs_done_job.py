@@ -1,7 +1,10 @@
 from __future__ import unicode_literals
+import yaml
+
+
+
 # Name of jobs_done file, repositories must contain this file in their root dir to be able to
 # create jobs.
-import yaml
 JOBS_DONE_FILENAME = '.jobs_done.yaml'
 
 
@@ -97,6 +100,11 @@ class JobsDoneJob(object):
         #    Jobs for a branch will only be created if any of this pattern matches that name.
         #    .. note:: Uses python `re` syntax.
         'branch_patterns':list,
+
+        # unicode ignore_unmatchable:
+        #    If 'true', will not raise errors when an unmatchable condition is found.
+        #    Defaults to 'false'
+        'ignore_unmatchable':unicode,
 
         # dict matrix:
         #     A dict that represents all possible job combinations created from this file.
@@ -215,17 +223,20 @@ class JobsDoneJob(object):
         # List all possible matrix_rows
         matrix_rows = cls._MatrixRow.CreateFromDict(jd_data.get('matrix', {}))
 
-        # Raise an error if a condition can never be matched
-        for yaml_dict in cls._IterDicts(jd_data):
-            for key, _value in yaml_dict.iteritems():
-                if ':' in key:
-                    conditions = key.split(':')[:-1]
+        from ben10.foundation.types_ import Boolean
+        ignore_unmatchable = Boolean(jd_data.get('ignore_unmatchable', 'false'))
+        if not ignore_unmatchable:
+            # Raise an error if a condition can never be matched
+            for yaml_dict in cls._IterDicts(jd_data):
+                for key, _value in yaml_dict.iteritems():
+                    if ':' in key:
+                        conditions = key.split(':')[:-1]
 
-                    for row in matrix_rows:
-                        if cls._MatchConditions(conditions, row.full_dict, branch=cls._MATCH_ANY):
-                            break
-                    else:
-                        raise UnmatchableConditionError(key)
+                        for row in matrix_rows:
+                            if cls._MatchConditions(conditions, row.full_dict, branch=cls._MATCH_ANY):
+                                break
+                        else:
+                            raise UnmatchableConditionError(key)
 
         import re
         jobs_done_jobs = []

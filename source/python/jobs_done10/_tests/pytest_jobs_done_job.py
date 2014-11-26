@@ -373,6 +373,26 @@ class Test(object):
         assert jobs[0].junit_patterns == ['1']
 
 
+    def testIgnoreUnmatchable(self):
+        '''
+        Asserts that using a condition that can never be matched will not raise an error if
+        'ignore_unmatchable' is enabled.
+        '''
+        contents = Dedent(
+            '''
+            ignore_unmatchable: true
+
+            planet-pluto:junit_patterns:
+                - '*.xml'
+
+            matrix:
+                planet:
+                - earth
+            '''
+        )
+        JobsDoneJob.CreateFromYAML(contents, repository=self._REPOSITORY)
+
+
     def testUnmatchableCondition(self):
         '''
         Asserts that using a condition that can never be matched will raise an error.
