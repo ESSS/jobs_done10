@@ -1529,13 +1529,11 @@ class TestJenkinsPublisher(object):
                 assert username == 'jenkins_user'
                 assert password == 'jenkins_pass'
 
-            def get_jobs(self):
-                return [
-                    {'name' : u'space-milky_way-mercury'},
-                    {'name' : u'space-milky_way-saturn'},
-                ]
+            @property
+            def jobnames(self):
+                return ['space-milky_way-mercury', 'space-milky_way-saturn']
 
-            def get_job_config(self, job_name):
+            def job_config(self, job_name):
                 # Test with single, and multiple scms
                 if job_name == 'space-milky_way-mercury':
                     return Dedent(
@@ -1601,13 +1599,13 @@ class TestJenkinsPublisher(object):
                         '''
                     )
 
-            def create_job(self, name, xml):
+            def job_create(self, name, xml):
                 self.NEW_JOBS.add(name)
 
-            def reconfig_job(self, name, xml):
+            def job_reconfigure(self, name, xml):
                 self.UPDATED_JOBS.add(name)
 
-            def delete_job(self, name):
+            def job_delete(self, name):
                 self.DELETED_JOBS.add(name)
 
 

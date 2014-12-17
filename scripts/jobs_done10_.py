@@ -13,7 +13,7 @@ class JobsDone10(EsssProject):
 
     DEPENDENCIES = [
         'git',  # Used when creating jobs from local repository
-        'python_jenkins',
+        'jenkins_webapi',
         'pyyaml',
 
         'ben10',

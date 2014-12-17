@@ -307,7 +307,6 @@ class JenkinsJobPublisher(object):
         self.jobs = dict((job.name, job) for job in jobs)
 
 
-
     def PublishToUrl(self, url, username=None, password=None):
         '''
         Publishes new jobs, updated existing jobs, and delete jobs that belong to the same
@@ -339,13 +338,13 @@ class JenkinsJobPublisher(object):
 
         # Process everything
         for job_name in new_jobs:
-            jenkins_api.create_job(job_name, self.jobs[job_name].xml)
+            jenkins_api.job_create(job_name, self.jobs[job_name].xml)
 
         for job_name in updated_jobs:
-            jenkins_api.reconfig_job(job_name, self.jobs[job_name].xml)
+            jenkins_api.job_reconfigure(job_name, self.jobs[job_name].xml)
 
         for job_name in deleted_jobs:
-            jenkins_api.delete_job(job_name)
+            jenkins_api.job_delete(job_name)
 
         return map(sorted, (new_jobs, updated_jobs, deleted_jobs))
 
@@ -371,16 +370,14 @@ class JenkinsJobPublisher(object):
         Filter jobs that belong to the same repository/branch as a `job` being published
 
         :param jenkins_api:
-            Configured API from python_jenkins that give access to Jenkins data at a host.
+            Configured Jenkins API that gives access to Jenkins data at a host.
 
         :return set(unicode):
             Names of all Jenkins jobs that match `job` repository name and branch
         '''
-        jenkins_jobs = set([unicode(job['name']) for job in jenkins_api.get_jobs()])
-
         matching_jobs = set()
 
-        for jenkins_job in jenkins_jobs:
+        for jenkins_job in jenkins_api.jobnames:
             # Filter jobs that belong to this repository (this would be safer to do reading SCM
             # information, but a lot more expensive
             common_prefix = self.repository.name + '-' + self.repository.branch
@@ -398,7 +395,7 @@ class JenkinsJobPublisher(object):
     def _GetJenkinsJobBranch(self, jenkins_api, jenkins_job):
         '''
         :param jenkins.Jenkins jenkins_api:
-            Configured API from python_jenkins that give access to Jenkins data at a host.
+            Configured Jenkins API that gives access to Jenkins data at a host.
 
         :param unicode jenkins_job:
             Name of a job in jenkins
@@ -413,7 +410,7 @@ class JenkinsJobPublisher(object):
         from xml.etree import ElementTree
 
         # Read config to see if this job is in the same branch
-        config = jenkins_api.get_job_config(jenkins_job)
+        config = jenkins_api.job_config(jenkins_job)
 
         # We should be able to get this information from jenkins API, but it seems that git
         # plugin for Jenkins has a bug that prevents its data from being shown in the API
