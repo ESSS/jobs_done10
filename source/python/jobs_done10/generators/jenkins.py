@@ -252,7 +252,13 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetTimeout(self, timeout):
-        self.__jjgen.CreatePlugin("timeout", timeout)
+        from pyjenkins import Timeout
+        self.__jjgen.CreatePlugin("timeout", timeout, strategy=Timeout.ABSOLUTE)
+
+
+    def SetTimeoutNoActivity(self, timeout):
+        from pyjenkins import Timeout
+        self.__jjgen.CreatePlugin("timeout", timeout, strategy=Timeout.NO_ACTIVITY)
 
 
     def SetCustomWorkspace(self, custom_workspace):

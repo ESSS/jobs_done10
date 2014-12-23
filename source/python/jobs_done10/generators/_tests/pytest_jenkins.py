@@ -337,7 +337,8 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    def testTimeout(self):
+
+    def testTimeoutAbsolute(self):
         self._DoTest(
             ci_contents=Dedent(
                 '''
@@ -352,6 +353,32 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
                 +      <timeoutMinutes>60</timeoutMinutes>
                 +      <failBuild>true</failBuild>
+                +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+                +  </buildWrappers>
+                '''
+            ),
+        )
+
+
+    def testTimeoutNoActivity(self):
+        self._DoTest(
+            ci_contents=Dedent(
+                '''
+                timeout_no_activity: 600
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                -  <buildWrappers/>
+                +  <buildWrappers>
+                +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
+                +      <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
+                +        <timeoutSecondsString>600</timeoutSecondsString>
+                +      </strategy>
+                +      <operationList>
+                +        <hudson.plugins.build__timeout.operations.FailOperation/>
+                +      </operationList>
                 +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
                 +  </buildWrappers>
                 '''
