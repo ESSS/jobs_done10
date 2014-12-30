@@ -23,25 +23,25 @@ class JobsDoneJob(object):
     # after parsing (setattr(option_name, self, value)), and are available as object fields
     GENERATOR_OPTIONS = {
         # Additional repositories to be used in a job.
-        'additional_repositories':list,
+        'additional_repositories' : list,
 
         # Job authentication token used to execute it remotely.
-        'auth_token':unicode,
+        'auth_token' : unicode,
 
         # Patterns to match when looking for boosttest results.
-        'boosttest_patterns':list,
+        'boosttest_patterns' : list,
 
         # Batch script commands used to build a project.
-        'build_batch_commands':list,
+        'build_batch_commands' : list,
 
         # Shell script commands used to build a project.
-        'build_shell_commands':list,
+        'build_shell_commands' : list,
 
         # Python commands used to build a project.
-        'build_python_commands':list,
+        'build_python_commands' : list,
 
         # Time based triggers for job (Jenkins)
-        'cron':unicode,
+        'cron' : unicode,
 
         # Custom workspace. To maintain the same location as the default workspace prefix it with
         # "workspace/"
@@ -49,33 +49,33 @@ class JobsDoneJob(object):
 
         # Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
-        'description_regex':unicode,
+        'description_regex' : unicode,
 
         # The format for the job display name.
-        'display_name':unicode,
+        'display_name' : unicode,
 
         # Emails to be sent out for failed builds
-        'email_notification':(dict, unicode),
+        'email_notification' : (dict, unicode),
 
         # Additional git options.
         # Uses same options available for git repos under `additional_repositories`
-        'git':dict,
+        'git' : dict,
 
         # List of patterns to match when looking for jsunit test results.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
-        'jsunit_patterns':list,
+        'jsunit_patterns' : list,
 
         # List of patterns to match when looking for junit test results.
-        'junit_patterns':list,
+        'junit_patterns' : list,
 
         # A "label expression" that is used to match slave nodes.
-        'label_expression':unicode,
+        'label_expression' : unicode,
 
         # Notifies Stash when a build passes
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
-        'notify_stash':(dict, unicode),
+        'notify_stash' : (dict, unicode),
 
         # Definition of parameters available to this job.
         # Uses jenkins-job-builder syntax parsed by yaml.
@@ -83,13 +83,16 @@ class JobsDoneJob(object):
         #
         # e.g.
         #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
-        'parameters':list,
+        'parameters' : list,
 
         # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
-        'scm_poll':unicode,
+        'scm_poll' : unicode,
 
         # Job timeout in minutes
         'timeout' : unicode,
+
+        # Job timeout in seconds without console activity
+        'timeout_no_activity' : unicode,
     }
 
     # All parsed options

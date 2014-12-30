@@ -595,14 +595,25 @@ class Timeout(BaseJenkinsJobGeneratorPlugin):
 
     TYPE = IJenkinsJobGeneratorPlugin.TYPE_BUILD_WRAPPER
 
-    def __init__(self, timeout):
+    ABSOLUTE = 'absolute'  # Abort build based on a fixed time-out.
+    NO_ACTIVITY = 'no-activity'  # Timeout when specified seconds has passed since the last log output.
+
+    def __init__(self, timeout, strategy=ABSOLUTE):
         self.timeout = timeout
+        self.strategy = strategy
+
 
     @Implements(IJenkinsJobGeneratorPlugin.Create)
     def Create(self, xml_factory):
-        build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
-        build_timeout_wrapper['timeoutMinutes'] = unicode(self.timeout)
-        build_timeout_wrapper['failBuild'] = _ToString(True)
+        if self.strategy == self.ABSOLUTE:
+            build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
+            build_timeout_wrapper['timeoutMinutes'] = unicode(self.timeout)
+            build_timeout_wrapper['failBuild'] = _ToString(True)
+        elif self.strategy == self.NO_ACTIVITY:
+            build_timeout_wrapper = xml_factory['hudson.plugins.build__timeout.BuildTimeoutWrapper']
+            build_timeout_wrapper['strategy@class'] = 'hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy'
+            build_timeout_wrapper['strategy']['timeoutSecondsString'] = unicode(self.timeout)
+            build_timeout_wrapper['operationList']['hudson.plugins.build__timeout.operations.FailOperation']
 
 
 
