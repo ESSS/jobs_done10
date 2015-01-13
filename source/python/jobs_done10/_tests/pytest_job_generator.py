@@ -9,48 +9,43 @@ import pytest
 
 
 
-#===================================================================================================
-# Test
-#===================================================================================================
-class Test(object):
+def testJobGeneratorConfigurator():
+    class MyGenerator(object):
+        ImplementsInterface(IJobGenerator)
 
-    def testJobGeneratorConfigurator(self):
-        class MyGenerator(object):
-            ImplementsInterface(IJobGenerator)
+        def SetRepository(self, repository):
+            assert repository.url == 'http://repo.git'
 
-            def SetRepository(self, repository):
-                assert repository.url == 'http://repo.git'
+        def SetMatrix(self, matrix, matrix_row):
+            assert matrix == {'id':[1,2,3]}
+            assert matrix_row == {'id':1}
 
-            def SetMatrix(self, matrix, matrix_row):
-                assert matrix == {'id':[1,2,3]}
-                assert matrix_row == {'id':1}
+        def SetBuildBatchCommands(self, commands):
+            assert commands == ['command']
 
-            def SetBuildBatchCommands(self, commands):
-                assert commands == ['command']
+        def Reset(self):
+            pass
 
-            def Reset(self):
-                pass
+    jobs_done_job = JobsDoneJob()
+    jobs_done_job.matrix = {'id':[1,2,3]}
+    jobs_done_job.matrix_row = {'id':1}
+    jobs_done_job.repository = Repository(url='http://repo.git')
 
-        jobs_done_job = JobsDoneJob()
-        jobs_done_job.matrix = {'id':[1,2,3]}
-        jobs_done_job.matrix_row = {'id':1}
-        jobs_done_job.repository = Repository(url='http://repo.git')
+    generator = MyGenerator()
 
-        generator = MyGenerator()
+    # Test basic calls
+    with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=0):
+        JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
-        # Test basic calls
-        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=0):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
+    # Set some more values to jobs_done_job, and make sure it is called
+    jobs_done_job.build_batch_commands = ['command']
+    with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=1):
+        JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
-        # Set some more values to jobs_done_job, and make sure it is called
-        jobs_done_job.build_batch_commands = ['command']
-        with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=1):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
-
-        # Try calling a missing option
-        jobs_done_job.boosttest_patterns = 'patterns'
-        with pytest.raises(JobGeneratorAttributeError):
-            JobGeneratorConfigurator.Configure(generator, jobs_done_job)
+    # Try calling a missing option
+    jobs_done_job.boosttest_patterns = 'patterns'
+    with pytest.raises(JobGeneratorAttributeError):
+        JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
 
 

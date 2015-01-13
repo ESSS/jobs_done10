@@ -209,7 +209,7 @@ class JobsDoneJob(object):
         # Load yaml
         jd_data = yaml.load(yaml_contents, Loader=yaml.loader.BaseLoader)
         if not jd_data:
-            return []
+            raise ValueError('Could not parse anything from .yaml contents')
 
         # Search for unknown options and type errors
         for option_name, option_value in jd_data.iteritems():
@@ -375,19 +375,6 @@ class JobsDoneJob(object):
             values = tuple(i.split(',') for i in values)
             self.full_dict = dict(zip(names, values))
             self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.iteritems())
-
-
-        def __unicode__(self):
-            '''
-            String representation for tests.
-
-            :return unicode:
-            '''
-            result = []
-            for i_name, i_values in self.full_dict.iteritems():
-                for j_value in i_values:
-                    result.append('%s-%s' % (i_name, j_value))
-            return '<MatrixRow %s>' % ' '.join(result)
 
 
         @classmethod

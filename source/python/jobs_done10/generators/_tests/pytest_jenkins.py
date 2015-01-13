@@ -30,22 +30,21 @@ class TestJenkinsXmlJobGenerator(object):
         '''
         <?xml version="1.0" ?>
         <project>
-          <actions/>
           <description>&lt;!-- Managed by Job's Done --&gt;</description>
           <keepDependencies>false</keepDependencies>
-          <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-          <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-          <concurrentBuild>false</concurrentBuild>
-          <assignedNode>fake</assignedNode>
-          <canRoam>false</canRoam>
           <logRotator>
             <daysToKeep>7</daysToKeep>
             <numToKeep>-1</numToKeep>
             <artifactDaysToKeep>-1</artifactDaysToKeep>
             <artifactNumToKeep>-1</artifactNumToKeep>
           </logRotator>
+          <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+          <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+          <concurrentBuild>false</concurrentBuild>
+          <canRoam>false</canRoam>
           <scm class="hudson.plugins.git.GitSCM">
             <configVersion>2</configVersion>
+            <relativeTargetDir>fake</relativeTargetDir>
             <userRemoteConfigs>
               <hudson.plugins.git.UserRemoteConfig>
                 <name>origin</name>
@@ -58,18 +57,22 @@ class TestJenkinsXmlJobGenerator(object):
                 <name>not_master</name>
               </hudson.plugins.git.BranchSpec>
             </branches>
-            <relativeTargetDir>fake</relativeTargetDir>
             <extensions>
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
+              <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                <recursiveSubmodules>false</recursiveSubmodules>
+              </hudson.plugins.git.extensions.impl.SubmoduleOption>
+              <hudson.plugins.git.extensions.impl.CloneOption>
+                <shallow>false</shallow>
+                <reference>false</reference>
+                <timeout>false</timeout>
+              </hudson.plugins.git.extensions.impl.CloneOption>
             </extensions>
             <localBranch>not_master</localBranch>
           </scm>
-          <builders/>
-          <publishers/>
-          <buildWrappers/>
-          <triggers/>
+          <assignedNode>fake</assignedNode>
         </project>
         ''',
         ignore_last_linebreak=True
@@ -79,9 +82,15 @@ class TestJenkinsXmlJobGenerator(object):
     #===============================================================================================
     # Tests
     #===============================================================================================
+    def testEmpty(self):
+        with pytest.raises(ValueError) as e:
+            self._DoTest(yaml_contents='', expected_diff=None)
+        assert unicode(e.value) == 'Could not parse anything from .yaml contents'
+
+
     def testChoiceParameters(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 parameters:
                   - choice:
@@ -99,14 +108,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
                 +        <hudson.model.ChoiceParameterDefinition>
-                +          <name>PARAM</name>
-                +          <description>Description</description>
                 +          <choices class="java.util.Arrays$ArrayList">
                 +            <a class="string-array">
                 +              <string>choice_1</string>
                 +              <string>choice_2</string>
                 +            </a>
                 +          </choices>
+                +          <name>PARAM</name>
+                +          <description>Description</description>
                 +        </hudson.model.ChoiceParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
@@ -117,7 +126,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testMultipleChoiceParameters(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 parameters:
                   - choice:
@@ -141,24 +150,24 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
                 +        <hudson.model.ChoiceParameterDefinition>
+                +          <choices class="java.util.Arrays$ArrayList">
+                +            <a class="string-array">
+                +              <string>choice_1</string>
+                +              <string>choice_2</string>
+                +            </a>
+                +          </choices>
                 +          <name>PARAM</name>
                 +          <description>Description</description>
-                +          <choices class="java.util.Arrays$ArrayList">
-                +            <a class="string-array">
-                +              <string>choice_1</string>
-                +              <string>choice_2</string>
-                +            </a>
-                +          </choices>
                 +        </hudson.model.ChoiceParameterDefinition>
                 +        <hudson.model.ChoiceParameterDefinition>
-                +          <name>PARAM_2</name>
-                +          <description>Description</description>
                 +          <choices class="java.util.Arrays$ArrayList">
                 +            <a class="string-array">
                 +              <string>choice_1</string>
                 +              <string>choice_2</string>
                 +            </a>
                 +          </choices>
+                +          <name>PARAM_2</name>
+                +          <description>Description</description>
                 +        </hudson.model.ChoiceParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
@@ -170,7 +179,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testStringParameters(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 parameters:
                   - string:
@@ -186,9 +195,9 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
                 +        <hudson.model.StringParameterDefinition>
+                +          <defaultValue>Default</defaultValue>
                 +          <name>PARAM_VERSION</name>
                 +          <description>Description</description>
-                +          <defaultValue>Default</defaultValue>
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
@@ -200,7 +209,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testMultipleStringParameters(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 parameters:
                   - string:
@@ -220,14 +229,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
                 +        <hudson.model.StringParameterDefinition>
+                +          <defaultValue>Default</defaultValue>
                 +          <name>PARAM_VERSION</name>
                 +          <description>Description</description>
-                +          <defaultValue>Default</defaultValue>
                 +        </hudson.model.StringParameterDefinition>
                 +        <hudson.model.StringParameterDefinition>
+                +          <defaultValue>Default</defaultValue>
                 +          <name>PARAM_VERSION_2</name>
                 +          <description>Description</description>
-                +          <defaultValue>Default</defaultValue>
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
@@ -239,7 +248,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testParametersMaintainOrder(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 parameters:
                   - choice:
@@ -261,19 +270,19 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.model.ParametersDefinitionProperty>
                 +      <parameterDefinitions>
                 +        <hudson.model.ChoiceParameterDefinition>
-                +          <name>PARAM</name>
-                +          <description>Description</description>
                 +          <choices class="java.util.Arrays$ArrayList">
                 +            <a class="string-array">
                 +              <string>choice_1</string>
                 +              <string>choice_2</string>
                 +            </a>
                 +          </choices>
+                +          <name>PARAM</name>
+                +          <description>Description</description>
                 +        </hudson.model.ChoiceParameterDefinition>
                 +        <hudson.model.StringParameterDefinition>
+                +          <defaultValue>Default</defaultValue>
                 +          <name>PARAM_VERSION</name>
                 +          <description>Description</description>
-                +          <defaultValue>Default</defaultValue>
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
@@ -285,7 +294,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testJUnitPatterns(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 junit_patterns:
                 - "junit*.xml"
@@ -295,10 +304,15 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
-                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
                 +      <types>
                 +        <JUnitType>
                 +          <pattern>junit*.xml,others.xml</pattern>
@@ -308,13 +322,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JUnitType>
                 +      </types>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -340,7 +347,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testTimeoutAbsolute(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 timeout: 60
                 '''
@@ -348,7 +355,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <buildWrappers/>
                 +  <buildWrappers>
                 +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
                 +      <timeoutMinutes>60</timeoutMinutes>
@@ -362,7 +368,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testTimeoutNoActivity(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 timeout_no_activity: 600
                 '''
@@ -370,7 +376,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <buildWrappers/>
                 +  <buildWrappers>
                 +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
                 +      <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
@@ -388,7 +393,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testCustomWorkspace(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 custom_workspace: workspace/WS
                 '''
@@ -401,10 +406,9 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
-
     def testAuthToken(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 auth_token: my_token
                 '''
@@ -418,9 +422,55 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    def testBoosttestPatterns(self):
+        self._DoTest(
+            yaml_contents=Dedent(
+                '''
+                boosttest_patterns:
+                - "boost*.xml"
+                '''
+            ),
+            expected_diff=Dedent(
+                '''
+                @@ @@
+                +  <publishers>
+                +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
+                +      <types>
+                +        <BoostTestJunitHudsonTestType>
+                +          <pattern>boost*.xml</pattern>
+                +          <skipNoTestFiles>true</skipNoTestFiles>
+                +          <failIfNotNew>false</failIfNotNew>
+                +          <deleteOutputFiles>true</deleteOutputFiles>
+                +          <stopProcessingIfError>true</stopProcessingIfError>
+                +        </BoostTestJunitHudsonTestType>
+                +      </types>
+                +    </xunit>
+                +  </publishers>
+                +  <buildWrappers>
+                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +      <patterns>
+                +        <hudson.plugins.ws__cleanup.Pattern>
+                +          <pattern>boost*.xml</pattern>
+                +          <type>INCLUDE</type>
+                +        </hudson.plugins.ws__cleanup.Pattern>
+                +      </patterns>
+                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+                +  </buildWrappers>
+                '''
+            ),
+        )
+
+
     def testJSUnitPatterns(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 jsunit_patterns:
                 - "jsunit*.xml"
@@ -429,10 +479,15 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
-                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
                 +      <types>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
@@ -442,13 +497,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
                 +      </types>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -463,13 +511,12 @@ class TestJenkinsXmlJobGenerator(object):
                 +  </buildWrappers>
                 '''
             ),
-
         )
 
 
     def testMulitpleTestResults(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 junit_patterns:
                 - "junit*.xml"
@@ -481,10 +528,15 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
-                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
                 +      <types>
                 +        <JUnitType>
                 +          <pattern>junit*.xml</pattern>
@@ -501,13 +553,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </BoostTestJunitHudsonTestType>
                 +      </types>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -532,7 +577,7 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildBatchCommand(self):
         # works with a single command
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_batch_commands:
                 - my_command
@@ -541,7 +586,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
                 +      <command>my_command</command>
@@ -554,7 +598,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         # Works with multi line commands
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_batch_commands:
                 - |
@@ -565,7 +609,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
                 +      <command>multi_line
@@ -579,7 +622,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         # Works with multiple commands
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_batch_commands:
                 - command_1
@@ -589,7 +632,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
                 +      <command>command_1</command>
@@ -607,7 +649,7 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildPythonCommand(self):
         # works with a single command
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_python_commands:
                 - print 'hello'
@@ -616,7 +658,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.plugins.python.Python>
                 +      <command>print 'hello'</command>
@@ -631,7 +672,7 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildShellCommand(self):
         # works with a single command
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_shell_commands:
                 - my_command
@@ -640,7 +681,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.Shell>
                 +      <command>my_command</command>
@@ -653,7 +693,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         # Works with multi line commands
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_shell_commands:
                 - |
@@ -664,7 +704,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.Shell>
                 +      <command>multi_line
@@ -678,7 +717,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         # Works with multiple commands
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 build_shell_commands:
                 - command_1
@@ -688,7 +727,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <builders/>
                 +  <builders>
                 +    <hudson.tasks.Shell>
                 +      <command>command_1</command>
@@ -703,9 +741,9 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    def testDescriptionSetter(self):
+    def testDescriptionRegex(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 r'''
                 description_regex: "JENKINS DESCRIPTION\\: (.*)"
                 '''
@@ -713,7 +751,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 r'''
                 @@ @@
-                -  <publishers/>
                 +  <publishers>
                 +    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
                 +      <regexp>JENKINS DESCRIPTION\: (.*)</regexp>
@@ -729,7 +766,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testNotifyStash(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 r'''
                 notify_stash:
                   url: stash.com
@@ -740,7 +777,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 r'''
                 @@ @@
-                -  <publishers/>
                 +  <publishers>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
@@ -759,40 +795,22 @@ class TestJenkinsXmlJobGenerator(object):
         When given no parameters, use the default Stash configurations set in the Jenkins server
         '''
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 r'''
-                notify_stash:
+                notify_stash: stash.com
                 '''
             ),
             expected_diff=Dedent(
                 r'''
                 @@ @@
-                -  <publishers/>
                 +  <publishers>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +      <stashServerBaseUrl></stashServerBaseUrl>
-                +      <stashUserName></stashUserName>
-                +      <stashUserPassword></stashUserPassword>
+                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
                 +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +  </publishers>
                 '''
             ),
         )
-
-
-    def testNotifyStashIncompleteParameters(self):
-        with pytest.raises(ValueError) as e:
-            self._DoTest(
-                ci_contents=Dedent(
-                    r'''
-                    notify_stash:
-                      url: stash.com
-                      password: pass
-                    '''
-                ),
-                expected_diff=None
-            )
-        assert unicode(e.value) == 'Must pass "username" when passing "password"'
 
 
     def testNotifyStashWithTests(self):
@@ -802,7 +820,7 @@ class TestJenkinsXmlJobGenerator(object):
         with failed tests might be reported as successful to Stash
         '''
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 notify_stash:
                   url: stash.com
@@ -816,10 +834,15 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
-                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
                 +      <types>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
@@ -829,13 +852,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
                 +      </types>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
@@ -859,7 +875,7 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     def testMatrix(self):
-        ci_contents = Dedent(
+        yaml_contents = Dedent(
             '''
             planet-earth:build_shell_commands:
             - earth_command
@@ -879,7 +895,7 @@ class TestJenkinsXmlJobGenerator(object):
         repository = Repository(url='http://fake.git', branch='not_master')
 
         # This test should create two jobs based on the given matrix
-        jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
+        jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository)
 
         job_generator = JenkinsXmlJobGenerator()
 
@@ -899,8 +915,6 @@ class TestJenkinsXmlJobGenerator(object):
                     @@ @@
                     -  <assignedNode>fake</assignedNode>
                     +  <assignedNode>fake-%(planet)s</assignedNode>
-                    @@ @@
-                    -  <builders/>
                     +  <builders>
                     +    <hudson.tasks.Shell>
                     +      <command>%(planet)s_command</command>
@@ -912,7 +926,7 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     def testMatrixSingleValueOnly(self):
-        ci_contents = Dedent(
+        yaml_contents = Dedent(
             '''
             matrix:
                 planet:
@@ -925,7 +939,7 @@ class TestJenkinsXmlJobGenerator(object):
         repository = Repository(url='http://fake.git', branch='not_master')
 
         # This test should create two jobs based on the given matrix
-        jd_file = JobsDoneJob.CreateFromYAML(ci_contents, repository)[0]
+        jd_file = JobsDoneJob.CreateFromYAML(yaml_contents, repository)[0]
         job_generator = JenkinsXmlJobGenerator()
 
         JobGeneratorConfigurator.Configure(job_generator, jd_file)
@@ -940,7 +954,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testDisplayName(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 display_name: "{name}-{branch}"
                 '''
@@ -956,7 +970,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testLabelExpression(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 label_expression: "win32&&dist-12.0"
                 '''
@@ -973,7 +987,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testCron(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 cron: |
                        # Everyday at 22 pm
@@ -983,7 +997,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <triggers/>
                 +  <triggers>
                 +    <hudson.triggers.TimerTrigger>
                 +      <spec># Everyday at 22 pm
@@ -997,7 +1010,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testSCMPoll(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 scm_poll: |
                        # Everyday at 22 pm
@@ -1007,7 +1020,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <triggers/>
                 +  <triggers>
                 +    <hudson.triggers.SCMTrigger>
                 +      <spec># Everyday at 22 pm
@@ -1021,7 +1033,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testAdditionalRepositories(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 additional_repositories:
                 - git:
@@ -1034,6 +1046,7 @@ class TestJenkinsXmlJobGenerator(object):
                 @@ @@
                 -  <scm class="hudson.plugins.git.GitSCM">
                 -    <configVersion>2</configVersion>
+                -    <relativeTargetDir>fake</relativeTargetDir>
                 -    <userRemoteConfigs>
                 -      <hudson.plugins.git.UserRemoteConfig>
                 -        <name>origin</name>
@@ -1046,13 +1059,14 @@ class TestJenkinsXmlJobGenerator(object):
                 -        <name>not_master</name>
                 -      </hudson.plugins.git.BranchSpec>
                 -    </branches>
-                -    <relativeTargetDir>fake</relativeTargetDir>
                 -    <extensions>
                 -      <hudson.plugins.git.extensions.impl.LocalBranch>
+                +  <assignedNode>fake</assignedNode>
                 +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
                 +    <scms>
                 +      <hudson.plugins.git.GitSCM>
                 +        <configVersion>2</configVersion>
+                +        <relativeTargetDir>fake</relativeTargetDir>
                 +        <userRemoteConfigs>
                 +          <hudson.plugins.git.UserRemoteConfig>
                 +            <name>origin</name>
@@ -1065,14 +1079,29 @@ class TestJenkinsXmlJobGenerator(object):
                 +            <name>not_master</name>
                 +          </hudson.plugins.git.BranchSpec>
                 +        </branches>
-                +        <relativeTargetDir>fake</relativeTargetDir>
                 +        <extensions>
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>not_master</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +            <recursiveSubmodules>false</recursiveSubmodules>
+                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>false</shallow>
+                +            <reference>false</reference>
+                +            <timeout>false</timeout>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -      <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                -        <recursiveSubmodules>false</recursiveSubmodules>
+                -      </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                -      <hudson.plugins.git.extensions.impl.CloneOption>
+                -        <shallow>false</shallow>
+                -        <reference>false</reference>
+                -        <timeout>false</timeout>
+                -      </hudson.plugins.git.extensions.impl.CloneOption>
                 -    </extensions>
                 -    <localBranch>not_master</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1090,25 +1119,171 @@ class TestJenkinsXmlJobGenerator(object):
                 +            <name>my_branch</name>
                 +          </hudson.plugins.git.BranchSpec>
                 +        </branches>
-                +        <relativeTargetDir>some_url</relativeTargetDir>
                 +        <extensions>
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +            <recursiveSubmodules>false</recursiveSubmodules>
+                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <shallow>false</shallow>
+                +            <reference>false</reference>
+                +            <timeout>false</timeout>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 +        <localBranch>my_branch</localBranch>
                 +      </hudson.plugins.git.GitSCM>
                 +    </scms>
+                @@ @@
+                -  <assignedNode>fake</assignedNode>
                 '''
             ),
         )
 
 
-    def testGitOptions(self):
-        # Test unknown options
+    def testGitAndAdditionalRepositories(self):
+        '''
+        Make sure that everything works just fine when we fix 'git' and 'additional_repositories'
+        '''
+        # We expect the same diff for both orders (git -> additional and additional -> git)
+        expected_diff = Dedent(
+            '''
+            @@ @@
+            -  <scm class="hudson.plugins.git.GitSCM">
+            -    <configVersion>2</configVersion>
+            -    <relativeTargetDir>fake</relativeTargetDir>
+            -    <userRemoteConfigs>
+            -      <hudson.plugins.git.UserRemoteConfig>
+            -        <name>origin</name>
+            -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+            -        <url>http://fake.git</url>
+            -      </hudson.plugins.git.UserRemoteConfig>
+            -    </userRemoteConfigs>
+            -    <branches>
+            -      <hudson.plugins.git.BranchSpec>
+            -        <name>not_master</name>
+            -      </hudson.plugins.git.BranchSpec>
+            -    </branches>
+            -    <extensions>
+            -      <hudson.plugins.git.extensions.impl.LocalBranch>
+            -        <localBranch>not_master</localBranch>
+            -      </hudson.plugins.git.extensions.impl.LocalBranch>
+            -      <hudson.plugins.git.extensions.impl.SubmoduleOption>
+            -        <recursiveSubmodules>false</recursiveSubmodules>
+            -      </hudson.plugins.git.extensions.impl.SubmoduleOption>
+            -      <hudson.plugins.git.extensions.impl.CloneOption>
+            -        <shallow>false</shallow>
+            -        <reference>false</reference>
+            -        <timeout>false</timeout>
+            -      </hudson.plugins.git.extensions.impl.CloneOption>
+            -    </extensions>
+            -    <localBranch>not_master</localBranch>
+            +  <assignedNode>fake</assignedNode>
+            +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
+            +    <scms>
+            +      <hudson.plugins.git.GitSCM>
+            +        <configVersion>2</configVersion>
+            +        <relativeTargetDir>fake</relativeTargetDir>
+            +        <userRemoteConfigs>
+            +          <hudson.plugins.git.UserRemoteConfig>
+            +            <name>origin</name>
+            +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+            +            <url>http://fake.git</url>
+            +          </hudson.plugins.git.UserRemoteConfig>
+            +        </userRemoteConfigs>
+            +        <branches>
+            +          <hudson.plugins.git.BranchSpec>
+            +            <name>custom_main</name>
+            +          </hudson.plugins.git.BranchSpec>
+            +        </branches>
+            +        <extensions>
+            +          <hudson.plugins.git.extensions.impl.LocalBranch>
+            +            <localBranch>custom_main</localBranch>
+            +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+            +            <recursiveSubmodules>false</recursiveSubmodules>
+            +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+            +          <hudson.plugins.git.extensions.impl.CloneOption>
+            +            <shallow>false</shallow>
+            +            <reference>false</reference>
+            +            <timeout>false</timeout>
+            +          </hudson.plugins.git.extensions.impl.CloneOption>
+            +        </extensions>
+            +        <localBranch>custom_main</localBranch>
+            +      </hudson.plugins.git.GitSCM>
+            +      <hudson.plugins.git.GitSCM>
+            +        <configVersion>2</configVersion>
+            +        <userRemoteConfigs>
+            +          <hudson.plugins.git.UserRemoteConfig>
+            +            <name>origin</name>
+            +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
+            +            <url>http://additional.git</url>
+            +          </hudson.plugins.git.UserRemoteConfig>
+            +        </userRemoteConfigs>
+            +        <branches>
+            +          <hudson.plugins.git.BranchSpec>
+            +            <name>custom_additional</name>
+            +          </hudson.plugins.git.BranchSpec>
+            +        </branches>
+            +        <extensions>
+            +          <hudson.plugins.git.extensions.impl.LocalBranch>
+            +            <localBranch>custom_additional</localBranch>
+            +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
+            +            <recursiveSubmodules>false</recursiveSubmodules>
+            +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
+            +          <hudson.plugins.git.extensions.impl.CloneOption>
+            +            <shallow>false</shallow>
+            +            <reference>false</reference>
+            +            <timeout>false</timeout>
+            +          </hudson.plugins.git.extensions.impl.CloneOption>
+            +        </extensions>
+            +        <localBranch>custom_additional</localBranch>
+            +      </hudson.plugins.git.GitSCM>
+            +    </scms>
+            @@ @@
+            -  <assignedNode>fake</assignedNode>
+            '''
+        )
+
+        # Test git -> additional
+        self._DoTest(
+            yaml_contents=Dedent(
+                '''
+                git:
+                  branch: custom_main
+
+                additional_repositories:
+                - git:
+                    url: http://additional.git
+                    branch: custom_additional
+                '''
+            ),
+            expected_diff=expected_diff
+        )
+
+        # Test additional -> git
+        self._DoTest(
+            yaml_contents=Dedent(
+                '''
+                additional_repositories:
+                - git:
+                    url: http://additional.git
+                    branch: custom_additional
+
+                git:
+                  branch: custom_main
+                '''
+            ),
+            expected_diff=expected_diff
+        )
+
+
+    def testUnknownGitOptions(self):
         with pytest.raises(RuntimeError) as e:
             self._DoTest(
-                ci_contents=Dedent(
+                yaml_contents=Dedent(
                     '''
                     git:
                       unknown: ""
@@ -1116,142 +1291,43 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff=''
             )
-        assert unicode(e.value) == "Received unknown git options: ['unknown']"
+        assert unicode(e.value) == "Received unknown git options: [u'unknown']"
 
-        # Include some extra options
+
+    def testGitOptions(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 git:
-                  target_dir: "main_application"
                   recursive_submodules: true
                   reference: "/home/reference.git"
+                  target_dir: "main_application"
                   timeout: 30
-
-                additional_repositories:
-                - git:
-                    url: http://some_url.git
-                    branch: my_branch
-                    target_dir: "other_dir"
-                    recursive_submodules: true
-                - git:
-                    url: http://another_url.git
-                    branch: my_branch
-                    target_dir: ""
-                    recursive_submodules: false
+                  recursive_submodules: true
                 '''
             ),
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <scm class="hudson.plugins.git.GitSCM">
-                -    <configVersion>2</configVersion>
-                -    <userRemoteConfigs>
-                -      <hudson.plugins.git.UserRemoteConfig>
-                -        <name>origin</name>
-                -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-                -        <url>http://fake.git</url>
-                -      </hudson.plugins.git.UserRemoteConfig>
-                -    </userRemoteConfigs>
-                -    <branches>
-                -      <hudson.plugins.git.BranchSpec>
-                -        <name>not_master</name>
-                -      </hudson.plugins.git.BranchSpec>
-                -    </branches>
                 -    <relativeTargetDir>fake</relativeTargetDir>
-                -    <extensions>
-                -      <hudson.plugins.git.extensions.impl.LocalBranch>
-                +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
-                +    <scms>
-                +      <hudson.plugins.git.GitSCM>
-                +        <configVersion>2</configVersion>
-                +        <userRemoteConfigs>
-                +          <hudson.plugins.git.UserRemoteConfig>
-                +            <name>origin</name>
-                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-                +            <url>http://fake.git</url>
-                +          </hudson.plugins.git.UserRemoteConfig>
-                +        </userRemoteConfigs>
-                +        <branches>
-                +          <hudson.plugins.git.BranchSpec>
-                +            <name>not_master</name>
-                +          </hudson.plugins.git.BranchSpec>
-                +        </branches>
-                +        <relativeTargetDir>main_application</relativeTargetDir>
-                +        <extensions>
-                +          <hudson.plugins.git.extensions.impl.LocalBranch>
-                +            <localBranch>not_master</localBranch>
-                +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +            <recursiveSubmodules>true</recursiveSubmodules>
-                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <reference>/home/reference.git</reference>
-                +            <timeout>30</timeout>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
-                +        </extensions>
+                +    <relativeTargetDir>main_application</relativeTargetDir>
                 @@ @@
-                -      </hudson.plugins.git.extensions.impl.LocalBranch>
-                -    </extensions>
-                -    <localBranch>not_master</localBranch>
-                +      </hudson.plugins.git.GitSCM>
-                +      <hudson.plugins.git.GitSCM>
-                +        <configVersion>2</configVersion>
-                +        <userRemoteConfigs>
-                +          <hudson.plugins.git.UserRemoteConfig>
-                +            <name>origin</name>
-                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-                +            <url>http://some_url.git</url>
-                +          </hudson.plugins.git.UserRemoteConfig>
-                +        </userRemoteConfigs>
-                +        <branches>
-                +          <hudson.plugins.git.BranchSpec>
-                +            <name>my_branch</name>
-                +          </hudson.plugins.git.BranchSpec>
-                +        </branches>
-                +        <relativeTargetDir>other_dir</relativeTargetDir>
-                +        <extensions>
-                +          <hudson.plugins.git.extensions.impl.LocalBranch>
-                +            <localBranch>my_branch</localBranch>
-                +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +            <recursiveSubmodules>true</recursiveSubmodules>
-                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +        </extensions>
-                +        <localBranch>my_branch</localBranch>
-                +      </hudson.plugins.git.GitSCM>
-                +      <hudson.plugins.git.GitSCM>
-                +        <configVersion>2</configVersion>
-                +        <userRemoteConfigs>
-                +          <hudson.plugins.git.UserRemoteConfig>
-                +            <name>origin</name>
-                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
-                +            <url>http://another_url.git</url>
-                +          </hudson.plugins.git.UserRemoteConfig>
-                +        </userRemoteConfigs>
-                +        <branches>
-                +          <hudson.plugins.git.BranchSpec>
-                +            <name>my_branch</name>
-                +          </hudson.plugins.git.BranchSpec>
-                +        </branches>
-                +        <extensions>
-                +          <hudson.plugins.git.extensions.impl.LocalBranch>
-                +            <localBranch>my_branch</localBranch>
-                +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +        </extensions>
-                +        <localBranch>my_branch</localBranch>
-                +      </hudson.plugins.git.GitSCM>
-                +    </scms>
+                -        <recursiveSubmodules>false</recursiveSubmodules>
+                +        <recursiveSubmodules>true</recursiveSubmodules>
+                @@ @@
+                -        <reference>false</reference>
+                -        <timeout>false</timeout>
+                +        <reference>/home/reference.git</reference>
+                +        <timeout>30</timeout>
                 '''
             ),
         )
 
 
 
-    def testEmailNotification(self):
-        # Test dict syntax
+    def testEmailNotificationDict(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 email_notification:
                   recipients: user@company.com other@company.com
@@ -1263,7 +1339,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
                 +  <publishers>
                 +    <hudson.tasks.Mailer>
                 +      <recipients>user@company.com other@company.com</recipients>
@@ -1275,9 +1350,9 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
-        # Test string syntax
+    def testEmailNotificationString(self):
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 email_notification: user@company.com other@company.com
                 '''
@@ -1285,7 +1360,6 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
                 +  <publishers>
                 +    <hudson.tasks.Mailer>
                 +      <recipients>user@company.com other@company.com</recipients>
@@ -1304,7 +1378,7 @@ class TestJenkinsXmlJobGenerator(object):
         otherwise builds with failed tests might be reported as successful via email
         '''
         self._DoTest(
-            ci_contents=Dedent(
+            yaml_contents=Dedent(
                 '''
                 email_notification:
                   recipients: user@company.com other@company.com
@@ -1318,10 +1392,15 @@ class TestJenkinsXmlJobGenerator(object):
             expected_diff=Dedent(
                 '''
                 @@ @@
-                -  <publishers/>
-                -  <buildWrappers/>
                 +  <publishers>
                 +    <xunit>
+                +      <thresholds>
+                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +          <unstableThreshold>0</unstableThreshold>
+                +          <unstableNewThreshold>0</unstableNewThreshold>
+                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+                +      </thresholds>
+                +      <thresholdMode>1</thresholdMode>
                 +      <types>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
@@ -1331,13 +1410,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
                 +      </types>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
                 +    </xunit>
                 +    <hudson.tasks.Mailer>
                 +      <recipients>user@company.com other@company.com</recipients>
@@ -1361,21 +1433,20 @@ class TestJenkinsXmlJobGenerator(object):
 
 
 
-    def _DoTest(self, ci_contents, expected_diff):
+    def _DoTest(self, yaml_contents, expected_diff):
         '''
-        :param unicode ci_contents:
+        :param unicode yaml_contents:
             Contents of JobsDoneJob used for this test
 
         :param unicode expected_diff:
-            Expected diff from build jobs from `ci_contents`, when compared to BASIC_EXPECTED_XML.
+            Expected diff from build jobs from `yaml_contents`, when compared to BASIC_EXPECTED_XML.
         '''
         repository = Repository(url='http://fake.git', branch='not_master')
-        jobs_done_jobs = JobsDoneJob.CreateFromYAML(ci_contents, repository)
+        jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository)
 
         job_generator = JenkinsXmlJobGenerator()
         JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
         jenkins_job = job_generator.GetJob()
-
         self._AssertDiff(jenkins_job.xml, expected_diff)
 
 
@@ -1388,7 +1459,8 @@ class TestJenkinsXmlJobGenerator(object):
         diff = '\n'.join(diff.splitlines()[2:])
         diff = re.sub('@@.*@@', '@@ @@', diff, flags=re.MULTILINE)
 
-        print diff
+        print obtained_xml
+        # print diff
         assert expected_diff == diff
 
 
