@@ -257,8 +257,15 @@ class JenkinsXmlJobGenerator(object):
             'localBranch',  # Checkout to local branch (GitPlugin 1.5)
         ]
 
-        # Set all options
-        _Set('target_dir', 'relativeTargetDir')
+        # Set all options --------------------------------------------------------------------------
+        # Try to obtain a default target_dir based on repository name
+        if 'url' in git_options:
+            from jobs_done10.repository import Repository
+            repository = Repository(url=git_options['url'])
+            _Set('target_dir', 'relativeTargetDir', default=repository.name)
+        else:
+            _Set('target_dir', 'relativeTargetDir')
+
         _Set('remote', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name', default='origin')
         _Set('refspec', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec', default='+refs/heads/*:refs/remotes/origin/*')
         _Set('url', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url')

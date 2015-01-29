@@ -1107,6 +1107,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      </hudson.plugins.git.GitSCM>
                 +      <hudson.plugins.git.GitSCM>
                 +        <configVersion>2</configVersion>
+                +        <relativeTargetDir>some_url</relativeTargetDir>
                 +        <userRemoteConfigs>
                 +          <hudson.plugins.git.UserRemoteConfig>
                 +            <name>origin</name>
@@ -1214,6 +1215,7 @@ class TestJenkinsXmlJobGenerator(object):
             +      </hudson.plugins.git.GitSCM>
             +      <hudson.plugins.git.GitSCM>
             +        <configVersion>2</configVersion>
+            +        <relativeTargetDir>additional</relativeTargetDir>
             +        <userRemoteConfigs>
             +          <hudson.plugins.git.UserRemoteConfig>
             +            <name>origin</name>
