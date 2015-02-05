@@ -266,14 +266,14 @@ class JenkinsXmlJobGenerator(object):
         else:
             _Set('target_dir', 'relativeTargetDir')
 
-        _Set('remote', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name', default='origin')
-        _Set('refspec', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec', default='+refs/heads/*:refs/remotes/origin/*')
+        _Set('remote', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/name')
+        _Set('refspec', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/refspec')
         _Set('url', 'userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url')
         _Set('branch', branch_paths)
-        _Set('recursive_submodules', 'extensions/hudson.plugins.git.extensions.impl.SubmoduleOption/recursiveSubmodules', default=xmls(False))
-        _Set('shallow_clone', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow', default=xmls(False))
-        _Set('reference', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/reference', default=xmls(False))
-        _Set('timeout', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/timeout', default=xmls(False))
+        _Set('recursive_submodules', 'extensions/hudson.plugins.git.extensions.impl.SubmoduleOption/recursiveSubmodules')
+        _Set('shallow_clone', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow')
+        _Set('reference', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/reference')
+        _Set('timeout', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/timeout')
 
         self._CheckUnknownOptions('git', git_options)
 
