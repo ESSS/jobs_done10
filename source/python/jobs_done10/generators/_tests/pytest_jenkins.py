@@ -47,8 +47,6 @@ class TestJenkinsXmlJobGenerator(object):
             <relativeTargetDir>fake</relativeTargetDir>
             <userRemoteConfigs>
               <hudson.plugins.git.UserRemoteConfig>
-                <name>origin</name>
-                <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
                 <url>http://fake.git</url>
               </hudson.plugins.git.UserRemoteConfig>
             </userRemoteConfigs>
@@ -61,14 +59,6 @@ class TestJenkinsXmlJobGenerator(object):
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
-              <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                <recursiveSubmodules>false</recursiveSubmodules>
-              </hudson.plugins.git.extensions.impl.SubmoduleOption>
-              <hudson.plugins.git.extensions.impl.CloneOption>
-                <shallow>false</shallow>
-                <reference>false</reference>
-                <timeout>false</timeout>
-              </hudson.plugins.git.extensions.impl.CloneOption>
             </extensions>
             <localBranch>not_master</localBranch>
           </scm>
@@ -1049,8 +1039,6 @@ class TestJenkinsXmlJobGenerator(object):
                 -    <relativeTargetDir>fake</relativeTargetDir>
                 -    <userRemoteConfigs>
                 -      <hudson.plugins.git.UserRemoteConfig>
-                -        <name>origin</name>
-                -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
                 -        <url>http://fake.git</url>
                 -      </hudson.plugins.git.UserRemoteConfig>
                 -    </userRemoteConfigs>
@@ -1069,8 +1057,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +        <relativeTargetDir>fake</relativeTargetDir>
                 +        <userRemoteConfigs>
                 +          <hudson.plugins.git.UserRemoteConfig>
-                +            <name>origin</name>
-                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
                 +            <url>http://fake.git</url>
                 +          </hudson.plugins.git.UserRemoteConfig>
                 +        </userRemoteConfigs>
@@ -1083,25 +1069,9 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>not_master</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +            <recursiveSubmodules>false</recursiveSubmodules>
-                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <shallow>false</shallow>
-                +            <reference>false</reference>
-                +            <timeout>false</timeout>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
-                -      <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                -        <recursiveSubmodules>false</recursiveSubmodules>
-                -      </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                -      <hudson.plugins.git.extensions.impl.CloneOption>
-                -        <shallow>false</shallow>
-                -        <reference>false</reference>
-                -        <timeout>false</timeout>
-                -      </hudson.plugins.git.extensions.impl.CloneOption>
                 -    </extensions>
                 -    <localBranch>not_master</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1110,8 +1080,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +        <relativeTargetDir>some_url</relativeTargetDir>
                 +        <userRemoteConfigs>
                 +          <hudson.plugins.git.UserRemoteConfig>
-                +            <name>origin</name>
-                +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
                 +            <url>http://some_url.git</url>
                 +          </hudson.plugins.git.UserRemoteConfig>
                 +        </userRemoteConfigs>
@@ -1124,14 +1092,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +            <recursiveSubmodules>false</recursiveSubmodules>
-                +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <shallow>false</shallow>
-                +            <reference>false</reference>
-                +            <timeout>false</timeout>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +        </extensions>
                 +        <localBranch>my_branch</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1145,7 +1105,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testGitAndAdditionalRepositories(self):
         '''
-        Make sure that everything works just fine when we fix 'git' and 'additional_repositories'
+        Make sure that everything works just fine when we mix 'git' and 'additional_repositories'
         '''
         # We expect the same diff for both orders (git -> additional and additional -> git)
         expected_diff = Dedent(
@@ -1156,8 +1116,6 @@ class TestJenkinsXmlJobGenerator(object):
             -    <relativeTargetDir>fake</relativeTargetDir>
             -    <userRemoteConfigs>
             -      <hudson.plugins.git.UserRemoteConfig>
-            -        <name>origin</name>
-            -        <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
             -        <url>http://fake.git</url>
             -      </hudson.plugins.git.UserRemoteConfig>
             -    </userRemoteConfigs>
@@ -1170,14 +1128,6 @@ class TestJenkinsXmlJobGenerator(object):
             -      <hudson.plugins.git.extensions.impl.LocalBranch>
             -        <localBranch>not_master</localBranch>
             -      </hudson.plugins.git.extensions.impl.LocalBranch>
-            -      <hudson.plugins.git.extensions.impl.SubmoduleOption>
-            -        <recursiveSubmodules>false</recursiveSubmodules>
-            -      </hudson.plugins.git.extensions.impl.SubmoduleOption>
-            -      <hudson.plugins.git.extensions.impl.CloneOption>
-            -        <shallow>false</shallow>
-            -        <reference>false</reference>
-            -        <timeout>false</timeout>
-            -      </hudson.plugins.git.extensions.impl.CloneOption>
             -    </extensions>
             -    <localBranch>not_master</localBranch>
             +  <assignedNode>fake</assignedNode>
@@ -1188,8 +1138,6 @@ class TestJenkinsXmlJobGenerator(object):
             +        <relativeTargetDir>fake</relativeTargetDir>
             +        <userRemoteConfigs>
             +          <hudson.plugins.git.UserRemoteConfig>
-            +            <name>origin</name>
-            +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
             +            <url>http://fake.git</url>
             +          </hudson.plugins.git.UserRemoteConfig>
             +        </userRemoteConfigs>
@@ -1202,14 +1150,6 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_main</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
-            +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-            +            <recursiveSubmodules>false</recursiveSubmodules>
-            +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-            +          <hudson.plugins.git.extensions.impl.CloneOption>
-            +            <shallow>false</shallow>
-            +            <reference>false</reference>
-            +            <timeout>false</timeout>
-            +          </hudson.plugins.git.extensions.impl.CloneOption>
             +        </extensions>
             +        <localBranch>custom_main</localBranch>
             +      </hudson.plugins.git.GitSCM>
@@ -1218,8 +1158,6 @@ class TestJenkinsXmlJobGenerator(object):
             +        <relativeTargetDir>additional</relativeTargetDir>
             +        <userRemoteConfigs>
             +          <hudson.plugins.git.UserRemoteConfig>
-            +            <name>origin</name>
-            +            <refspec>+refs/heads/*:refs/remotes/origin/*</refspec>
             +            <url>http://additional.git</url>
             +          </hudson.plugins.git.UserRemoteConfig>
             +        </userRemoteConfigs>
@@ -1232,14 +1170,6 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_additional</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
-            +          <hudson.plugins.git.extensions.impl.SubmoduleOption>
-            +            <recursiveSubmodules>false</recursiveSubmodules>
-            +          </hudson.plugins.git.extensions.impl.SubmoduleOption>
-            +          <hudson.plugins.git.extensions.impl.CloneOption>
-            +            <shallow>false</shallow>
-            +            <reference>false</reference>
-            +            <timeout>false</timeout>
-            +          </hudson.plugins.git.extensions.impl.CloneOption>
             +        </extensions>
             +        <localBranch>custom_additional</localBranch>
             +      </hudson.plugins.git.GitSCM>
@@ -1314,13 +1244,13 @@ class TestJenkinsXmlJobGenerator(object):
                 -    <relativeTargetDir>fake</relativeTargetDir>
                 +    <relativeTargetDir>main_application</relativeTargetDir>
                 @@ @@
-                -        <recursiveSubmodules>false</recursiveSubmodules>
+                +      <hudson.plugins.git.extensions.impl.SubmoduleOption>
                 +        <recursiveSubmodules>true</recursiveSubmodules>
-                @@ @@
-                -        <reference>false</reference>
-                -        <timeout>false</timeout>
+                +      </hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +      <hudson.plugins.git.extensions.impl.CloneOption>
                 +        <reference>/home/reference.git</reference>
                 +        <timeout>30</timeout>
+                +      </hudson.plugins.git.extensions.impl.CloneOption>
                 '''
             ),
         )
