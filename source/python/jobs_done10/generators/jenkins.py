@@ -347,6 +347,28 @@ class JenkinsXmlJobGenerator(object):
         self.xml['customWorkspace'] = custom_workspace
 
 
+    def SetSlack(self, options):
+        room = options.get('room', 'general')
+
+        properties = self.xml['properties/jenkins.plugins.slack.SlackNotifier_-SlackJobProperty']
+        properties['@plugin'] = 'slack@1.2'
+        properties['room'] = '#' + room
+        properties['startNotification'] = 'true'
+        properties['notifySuccess'] = 'true'
+        properties['notifyAborted'] = 'true'
+        properties['notifyNotBuilt'] = 'true'
+        properties['notifyUnstable'] = 'true'
+        properties['notifyFailure'] = 'true'
+        properties['notifyBackToNormal'] = 'true'
+
+        publisher = self.xml['publishers/jenkins.plugins.slack.SlackNotifier']
+        publisher['@plugin'] = "slack@1.2"
+        publisher['teamDomain'] = 'esss'
+        publisher['authToken'] = options['token']
+        publisher['buildServerUrl'] = options['url']
+        publisher['room'] = '#' + room
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns

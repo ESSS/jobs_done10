@@ -334,7 +334,6 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-
     def testTimeoutAbsolute(self):
         self._DoTest(
             yaml_contents=Dedent(
@@ -1363,6 +1362,43 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
+
+    def testSlack(self):
+        self._DoTest(
+            yaml_contents=Dedent(
+                '''
+                slack:
+                  room: zulu
+                  token: ALPHA
+                  url: https://bravo
+                '''
+            ),
+            expected_diff=Dedent(
+            '''
+            @@ @@
+            +  <properties>
+            +    <jenkins.plugins.slack.SlackNotifier_-SlackJobProperty plugin="slack@1.2">
+            +      <room>#zulu</room>
+            +      <startNotification>true</startNotification>
+            +      <notifySuccess>true</notifySuccess>
+            +      <notifyAborted>true</notifyAborted>
+            +      <notifyNotBuilt>true</notifyNotBuilt>
+            +      <notifyUnstable>true</notifyUnstable>
+            +      <notifyFailure>true</notifyFailure>
+            +      <notifyBackToNormal>true</notifyBackToNormal>
+            +    </jenkins.plugins.slack.SlackNotifier_-SlackJobProperty>
+            +  </properties>
+            +  <publishers>
+            +    <jenkins.plugins.slack.SlackNotifier plugin="slack@1.2">
+            +      <teamDomain>esss</teamDomain>
+            +      <authToken>ALPHA</authToken>
+            +      <buildServerUrl>https://bravo</buildServerUrl>
+            +      <room>#zulu</room>
+            +    </jenkins.plugins.slack.SlackNotifier>
+            +  </publishers>
+            '''
+            )
+        ),
 
 
     def _DoTest(self, yaml_contents, expected_diff):

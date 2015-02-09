@@ -93,6 +93,12 @@ class JobsDoneJob(object):
 
         # Job timeout in seconds without console activity
         'timeout_no_activity' : unicode,
+
+        # Slack notification
+        # * room: general
+        # * token: 123123123123123123123
+        # * url: http://eden.esss.com.br/jenkins
+        'slack' : dict,
     }
 
     # All parsed options
