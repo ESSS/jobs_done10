@@ -1368,6 +1368,7 @@ class TestJenkinsXmlJobGenerator(object):
             yaml_contents=Dedent(
                 '''
                 slack:
+                  team: esss
                   room: zulu
                   token: ALPHA
                   url: https://bravo

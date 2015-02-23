@@ -363,7 +363,7 @@ class JenkinsXmlJobGenerator(object):
 
         publisher = self.xml['publishers/jenkins.plugins.slack.SlackNotifier']
         publisher['@plugin'] = "slack@1.2"
-        publisher['teamDomain'] = 'esss'
+        publisher['teamDomain'] = options['team']
         publisher['authToken'] = options['token']
         publisher['buildServerUrl'] = options['url']
         publisher['room'] = '#' + room
