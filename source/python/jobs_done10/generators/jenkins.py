@@ -369,6 +369,20 @@ class JenkinsXmlJobGenerator(object):
         publisher['room'] = '#' + room
 
 
+    def SetNotification(self, options):
+        room = options.get('room', 'general')
+
+        properties = self.xml['properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty']
+        properties['@plugin'] = 'notification@1.9'
+        endpoint = properties['endpoints/com.tikal.hudson.plugins.notification.Endpoint']
+        endpoint['protocol'] = options.get('protocol', 'HTTP')
+        endpoint['format'] = options.get('format', 'JSON')
+        endpoint['url'] = options['url']
+        endpoint['event'] = 'all'
+        endpoint['timeout'] = '30000'
+        endpoint['loglines'] = '1'
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns

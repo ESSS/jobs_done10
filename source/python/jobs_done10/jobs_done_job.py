@@ -99,6 +99,13 @@ class JobsDoneJob(object):
         # * token: 123123123123123123123
         # * url: http://eden.esss.com.br/jenkins
         'slack' : dict,
+
+        # Notification (HTTP/JSON)
+        # https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
+        # * protocol: HTTP (optional)
+        # * format: JSON (optional)
+        # * url: https://requestb.in/12345678
+        'notification' : dict,
     }
 
     # All parsed options

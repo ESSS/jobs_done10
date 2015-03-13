@@ -1363,6 +1363,38 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    def testNotification(self):
+        self._DoTest(
+            yaml_contents=Dedent(
+                '''
+                notification:
+                  protocol: ALPHA
+                  format: BRAVO
+                  url: https://bravo
+                '''
+            ),
+            expected_diff=Dedent(
+            '''
+            @@ @@
+            +  <properties>
+            +    <com.tikal.hudson.plugins.notification.HudsonNotificationProperty plugin="notification@1.9">
+            +      <endpoints>
+            +        <com.tikal.hudson.plugins.notification.Endpoint>
+            +          <protocol>ALPHA</protocol>
+            +          <format>BRAVO</format>
+            +          <url>https://bravo</url>
+            +          <event>all</event>
+            +          <timeout>30000</timeout>
+            +          <loglines>1</loglines>
+            +        </com.tikal.hudson.plugins.notification.Endpoint>
+            +      </endpoints>
+            +    </com.tikal.hudson.plugins.notification.HudsonNotificationProperty>
+            +  </properties>
+            '''
+            )
+        ),
+
+
     def testSlack(self):
         self._DoTest(
             yaml_contents=Dedent(
