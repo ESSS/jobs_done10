@@ -35,8 +35,8 @@ platform-linux:build_shell_commands:
   $AA_AASIMAR_AA project.build jobs_done10
 
 scm_poll: |
-  # build every 2 hours between 2h and 20h
-  H 2-20/2 * * *
+  # build at 23pm
+  H 23 * * *
 
 description_regex: "HUDSON DESCRIPTION\\: (.*)"
 
