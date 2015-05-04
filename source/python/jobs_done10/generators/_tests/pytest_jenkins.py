@@ -1591,6 +1591,39 @@ class TestJenkinsPublisher(object):
         assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-saturn'])
 
 
+    def testPublishToUrlProxyErrorOnce(self, monkeypatch):
+        # Do not actually sleep during tests
+        monkeypatch.setattr(JenkinsJobPublisher, 'RETRY_SLEEP', 0)
+
+        # Tell mock jenkins to raise a proxy error, our retry should catch it and continue
+        mock_jenkins = self._MockJenkinsAPI(monkeypatch, proxy_errors=1)
+        new_jobs, updated_jobs, deleted_jobs = self._GetPublisher().PublishToUrl(
+            url='jenkins_url',
+            username='jenkins_user',
+            password='jenkins_pass',
+        )
+        assert set(new_jobs) == mock_jenkins.NEW_JOBS == set(['space-milky_way-venus', 'space-milky_way-jupiter'])
+        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set(['space-milky_way-mercury'])
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-saturn'])
+
+
+    def testPublishToUrlProxyErrorTooManyTimes(self, monkeypatch):
+        # Do not actually sleep during tests
+        monkeypatch.setattr(JenkinsJobPublisher, 'RETRY_SLEEP', 0)
+        monkeypatch.setattr(JenkinsJobPublisher, 'RETRIES', 3)
+
+        # Tell mock jenkins to raise 5 proxy errors in a row, this should bust our retry limit
+        self._MockJenkinsAPI(monkeypatch, proxy_errors=5)
+
+        from requests.exceptions import HTTPError
+        with pytest.raises(HTTPError):
+            self._GetPublisher().PublishToUrl(
+                url='jenkins_url',
+                username='jenkins_user',
+                password='jenkins_pass',
+            )
+
+
     def testPublishToUrl2(self, monkeypatch):
         mock_jenkins = self._MockJenkinsAPI(monkeypatch)
 
@@ -1618,7 +1651,7 @@ class TestJenkinsPublisher(object):
         return JenkinsJobPublisher(repository, jobs)
 
 
-    def _MockJenkinsAPI(self, monkeypatch):
+    def _MockJenkinsAPI(self, monkeypatch, proxy_errors=0):
         class MockJenkins(object):
             NEW_JOBS = set()
             UPDATED_JOBS = set()
@@ -1628,6 +1661,7 @@ class TestJenkinsPublisher(object):
                 assert url == 'jenkins_url'
                 assert username == 'jenkins_user'
                 assert password == 'jenkins_pass'
+                self.proxy_errors_raised = 0
 
             @property
             def jobnames(self):
@@ -1706,6 +1740,14 @@ class TestJenkinsPublisher(object):
                 self.UPDATED_JOBS.add(name)
 
             def job_delete(self, name):
+                if self.proxy_errors_raised < proxy_errors:
+                    self.proxy_errors_raised += 1
+                    from mock import Mock
+                    from requests.exceptions import HTTPError
+                    response = Mock()
+                    response.status_code = 403
+                    raise HTTPError(response=response)
+
                 self.DELETED_JOBS.add(name)
 
 
