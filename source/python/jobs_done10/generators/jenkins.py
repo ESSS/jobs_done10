@@ -370,8 +370,6 @@ class JenkinsXmlJobGenerator(object):
 
 
     def SetNotification(self, options):
-        room = options.get('room', 'general')
-
         properties = self.xml['properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty']
         properties['@plugin'] = 'notification@1.9'
         endpoint = properties['endpoints/com.tikal.hudson.plugins.notification.Endpoint']
@@ -436,6 +434,12 @@ class JenkinsJobPublisher(object):
     '''
     Publishes `JenkinsJob`s
     '''
+    # Times to retry on ProxyErrors
+    RETRIES = 3
+
+    # Times to sleep (seconds) between each retry
+    RETRY_SLEEP = 1
+
     def __init__(self, repository, jobs):
         '''
         :param Repository repository:
@@ -482,15 +486,32 @@ class JenkinsJobPublisher(object):
         updated_jobs = job_names.intersection(matching_jobs)
         deleted_jobs = matching_jobs.difference(job_names)
 
+        def retry(func, *args, **kwargs):
+            from requests.exceptions import HTTPError
+            for _ in range(self.RETRIES):
+                try:
+                    func(*args, **kwargs)
+                    break
+                except HTTPError as http_error:
+                    if http_error.response.status_code == 403:  # Proxy error
+                        # This happens sometimes for no apparent reason, and we want to retry.
+                        from time import sleep
+                        sleep(self.RETRY_SLEEP)
+                    else:
+                        raise http_error
+            else:
+                # If we got here, this mean we ran out of retries. Raise the last error we received.
+                raise http_error
+
         # Process everything
         for job_name in new_jobs:
-            jenkins_api.job_create(job_name, self.jobs[job_name].xml)
+            retry(jenkins_api.job_create, job_name, self.jobs[job_name].xml)
 
         for job_name in updated_jobs:
-            jenkins_api.job_reconfigure(job_name, self.jobs[job_name].xml)
+            retry(jenkins_api.job_reconfigure, job_name, self.jobs[job_name].xml)
 
         for job_name in deleted_jobs:
-            jenkins_api.job_delete(job_name)
+            retry(jenkins_api.job_delete, job_name)
 
         return map(sorted, (new_jobs, updated_jobs, deleted_jobs))
 
