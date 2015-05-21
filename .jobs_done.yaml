@@ -44,6 +44,6 @@ notify_stash:
 
 display_name: "[{branch}] {name} {dist}-{platform}"
 
-label_expression: "dist-{dist} && {platform} && team-bos"
+label_expression: "dist-{dist} && {platform} && team-dev"
 
 timeout: 5
