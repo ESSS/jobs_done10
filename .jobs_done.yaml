@@ -46,4 +46,4 @@ display_name: "[{branch}] {name} {dist}-{platform}"
 
 label_expression: "dist-{dist} && {platform} && team-dev"
 
-timeout: 5
+timeout: 20
