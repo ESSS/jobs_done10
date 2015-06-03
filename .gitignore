@@ -1,4 +1,6 @@
 *.pyc
+*~
+/.venv/
 *_generated.py
 .coverage
 /build/
