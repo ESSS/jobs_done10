@@ -90,6 +90,92 @@ def testCreateJobsDoneJobFromYAML():
     assert venus_job.label_expression == 'planet-venus&&moon-europa'
 
 
+def testExclude():
+    key = lambda job: ':'.join(j + '-' + job.matrix_row[j] for j in sorted(job.matrix_row.keys()))
+    # Base case ------------------------------------------------------------------------------------
+    yaml_contents = Dedent(
+        '''
+        matrix:
+          planet:
+          - mercury
+          - venus
+
+          moon:
+          - europa
+          - ganymede
+
+        '''
+    )
+    jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
+    assert sorted(map(key, jobs_done_jobs)) == [
+        'moon-europa:planet-mercury',
+        'moon-europa:planet-venus',
+        'moon-ganymede:planet-mercury',
+        'moon-ganymede:planet-venus'
+    ]
+
+    # Exclude everything matching planet-venus -----------------------------------------------------
+    yaml_contents = Dedent(
+        '''
+        matrix:
+          planet:
+          - mercury
+          - venus
+
+          moon:
+          - europa
+          - ganymede
+
+        planet-venus:exclude: yes
+        '''
+    )
+    jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
+    assert sorted(map(key, jobs_done_jobs)) == [
+        'moon-europa:planet-mercury',
+        'moon-ganymede:planet-mercury',
+    ]
+
+    # Exclude everything matching planet-venus and moon europa -------------------------------------
+    yaml_contents = Dedent(
+        '''
+        matrix:
+          planet:
+          - mercury
+          - venus
+
+          moon:
+          - europa
+          - ganymede
+
+        planet-venus:moon-europa:exclude: yes
+        '''
+    )
+    jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
+    assert sorted(map(key, jobs_done_jobs)) == [
+        'moon-europa:planet-mercury',
+        'moon-ganymede:planet-mercury',
+        'moon-ganymede:planet-venus'
+    ]
+
+    # Exclude everything ---------------------------------------------------------------------------
+    yaml_contents = Dedent(
+        '''
+        matrix:
+          planet:
+          - mercury
+          - venus
+
+          moon:
+          - europa
+          - ganymede
+
+        exclude: yes
+        '''
+    )
+    jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
+    assert sorted(map(key, jobs_done_jobs)) == []
+
+
 def testBranchFlags():
     yaml_contents = Dedent(
         '''
