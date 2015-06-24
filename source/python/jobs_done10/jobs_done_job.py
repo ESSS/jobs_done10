@@ -117,6 +117,11 @@ class JobsDoneJob(object):
         #    .. note:: Uses python `re` syntax.
         'branch_patterns':list,
 
+        # unicode exclude:
+        #     Determines if a job should be excluded (usually used with matrix flags)
+        #     Defaults to 'false'
+        'exclude': unicode,
+
         # unicode ignore_unmatchable:
         #    If 'true', will not raise errors when an unmatchable condition is found.
         #    Defaults to 'false'
@@ -291,10 +296,16 @@ class JobsDoneJob(object):
             for option_name, option_value in jd_formatted_data.iteritems():
                 setattr(jobs_done_job, option_name, option_value)
 
-            # Only create this job if this branch is acceptable (matches anything in branch_patterns)
+            # Do not create a job if exclude=='yes'
+            if jd_formatted_data.get('exclude', 'no') == 'yes':
+                continue
+
+            # Do not create a job if there is no match for this branch
             branch_patterns = jobs_done_job.branch_patterns or ['.*']
-            if any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
-                jobs_done_jobs.append(jobs_done_job)
+            if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
+                continue
+
+            jobs_done_jobs.append(jobs_done_job)
 
         return jobs_done_jobs
 
