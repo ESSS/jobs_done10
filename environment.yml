@@ -1,0 +1,8 @@
+name: jobs_done10
+
+includes:
+  - {{ root }}/../ben10/environment.yml
+
+environment:
+  - PYTHONPATH:
+    - {{ os.path.join(root, 'source', 'python') }}

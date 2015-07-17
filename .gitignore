@@ -3,6 +3,8 @@
 /.venv/
 *_generated.py
 .coverage
+/.cache/
+/tmp/
 /build/
 __pycache__
 /dist/
