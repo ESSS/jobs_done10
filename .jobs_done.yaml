@@ -36,7 +36,7 @@ dist-conda:platform-linux:build_shell_commands:
 - |
   $WORKSPACE/eden/bin/run-chroot-command bash -c "
       source $WORKSPACE/eden/bin/aa_setup_slave
-      aa.bash project.build etk10 --
+      aa.bash project.build jobs_done10 --
   "
 
 
