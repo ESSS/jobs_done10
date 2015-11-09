@@ -30,6 +30,10 @@ additional_repositories:
     url: "ssh://git@eden.fln.esss.com.br:7999/esss/aasimar.git"
     branch: "{branch}"
     reference: "$AA_SYSTEM_REF_REPOS/aasimar"
+- git:
+    url: "ssh://git@eden.fln.esss.com.br:7999/esss/etk.git"
+    branch: "{branch}"
+    reference: "$AA_SYSTEM_REF_REPOS/etk"
 
 junit_patterns:
 - "**/build/tests/*.xml"
