@@ -26,6 +26,10 @@ additional_repositories:
     url: "ssh://git@eden.fln.esss.com.br:7999/esss/ben10.git"
     branch: "{branch}"
     reference: "$AA_SYSTEM_REF_REPOS/ben10"
+- git:
+    url: "ssh://git@eden.fln.esss.com.br:7999/esss/aasimar.git"
+    branch: "{branch}"
+    reference: "$AA_SYSTEM_REF_REPOS/aasimar"
 
 junit_patterns:
 - "**/build/tests/*.xml"
