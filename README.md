@@ -12,7 +12,7 @@ Build Status
 
 * win32: [![Build Status](http://eden.fln.esss.com.br:9090/buildStatus/icon?job=jobs_done10-master-12.0-win32)](http://eden.fln.esss.com.br:9090/job/jobs_done10-master-12.0-win32/)
 * win64: [![Build Status](http://eden.fln.esss.com.br:9090/buildStatus/icon?job=jobs_done10-master-12.0-win64)](http://eden.fln.esss.com.br:9090/job/jobs_done10-master-12.0-win64/)
-* redhat64: [![Build Status](http://eden.fln.esss.com.br:9090/buildStatus/icon?job=jobs_done10-master-12.0-redhat64)](http://eden.fln.esss.com.br:9090/job/jobs_done10-master-12.0-redhat64/)
+* linux64: [![Build Status](http://eden.fln.esss.com.br:9090/buildStatus/icon?job=jobs_done10-master-12.0-linux64)](http://eden.fln.esss.com.br:9090/job/jobs_done10-master-12.0-linux64/)
 
 Documentation
 -----------

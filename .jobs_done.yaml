@@ -1,11 +1,14 @@
 matrix:
   dist:
   - 12.0
+  - conda
 
   platform:
   - win32,windows
   - win64,windows
-  - redhat64,linux
+  - linux64,linux
+
+dist-12.0:platform-linux:exclude: "yes"
 
 branch_patterns:
 - master
@@ -21,7 +24,7 @@ additional_repositories:
     reference: "$AA_SYSTEM_REF_REPOS/ben10"
 
 junit_patterns:
-- "**/build/{dist}-{platform}-tests/*.xml"
+- "**/build/tests/*.xml"
 - "ben10/pytest.xml"
 
 platform-windows:build_batch_commands:
@@ -29,12 +32,19 @@ platform-windows:build_batch_commands:
   %AA_AASIMAR_AA_CONFIG% --aasimar-ref=origin/master --dist-ref=origin/master --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --reset-env --load-env=git || goto :eof
   %AA_AASIMAR_AA% project.build jobs_done10 || goto :eof
 
-platform-linux:build_shell_commands:
+dist-conda:platform-linux:build_shell_commands:
 - |
-  $AA_AASIMAR_AA_CONFIG --aasimar-ref=origin/master --dist-ref=origin/master --dist={dist} --platform={platform} --projects-dir=$WORKSPACE --conf-dir=$WORKSPACE --reset-env --load-env=git
-  $AA_AASIMAR_AA project.build jobs_done10
+  $WORKSPACE/eden/bin/run-chroot-command bash -c "
+      source $WORKSPACE/eden/bin/aa_setup_slave
+      aa.bash project.build etk10 --
+  "
 
-scm_poll: |
+
+dist-12.0:branch-master:scm_poll: |
+  # build at 23pm
+  H 23 * * *
+
+dist-conda:platform-linux:branch-master:scm_poll: |
   # build at 23pm
   H 23 * * *
 
@@ -44,6 +54,6 @@ notify_stash:
 
 display_name: "[{branch}] {name} {dist}-{platform}"
 
-label_expression: "dist-{dist} && {platform} && team-dev"
+label_expression: "{dist} && {platform}"
 
 timeout: 20

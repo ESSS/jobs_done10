@@ -276,14 +276,14 @@ def testMatrixAndExtraFlags():
             platform:
             - win32,windows
             - win64,windows
-            - redhat64,linux
+            - linux64,linux
         '''
     )
     for jd_file in JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY):
-        if jd_file.matrix_row['platform'] == 'redhat64':
+        if jd_file.matrix_row['platform'] == 'linux64':
             assert jd_file.junit_patterns is None
             assert jd_file.build_batch_commands is None
-            assert jd_file.build_shell_commands == ['linux command: redhat64']
+            assert jd_file.build_shell_commands == ['linux command: linux64']
         if jd_file.matrix_row['platform'] == 'win32':
             assert jd_file.junit_patterns == ['junit*.xml']
             assert jd_file.build_batch_commands == ['windows command: win32']
