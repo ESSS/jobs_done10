@@ -1,17 +1,18 @@
 from __future__ import unicode_literals
-from ben10.filesystem import CreateFile
-from ben10.foundation.string import Dedent
+
+from textwrap import dedent
+
+import pytest
+
 from jobs_done10.jobs_done_job import (JobsDoneFileTypeError, JobsDoneJob,
     UnknownJobsDoneFileOption, UnmatchableConditionError)
 from jobs_done10.repository import Repository
-import pytest
-
 
 
 _REPOSITORY = Repository(url='https://space.git', branch='milky_way')
 
 def testCreateJobsDoneJobFromYAML():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         junit_patterns:
         - "junit*.xml"
@@ -93,7 +94,7 @@ def testCreateJobsDoneJobFromYAML():
 def testExclude():
     key = lambda job: ':'.join(j + '-' + job.matrix_row[j] for j in sorted(job.matrix_row.keys()))
     # Base case ------------------------------------------------------------------------------------
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         matrix:
           planet:
@@ -115,7 +116,7 @@ def testExclude():
     ]
 
     # Exclude everything matching planet-venus -----------------------------------------------------
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         matrix:
           planet:
@@ -136,7 +137,7 @@ def testExclude():
     ]
 
     # Exclude everything matching planet-venus and moon europa -------------------------------------
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         matrix:
           planet:
@@ -158,7 +159,7 @@ def testExclude():
     ]
 
     # Exclude everything ---------------------------------------------------------------------------
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         matrix:
           planet:
@@ -177,7 +178,7 @@ def testExclude():
 
 
 def testBranchFlags():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         branch-master:build_shell_commands:
         - "master.sh"
@@ -207,7 +208,7 @@ def testBranchFlags():
 
 
 def testMatrixAndFlags():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         platform-windows:junit_patterns:
         - "junit*.xml"
@@ -236,7 +237,7 @@ def testMatrixAndFlags():
 
 
 def testMatrixAndRegexFlags():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         platform-win.*:junit_patterns:
         - "junit*.xml"
@@ -261,7 +262,7 @@ def testMatrixAndRegexFlags():
 
 
 def testMatrixAndExtraFlags():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         platform-windows:junit_patterns:
         - "junit*.xml"
@@ -291,7 +292,7 @@ def testMatrixAndExtraFlags():
 
 
 def testMatrixAndFlagsForSubDicts():
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         git:
           platform-windows:shallow: true
@@ -322,7 +323,7 @@ def testMatrixAndFlagsForSubDicts():
 
 
 def testBranchPatterns():
-    base_contents = Dedent(
+    base_contents = dedent(
         '''
         matrix:
             planet:
@@ -333,7 +334,7 @@ def testBranchPatterns():
         '''
     )
     # Using a pattern that does not match our branch will prevent jobs from being generated
-    jd_file_contents = base_contents + Dedent(
+    jd_file_contents = base_contents + dedent(
         '''
         branch_patterns:
         - feature-.*
@@ -343,7 +344,7 @@ def testBranchPatterns():
     assert len(jobs) == 0
 
     # Matching patterns work as usual
-    jd_file_contents = base_contents + Dedent(
+    jd_file_contents = base_contents + dedent(
         '''
         branch_patterns:
         - milky_way
@@ -353,7 +354,7 @@ def testBranchPatterns():
     assert len(jobs) == 3
 
     # Also works with several patterns and regexes
-    jd_file_contents = base_contents + Dedent(
+    jd_file_contents = base_contents + dedent(
         '''
         branch_patterns:
         - master
@@ -365,7 +366,7 @@ def testBranchPatterns():
 
     # Branch patterns can also be filtered using matrix
     # e.g., mars only has jobs in master
-    jd_file_contents = base_contents + Dedent(
+    jd_file_contents = base_contents + dedent(
         '''
         planet-mars:branch_patterns:
         - "master"
@@ -384,7 +385,7 @@ def testBranchPatterns():
 
 def testUnknownOption():
     # Unknown options should fail
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         bad_option: value
         '''
@@ -397,7 +398,7 @@ def testUnknownOption():
 
 def testTypeChecking():
     # List is the correct type for build_batch_commands
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         build_batch_commands:
         - "list item 1"
@@ -406,7 +407,7 @@ def testTypeChecking():
     JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
 
     # Trying to set a different value, should raise an error
-    yaml_contents = Dedent(
+    yaml_contents = dedent(
         '''
         build_batch_commands: "string item"
         '''
@@ -420,7 +421,7 @@ def testTypeChecking():
 
 
 def testCreateFromFile(tmpdir):
-    contents = Dedent(
+    contents = dedent(
         '''
         matrix:
             planet:
@@ -430,10 +431,10 @@ def testCreateFromFile(tmpdir):
 
         '''
     )
-    filename = str(tmpdir / '.jobs_done.yaml')
-    CreateFile(filename, contents)
+    f = tmpdir / '.jobs_done.yaml'
+    f.write(contents)
 
-    jobs = JobsDoneJob.CreateFromFile(filename, repository=_REPOSITORY)
+    jobs = JobsDoneJob.CreateFromFile(unicode(f), repository=_REPOSITORY)
 
     assert len(jobs) == 3
 
@@ -442,7 +443,7 @@ def testStringConversion():
     '''
     Asserts that our YAML parser converts all basic values to strings (non unicode)
     '''
-    contents = Dedent(
+    contents = dedent(
         '''
         junit_patterns:
             - 1
@@ -459,7 +460,7 @@ def testIgnoreUnmatchable():
     Asserts that using a condition that can never be matched will not raise an error if
     'ignore_unmatchable' is enabled.
     '''
-    contents = Dedent(
+    contents = dedent(
         '''
         ignore_unmatchable: true
 
@@ -478,7 +479,7 @@ def testUnmatchableCondition():
     '''
     Asserts that using a condition that can never be matched will raise an error.
     '''
-    contents = Dedent(
+    contents = dedent(
         '''
         planet-pluto:junit_patterns:
             - '*.xml'
@@ -495,7 +496,7 @@ def testUnmatchableCondition():
 
 
 def testUnmatchableSubCondition():
-    contents = Dedent(
+    contents = dedent(
         '''
         git:
             planet-pluto:shallow: true
@@ -510,7 +511,7 @@ def testUnmatchableSubCondition():
     assert e.value.option == 'planet-pluto:shallow'
 
 
-    contents = Dedent(
+    contents = dedent(
         '''
         additional_repositories:
         - git:
@@ -530,7 +531,7 @@ def testStripFile():
     '''
     Asserts that we can handle empty spaces and tabs in .yaml files, without having parse errors
     '''
-    contents = Dedent(
+    contents = dedent(
         '''
         junit_patterns:
             - 1

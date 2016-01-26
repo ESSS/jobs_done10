@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
-from ben10.interface import Interface
 
 
 
 #===================================================================================================
 # IJobGenerator
 #===================================================================================================
-class IJobGenerator(Interface):
+class IJobGenerator(object):
     '''
     Interface for job generators.
 
