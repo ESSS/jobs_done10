@@ -1509,8 +1509,8 @@ class TestJenkinsActions(object):
         assert len(jobs) == 3
 
 
-    def testGetJobsFromDirectory(self, embed_data):
-        repo_path = embed_data['git_repository']
+    def testGetJobsFromDirectory(self, tmpdir):
+        repo_path = str(tmpdir / 'git_repository')
         CreateDirectory(repo_path)
 
         # Prepare git repository
@@ -1567,15 +1567,15 @@ class TestJenkinsActions(object):
 #===================================================================================================
 class TestJenkinsPublisher(object):
 
-    def testPublishToDirectory(self, embed_data):
-        self._GetPublisher().PublishToDirectory(embed_data['.'])
+    def testPublishToDirectory(self, tmpdir):
+        self._GetPublisher().PublishToDirectory(str(tmpdir))
 
-        assert set(ListFiles(embed_data['.'])) == set([
+        assert set(ListFiles(str(tmpdir))) == set([
             'space-milky_way-jupiter', 'space-milky_way-mercury', 'space-milky_way-venus'])
 
-        assert GetFileContents(embed_data['space-milky_way-jupiter']) == 'jupiter'
-        assert GetFileContents(embed_data['space-milky_way-mercury']) == 'mercury'
-        assert GetFileContents(embed_data['space-milky_way-venus']) == 'venus'
+        assert GetFileContents(str(tmpdir / 'space-milky_way-jupiter')) == 'jupiter'
+        assert GetFileContents(str(tmpdir/'space-milky_way-mercury')) == 'mercury'
+        assert GetFileContents(str(tmpdir/'space-milky_way-venus')) == 'venus'
 
 
     def testPublishToUrl(self, monkeypatch):

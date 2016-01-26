@@ -419,7 +419,7 @@ def testTypeChecking():
     assert e.value.obtained_type == unicode
 
 
-def testCreateFromFile(embed_data):
+def testCreateFromFile(tmpdir):
     contents = Dedent(
         '''
         matrix:
@@ -430,7 +430,7 @@ def testCreateFromFile(embed_data):
 
         '''
     )
-    filename = embed_data['.jobs_done.yaml']
+    filename = str(tmpdir / '.jobs_done.yaml')
     CreateFile(filename, contents)
 
     jobs = JobsDoneJob.CreateFromFile(filename, repository=_REPOSITORY)
