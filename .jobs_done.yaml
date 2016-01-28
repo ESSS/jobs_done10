@@ -1,71 +1,50 @@
 matrix:
-  dist:
-  - 12.0
-  - conda
-
   platform:
   - win32,windows
   - win64,windows
   - linux64,linux
-
-dist-12.0:platform-linux:exclude: "yes"
 
 branch_patterns:
 - master
 - fb-.*
 
 git:
-  reference: "$AA_SYSTEM_REF_REPOS/{name}"
-
-additional_repositories:
-- git:
-    url: "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git"
-    branch: "{branch}"
-    reference: "$AA_SYSTEM_REF_REPOS/eden"
-- git:
-    url: "ssh://git@eden.fln.esss.com.br:7999/esss/ben10.git"
-    branch: "{branch}"
-    reference: "$AA_SYSTEM_REF_REPOS/ben10"
-- git:
-    url: "ssh://git@eden.fln.esss.com.br:7999/esss/aasimar.git"
-    branch: "{branch}"
-    reference: "$AA_SYSTEM_REF_REPOS/aasimar"
-- git:
-    url: "ssh://git@eden.fln.esss.com.br:7999/esss/etk.git"
-    branch: "{branch}"
-    reference: "$AA_SYSTEM_REF_REPOS/etk"
+  reference: "$WORKSPACE/../../Shared/ref_repos/jobs_done10"
 
 junit_patterns:
-- "**/build/tests/*.xml"
-- "ben10/pytest.xml"
+- "**/build/*.xml"
 
 platform-windows:build_batch_commands:
 - |
-  %AA_AASIMAR_AA_CONFIG% --aasimar-ref=origin/master --dist-ref=origin/master --dist={dist} --platform={platform} --projects-dir=%WORKSPACE% --conf-dir=%WORKSPACE% --reset-env --load-env=git || goto :eof
-  %AA_AASIMAR_AA% project.build jobs_done10 || goto :eof
+  cd "%WORKSPACE%/jobs_done10"
+  set CONDA_FORCE_32BIT=
+  if "%PLATFORM%" == "win32" set CONDA_FORCE_32BIT=1
 
-dist-conda:platform-linux:build_shell_commands:
+  call conda clean --lock
+  call conda env update -n _jobs_done10-{platform} --prune
+  if not "%ERRORLEVEL%" == "0" exit /B 1
+
+  call activate _jobs_done10-{platform}
+  if not "%ERRORLEVEL%" == "0" exit /B 1
+
+  py.test --junitxml=build/tests.xml --showlocals
+
+platform-linux:build_shell_commands:
 - |
-  $WORKSPACE/eden/bin/run-chroot-command bash -c "
-      source $WORKSPACE/eden/bin/aa_setup_slave
-      aa project.build jobs_done10 --
+  # run-chroot-command is here temporarily: ETK-1158
+  $WORKSPACE/jobs_done10/run-chroot-command bash -c "
+      cd $WORKSPACE/jobs_done10
+      conda clean --lock
+      conda env create --force
+      source activate jobs_done10
+      py.test --junitxml=build/tests.xml --showlocals
   "
 
 
-dist-12.0:branch-master:scm_poll: |
-  # build at 23pm
-  H 23 * * *
-
-dist-conda:platform-linux:branch-master:scm_poll: |
-  # build at 23pm
-  H 23 * * *
-
-description_regex: "HUDSON DESCRIPTION\\: (.*)"
-
 notify_stash:
 
-display_name: "[{branch}] {name} {platform} {dist}"
+display_name: "[{branch}] {name} {platform}"
 
-label_expression: "{dist} && {platform}"
+label_expression: "{platform} && !12.0"
 
 timeout: 20
