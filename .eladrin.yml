@@ -1,6 +1,0 @@
-environment:
-  PATH:
-  - $projects_dir/jobs_done10/scripts
-  PYTHONPATH:
-  - $projects_dir/jobs_done10/source/python
-

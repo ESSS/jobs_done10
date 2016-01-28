@@ -46,7 +46,7 @@ class JenkinsXmlJobGenerator(object):
 
 
     def Reset(self):
-        from xml_factory import XmlFactory
+        from jobs_done10.xml_factory import XmlFactory
 
         self.xml = XmlFactory('project')
         self.xml['description'] = "<!-- Managed by Job's Done -->"

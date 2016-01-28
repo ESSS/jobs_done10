@@ -1,7 +1,14 @@
 name: jobs_done10
 
-includes:
-  - {{ root }}/../ben10/environment.yml
+dependencies:
+  - boltons
+  - jenkins-webapi
+  - mock
+  - pytest
+  - pyyaml
+  {% if os.sys.platform.startswith('linux') %}
+  - git
+  {% endif %}
 
 environment:
   - PYTHONPATH:

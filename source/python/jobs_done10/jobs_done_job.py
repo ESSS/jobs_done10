@@ -4,14 +4,9 @@ import io
 import yaml
 
 
-
 # Name of jobs_done file, repositories must contain this file in their root dir to be able to
 # create jobs.
-from boltons.iterutils import is_iterable
-
-
 JOBS_DONE_FILENAME = '.jobs_done.yaml'
-
 
 
 #===================================================================================================
