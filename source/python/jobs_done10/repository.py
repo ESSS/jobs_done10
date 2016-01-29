@@ -30,3 +30,11 @@ class Repository(object):
     def name(self):
         import re
         return re.match('.*/([^\./]+)(\.git/?)?$', self.url).groups()[0]
+
+
+    def __eq__(self, other):
+        return self.url == other.url and self.branch == other.branch
+
+
+    def __ne__(self, other):
+        return not self == other
