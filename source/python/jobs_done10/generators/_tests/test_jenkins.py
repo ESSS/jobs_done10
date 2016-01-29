@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
 
+import difflib
+import os
+import re
 from subprocess import check_call
 from textwrap import dedent
+
+import jenkins
+import pytest
 
 from jobs_done10.generators.jenkins import (GetJobsFromDirectory, GetJobsFromFile, JenkinsJob,
     JenkinsJobPublisher, JenkinsXmlJobGenerator, UploadJobsFromFile)
 from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneJob
 from jobs_done10.repository import Repository
-import difflib
-import jenkins
-import os
-import pytest
-import re
-
 
 
 #===================================================================================================

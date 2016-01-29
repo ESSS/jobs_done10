@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
-from xml.etree import ElementTree
 
+from xml.etree import ElementTree
 
 
 #===================================================================================================

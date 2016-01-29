@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
+
+import contextlib
+
+import pytest
+
 from jobs_done10.job_generator import (JobGeneratorAttributeError,
     JobGeneratorConfigurator)
 from jobs_done10.jobs_done_job import JobsDoneJob
 from jobs_done10.repository import Repository
-import contextlib
-import pytest
-
 
 
 def testJobGeneratorConfigurator():

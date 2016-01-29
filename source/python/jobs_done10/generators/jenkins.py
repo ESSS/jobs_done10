@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals
 
 import io
 from collections import namedtuple
+
 from jobs_done10.common import AsList
 
 

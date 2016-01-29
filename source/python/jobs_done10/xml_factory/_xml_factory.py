@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
+
 from io import StringIO
-from ._pretty_xml import WritePrettyXMLElement
 from xml.etree import ElementTree
 
+from ._pretty_xml import WritePrettyXMLElement
 
 
 #===================================================================================================

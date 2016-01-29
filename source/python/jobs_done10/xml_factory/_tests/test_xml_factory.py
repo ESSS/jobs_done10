@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
-import os
 from StringIO import StringIO
 from textwrap import dedent
 from xml.etree import ElementTree
-from jobs_done10.xml_factory import WritePrettyXML, WritePrettyXMLElement, XmlFactory
+
 import pytest
+
+from jobs_done10.xml_factory import WritePrettyXML, WritePrettyXMLElement, XmlFactory
 
 
 
