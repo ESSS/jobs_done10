@@ -1,7 +1,6 @@
 name: jobs_done10
 
 dependencies:
-  - boltons
   - jenkins-webapi
   - mock
   - pytest
