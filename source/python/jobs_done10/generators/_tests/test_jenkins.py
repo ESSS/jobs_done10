@@ -1,18 +1,19 @@
 from __future__ import unicode_literals
-from ben10.filesystem import CreateDirectory, CreateFile, GetFileContents, ListFiles
-from ben10.foundation.string import Dedent
-from gitit.git import Git
+
+import difflib
+import os
+import re
+from subprocess import check_call
+from textwrap import dedent
+
+import jenkins
+import pytest
+
 from jobs_done10.generators.jenkins import (GetJobsFromDirectory, GetJobsFromFile, JenkinsJob,
     JenkinsJobPublisher, JenkinsXmlJobGenerator, UploadJobsFromFile)
 from jobs_done10.job_generator import JobGeneratorConfigurator
 from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneJob
 from jobs_done10.repository import Repository
-import difflib
-import jenkins
-import os
-import pytest
-import re
-
 
 
 #===================================================================================================
@@ -26,8 +27,8 @@ class TestJenkinsXmlJobGenerator(object):
     # Baseline expected XML. All tests are compared against this baseline, this way each test only
     # has to verify what is expected to be different, this way, if the baseline is changed, we don't
     # have to fix all tests.
-    BASIC_EXPECTED_XML = Dedent(
-        '''
+    BASIC_EXPECTED_XML = dedent(
+        '''\
         <?xml version="1.0" ?>
         <project>
           <description>&lt;!-- Managed by Job's Done --&gt;</description>
@@ -63,9 +64,7 @@ class TestJenkinsXmlJobGenerator(object):
             <localBranch>not_master</localBranch>
           </scm>
           <assignedNode>fake</assignedNode>
-        </project>
-        ''',
-        ignore_last_linebreak=True
+        </project>''',
     )
 
 
@@ -80,8 +79,8 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testChoiceParameters(self):
         self._DoTest(
-            yaml_contents=Dedent(
-                '''
+            yaml_contents=dedent(
+                '''\
                 parameters:
                   - choice:
                       name: "PARAM"
@@ -91,8 +90,8 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
@@ -109,14 +108,13 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.model.ChoiceParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>
-                '''
+                +  </properties>'''
             ),
         )
 
     def testMultipleChoiceParameters(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 parameters:
                   - choice:
@@ -133,8 +131,8 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
@@ -161,15 +159,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.model.ChoiceParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>
-                '''
+                +  </properties>'''
             ),
         )
 
 
     def testStringParameters(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 parameters:
                   - string:
@@ -178,8 +175,8 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
@@ -191,15 +188,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>
-                '''
+                +  </properties>'''
             ),
         )
 
 
     def testMultipleStringParameters(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 parameters:
                   - string:
@@ -212,8 +208,8 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
@@ -230,15 +226,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>
-                '''
+                +  </properties>'''
             ),
         )
 
 
     def testParametersMaintainOrder(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 parameters:
                   - choice:
@@ -253,8 +248,8 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <properties>
                 +    <hudson.model.ParametersDefinitionProperty>
@@ -276,23 +271,22 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.model.StringParameterDefinition>
                 +      </parameterDefinitions>
                 +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>
-                '''
+                +  </properties>'''
             ),
         )
 
 
     def testJUnitPatterns(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 junit_patterns:
                 - "junit*.xml"
                 - "others.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -327,8 +321,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
 
         )
@@ -336,34 +329,33 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testTimeoutAbsolute(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 timeout: 60
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <buildWrappers>
                 +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
                 +      <timeoutMinutes>60</timeoutMinutes>
                 +      <failBuild>true</failBuild>
                 +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testTimeoutNoActivity(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 timeout_no_activity: 600
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <buildWrappers>
                 +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
@@ -374,53 +366,50 @@ class TestJenkinsXmlJobGenerator(object):
                 +        <hudson.plugins.build__timeout.operations.FailOperation/>
                 +      </operationList>
                 +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testCustomWorkspace(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 custom_workspace: workspace/WS
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
-                +  <customWorkspace>workspace/WS</customWorkspace>
-                '''
+                +  <customWorkspace>workspace/WS</customWorkspace>'''
             ),
         )
 
     def testAuthToken(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 auth_token: my_token
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
-                +  <authToken>my_token</authToken>
-                '''
+                +  <authToken>my_token</authToken>'''
             ),
         )
 
 
     def testBoosttestPatterns(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 boosttest_patterns:
                 - "boost*.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -451,22 +440,21 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testJSUnitPatterns(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 jsunit_patterns:
                 - "jsunit*.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -497,15 +485,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testMulitpleTestResults(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 junit_patterns:
                 - "junit*.xml"
@@ -514,8 +501,8 @@ class TestJenkinsXmlJobGenerator(object):
                 - "boosttest*.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -557,8 +544,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
@@ -566,28 +552,27 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildBatchCommand(self):
         # works with a single command
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_batch_commands:
                 - my_command
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
                 +      <command>my_command</command>
                 +    </hudson.tasks.BatchFile>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
 
         # Works with multi line commands
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_batch_commands:
                 - |
@@ -595,31 +580,30 @@ class TestJenkinsXmlJobGenerator(object):
                   command
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
                 +      <command>multi_line
                 +command</command>
                 +    </hudson.tasks.BatchFile>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
 
         # Works with multiple commands
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_batch_commands:
                 - command_1
                 - command_2
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
@@ -628,8 +612,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.tasks.BatchFile>
                 +      <command>command_2</command>
                 +    </hudson.tasks.BatchFile>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
@@ -638,21 +621,20 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildPythonCommand(self):
         # works with a single command
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_python_commands:
                 - print 'hello'
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.plugins.python.Python>
                 +      <command>print 'hello'</command>
                 +    </hudson.plugins.python.Python>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
@@ -661,28 +643,27 @@ class TestJenkinsXmlJobGenerator(object):
     def testBuildShellCommand(self):
         # works with a single command
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_shell_commands:
                 - my_command
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.Shell>
                 +      <command>my_command</command>
                 +    </hudson.tasks.Shell>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
 
         # Works with multi line commands
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_shell_commands:
                 - |
@@ -690,31 +671,30 @@ class TestJenkinsXmlJobGenerator(object):
                   command
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.Shell>
                 +      <command>multi_line
                 +command</command>
                 +    </hudson.tasks.Shell>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
 
         # Works with multiple commands
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 build_shell_commands:
                 - command_1
                 - command_2
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.Shell>
@@ -723,8 +703,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.tasks.Shell>
                 +      <command>command_2</command>
                 +    </hudson.tasks.Shell>
-                +  </builders>
-                '''
+                +  </builders>'''
             ),
 
         )
@@ -732,13 +711,13 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testDescriptionRegex(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 r'''
                 description_regex: "JENKINS DESCRIPTION\\: (.*)"
                 '''
             ),
-            expected_diff=Dedent(
-                r'''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
@@ -746,8 +725,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <regexpForFailed>JENKINS DESCRIPTION\: (.*)</regexpForFailed>
                 +      <setForMatrix>false</setForMatrix>
                 +    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
-                +  </publishers>
-                '''
+                +  </publishers>'''
             ),
 
         )
@@ -755,7 +733,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testNotifyStash(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 r'''
                 notify_stash:
                   url: stash.com
@@ -763,8 +741,8 @@ class TestJenkinsXmlJobGenerator(object):
                   password: pass
                 '''
             ),
-            expected_diff=Dedent(
-                r'''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
@@ -772,8 +750,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <stashUserName>user</stashUserName>
                 +      <stashUserPassword>pass</stashUserPassword>
                 +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +  </publishers>
-                '''
+                +  </publishers>'''
             ),
 
         )
@@ -784,20 +761,19 @@ class TestJenkinsXmlJobGenerator(object):
         When given no parameters, use the default Stash configurations set in the Jenkins server
         '''
         self._DoTest(
-            yaml_contents=Dedent(
-                r'''
+            yaml_contents=dedent(
+                '''
                 notify_stash: stash.com
                 '''
             ),
-            expected_diff=Dedent(
-                r'''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
                 +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +  </publishers>
-                '''
+                +  </publishers>'''
             ),
         )
 
@@ -809,7 +785,7 @@ class TestJenkinsXmlJobGenerator(object):
         with failed tests might be reported as successful to Stash
         '''
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 notify_stash:
                   url: stash.com
@@ -820,8 +796,8 @@ class TestJenkinsXmlJobGenerator(object):
                 - "jsunit*.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -857,14 +833,13 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testMatrix(self):
-        yaml_contents = Dedent(
+        yaml_contents = dedent(
             '''
             planet-earth:build_shell_commands:
             - earth_command
@@ -899,8 +874,8 @@ class TestJenkinsXmlJobGenerator(object):
 
             self._AssertDiff(
                 jenkins_job.xml,
-                Dedent(
-                    '''
+                dedent(
+                    '''\
                     @@ @@
                     -  <assignedNode>fake</assignedNode>
                     +  <assignedNode>fake-%(planet)s</assignedNode>
@@ -908,14 +883,13 @@ class TestJenkinsXmlJobGenerator(object):
                     +    <hudson.tasks.Shell>
                     +      <command>%(planet)s_command</command>
                     +    </hudson.tasks.Shell>
-                    +  </builders>
-                    ''' % locals()
+                    +  </builders>''' % locals()
                 ),
             )
 
 
     def testMatrixSingleValueOnly(self):
-        yaml_contents = Dedent(
+        yaml_contents = dedent(
             '''
             matrix:
                 planet:
@@ -943,86 +917,82 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testDisplayName(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 display_name: "{name}-{branch}"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
-                +  <displayName>fake-not_master</displayName>
-                '''
+                +  <displayName>fake-not_master</displayName>'''
             ),
         )
 
 
     def testLabelExpression(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 label_expression: "win32&&dist-12.0"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 -  <assignedNode>fake</assignedNode>
-                +  <assignedNode>win32&amp;&amp;dist-12.0</assignedNode>
-                '''
+                +  <assignedNode>win32&amp;&amp;dist-12.0</assignedNode>'''
             ),
         )
 
 
     def testCron(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 cron: |
                        # Everyday at 22 pm
                        0 22 * * *
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <triggers>
                 +    <hudson.triggers.TimerTrigger>
                 +      <spec># Everyday at 22 pm
                 +0 22 * * *</spec>
                 +    </hudson.triggers.TimerTrigger>
-                +  </triggers>
-                '''
+                +  </triggers>'''
             ),
         )
 
 
     def testSCMPoll(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 scm_poll: |
                        # Everyday at 22 pm
                        0 22 * * *
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <triggers>
                 +    <hudson.triggers.SCMTrigger>
                 +      <spec># Everyday at 22 pm
                 +0 22 * * *</spec>
                 +    </hudson.triggers.SCMTrigger>
-                +  </triggers>
-                '''
+                +  </triggers>'''
             ),
         )
 
 
     def testAdditionalRepositories(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 additional_repositories:
                 - git:
@@ -1030,8 +1000,8 @@ class TestJenkinsXmlJobGenerator(object):
                     branch: my_branch
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 -  <scm class="hudson.plugins.git.GitSCM">
                 -    <configVersion>2</configVersion>
@@ -1096,8 +1066,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      </hudson.plugins.git.GitSCM>
                 +    </scms>
                 @@ @@
-                -  <assignedNode>fake</assignedNode>
-                '''
+                -  <assignedNode>fake</assignedNode>'''
             ),
         )
 
@@ -1107,8 +1076,8 @@ class TestJenkinsXmlJobGenerator(object):
         Make sure that everything works just fine when we mix 'git' and 'additional_repositories'
         '''
         # We expect the same diff for both orders (git -> additional and additional -> git)
-        expected_diff = Dedent(
-            '''
+        expected_diff = dedent(
+            '''\
             @@ @@
             -  <scm class="hudson.plugins.git.GitSCM">
             -    <configVersion>2</configVersion>
@@ -1174,13 +1143,12 @@ class TestJenkinsXmlJobGenerator(object):
             +      </hudson.plugins.git.GitSCM>
             +    </scms>
             @@ @@
-            -  <assignedNode>fake</assignedNode>
-            '''
+            -  <assignedNode>fake</assignedNode>'''
         )
 
         # Test git -> additional
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 git:
                   branch: custom_main
@@ -1196,7 +1164,7 @@ class TestJenkinsXmlJobGenerator(object):
 
         # Test additional -> git
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 additional_repositories:
                 - git:
@@ -1214,7 +1182,7 @@ class TestJenkinsXmlJobGenerator(object):
     def testUnknownGitOptions(self):
         with pytest.raises(RuntimeError) as e:
             self._DoTest(
-                yaml_contents=Dedent(
+                yaml_contents=dedent(
                     '''
                     git:
                       unknown: ""
@@ -1227,7 +1195,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testGitOptions(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 git:
                   recursive_submodules: true
@@ -1237,8 +1205,8 @@ class TestJenkinsXmlJobGenerator(object):
                   recursive_submodules: true
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 -    <relativeTargetDir>fake</relativeTargetDir>
                 +    <relativeTargetDir>main_application</relativeTargetDir>
@@ -1249,8 +1217,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <hudson.plugins.git.extensions.impl.CloneOption>
                 +        <reference>/home/reference.git</reference>
                 +        <timeout>30</timeout>
-                +      </hudson.plugins.git.extensions.impl.CloneOption>
-                '''
+                +      </hudson.plugins.git.extensions.impl.CloneOption>'''
             ),
         )
 
@@ -1258,7 +1225,7 @@ class TestJenkinsXmlJobGenerator(object):
 
     def testEmailNotificationDict(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 email_notification:
                   recipients: user@company.com other@company.com
@@ -1267,8 +1234,8 @@ class TestJenkinsXmlJobGenerator(object):
 
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <hudson.tasks.Mailer>
@@ -1276,20 +1243,19 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
                 +      <sendToIndividuals>true</sendToIndividuals>
                 +    </hudson.tasks.Mailer>
-                +  </publishers>
-                '''
+                +  </publishers>'''
             ),
         )
 
     def testEmailNotificationString(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 email_notification: user@company.com other@company.com
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <hudson.tasks.Mailer>
@@ -1297,8 +1263,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +      <dontNotifyEveryUnstableBuild>true</dontNotifyEveryUnstableBuild>
                 +      <sendToIndividuals>false</sendToIndividuals>
                 +    </hudson.tasks.Mailer>
-                +  </publishers>
-                '''
+                +  </publishers>'''
             ),
         )
 
@@ -1309,7 +1274,7 @@ class TestJenkinsXmlJobGenerator(object):
         otherwise builds with failed tests might be reported as successful via email
         '''
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 email_notification:
                   recipients: user@company.com other@company.com
@@ -1320,8 +1285,8 @@ class TestJenkinsXmlJobGenerator(object):
                 - "jsunit*.xml"
                 '''
             ),
-            expected_diff=Dedent(
-                '''
+            expected_diff=dedent(
+                '''\
                 @@ @@
                 +  <publishers>
                 +    <xunit>
@@ -1357,15 +1322,14 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
                 +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>
-                '''
+                +  </buildWrappers>'''
             ),
         )
 
 
     def testNotification(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 notification:
                   protocol: ALPHA
@@ -1373,8 +1337,8 @@ class TestJenkinsXmlJobGenerator(object):
                   url: https://bravo
                 '''
             ),
-            expected_diff=Dedent(
-            '''
+            expected_diff=dedent(
+            '''\
             @@ @@
             +  <properties>
             +    <com.tikal.hudson.plugins.notification.HudsonNotificationProperty plugin="notification@1.9">
@@ -1389,15 +1353,14 @@ class TestJenkinsXmlJobGenerator(object):
             +        </com.tikal.hudson.plugins.notification.Endpoint>
             +      </endpoints>
             +    </com.tikal.hudson.plugins.notification.HudsonNotificationProperty>
-            +  </properties>
-            '''
+            +  </properties>'''
             )
         ),
 
 
     def testSlack(self):
         self._DoTest(
-            yaml_contents=Dedent(
+            yaml_contents=dedent(
                 '''
                 slack:
                   team: esss
@@ -1406,8 +1369,8 @@ class TestJenkinsXmlJobGenerator(object):
                   url: https://bravo
                 '''
             ),
-            expected_diff=Dedent(
-            '''
+            expected_diff=dedent(
+            '''\
             @@ @@
             +  <properties>
             +    <jenkins.plugins.slack.SlackNotifier_-SlackJobProperty plugin="slack@1.2">
@@ -1428,8 +1391,7 @@ class TestJenkinsXmlJobGenerator(object):
             +      <buildServerUrl>https://bravo</buildServerUrl>
             +      <room>#zulu</room>
             +    </jenkins.plugins.slack.SlackNotifier>
-            +  </publishers>
-            '''
+            +  </publishers>'''
             )
         ),
 
@@ -1474,7 +1436,7 @@ class TestJenkinsActions(object):
     Integration tests for Jenkins actions
     '''
 
-    _JOBS_DONE_FILE_CONTENTS = Dedent(
+    _JOBS_DONE_FILE_CONTENTS = dedent(
         '''
         junit_patterns:
         - "junit*.xml"
@@ -1509,30 +1471,30 @@ class TestJenkinsActions(object):
         assert len(jobs) == 3
 
 
-    def testGetJobsFromDirectory(self, embed_data):
-        repo_path = embed_data['git_repository']
-        CreateDirectory(repo_path)
+    def testGetJobsFromDirectory(self, tmpdir):
+        repo_path = tmpdir / 'git_repository'
+        repo_path.mkdir()
 
         # Prepare git repository
-        git = Git()
-        git.Execute(['init'], repo_path)
-        git.AddRemote(repo_path, 'origin', self._REPOSITORY.url)
-        git.CreateLocalBranch(repo_path, self._REPOSITORY.branch)
-        CreateFile(os.path.join(repo_path, '.gitignore'), '')
-        git.Add(repo_path, '.')
-        git.Commit(repo_path, 'First commit')
+        with repo_path.as_cwd():
+            check_call('git init', shell=True)
+            check_call('git remote add origin %s' % self._REPOSITORY.url, shell=True)
+            check_call('git checkout -b %s' % self._REPOSITORY.branch, shell=True)
+            repo_path.join('.gitignore').write('')
+            check_call('git add .', shell=True)
+            check_call('git commit -a -m "First commit"', shell=True)
 
-        # If there is no jobs_done file, we should get zero jobs
-        _repository, jobs = GetJobsFromDirectory(repo_path)
-        assert len(jobs) == 0
+            # If there is no jobs_done file, we should get zero jobs
+            _repository, jobs = GetJobsFromDirectory(str(repo_path))
+            assert len(jobs) == 0
 
-        # Create jobs_done file
-        CreateFile(os.path.join(repo_path, JOBS_DONE_FILENAME), self._JOBS_DONE_FILE_CONTENTS)
-        git.Add(repo_path, '.')
-        git.Commit(repo_path, 'Added jobs_done file')
+            # Create jobs_done file
+            repo_path.join(JOBS_DONE_FILENAME).write(self._JOBS_DONE_FILE_CONTENTS)
+            check_call('git add .', shell=True)
+            check_call('git commit -a -m "Added jobs_done file"', shell=True)
 
-        _repository, jobs = GetJobsFromDirectory(repo_path)
-        assert len(jobs) == 3
+            _repository, jobs = GetJobsFromDirectory(str(repo_path))
+            assert len(jobs) == 3
 
 
     def testUploadJobsFromFile(self, monkeypatch):
@@ -1567,15 +1529,15 @@ class TestJenkinsActions(object):
 #===================================================================================================
 class TestJenkinsPublisher(object):
 
-    def testPublishToDirectory(self, embed_data):
-        self._GetPublisher().PublishToDirectory(embed_data['.'])
+    def testPublishToDirectory(self, tmpdir):
+        self._GetPublisher().PublishToDirectory(str(tmpdir))
 
-        assert set(ListFiles(embed_data['.'])) == set([
-            'space-milky_way-jupiter', 'space-milky_way-mercury', 'space-milky_way-venus'])
+        assert set(os.path.basename(str(x)) for x in tmpdir.listdir()) == {
+            'space-milky_way-jupiter', 'space-milky_way-mercury', 'space-milky_way-venus'}
 
-        assert GetFileContents(embed_data['space-milky_way-jupiter']) == 'jupiter'
-        assert GetFileContents(embed_data['space-milky_way-mercury']) == 'mercury'
-        assert GetFileContents(embed_data['space-milky_way-venus']) == 'venus'
+        assert tmpdir.join('space-milky_way-jupiter').read() == 'jupiter'
+        assert tmpdir.join('space-milky_way-mercury') .read() == 'mercury'
+        assert tmpdir.join('space-milky_way-venus').read() == 'venus'
 
 
     def testPublishToUrl(self, monkeypatch):
@@ -1670,7 +1632,7 @@ class TestJenkinsPublisher(object):
             def job_config(self, job_name):
                 # Test with single, and multiple scms
                 if job_name == 'space-milky_way-mercury':
-                    return Dedent(
+                    return dedent(
                         '''
                         <project>
                           <scm>
@@ -1691,7 +1653,7 @@ class TestJenkinsPublisher(object):
                         '''
                     )
                 elif job_name == 'space-milky_way-saturn':
-                    return Dedent(
+                    return dedent(
                         '''
                         <project>
                           <scm>

@@ -1,12 +1,10 @@
 from __future__ import unicode_literals
-from ben10.foundation.bunch import Bunch
-
 
 
 #===================================================================================================
 #  Repository
 #===================================================================================================
-class Repository(Bunch):
+class Repository(object):
     '''
     Represents a source control repository used in a continuous integration job.
 
@@ -23,10 +21,20 @@ class Repository(Bunch):
             url = 'https://server/repo.git'
             name = 'repo'
     '''
-    url = None
-    branch = 'master'
+
+    def __init__(self, url=None, branch='master'):
+        self.url = url
+        self.branch = branch
 
     @property
     def name(self):
         import re
         return re.match('.*/([^\./]+)(\.git/?)?$', self.url).groups()[0]
+
+
+    def __eq__(self, other):
+        return self.url == other.url and self.branch == other.branch
+
+
+    def __ne__(self, other):
+        return not self == other

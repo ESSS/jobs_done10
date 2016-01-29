@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
-import yaml
 
+import io
+
+import yaml
 
 
 # Name of jobs_done file, repositories must contain this file in their root dir to be able to
 # create jobs.
 JOBS_DONE_FILENAME = '.jobs_done.yaml'
-
 
 
 #===================================================================================================
@@ -235,8 +236,8 @@ class JobsDoneJob(object):
             if option_name not in JobsDoneJob.PARSEABLE_OPTIONS:
                 raise UnknownJobsDoneFileOption(option_name)
 
-            from ben10.foundation.types_ import AsList
             obtained_type = type(option_value)
+            from jobs_done10.common import AsList
             expected_types = AsList(JobsDoneJob.PARSEABLE_OPTIONS[option_name])
             if obtained_type not in expected_types:
                 raise JobsDoneFileTypeError(option_name, obtained_type, expected_types)
@@ -244,7 +245,6 @@ class JobsDoneJob(object):
         # List all possible matrix_rows
         matrix_rows = cls._MatrixRow.CreateFromDict(jd_data.get('matrix', {}))
 
-        from ben10.foundation.types_ import Boolean
         ignore_unmatchable = Boolean(jd_data.get('ignore_unmatchable', 'false'))
         if not ignore_unmatchable:
             # Raise an error if a condition can never be matched
@@ -319,8 +319,9 @@ class JobsDoneJob(object):
         :param repository:
             .. seealso:: CreateFromYAML
         '''
-        from ben10.filesystem import GetFileContents
-        return cls.CreateFromYAML(GetFileContents(filename), repository)
+        with io.open(filename, encoding='utf-8') as f:
+            contents = f.read()
+        return cls.CreateFromYAML(contents, repository)
 
 
     _MATCH_ANY = object()
@@ -517,3 +518,29 @@ class UnmatchableConditionError(ValueError):
             self,
             'Condition "%s" can never be matched based on possible matrix rows.' % option
         )
+
+
+_TRUE_VALUES = ['TRUE', 'YES', '1']
+_FALSE_VALUES = ['FALSE', 'NO', '0']
+_TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES
+_KNOWN_NUMBER_TYPES = None
+
+#===================================================================================================
+# Boolean
+#===================================================================================================
+def Boolean(text):
+    '''
+    :param unicode text:
+        A text semantically representing a boolean value.
+
+    :rtype: bool
+    :returns:
+        Returns a boolean represented by the given text.
+    '''
+    text_upper = text.upper()
+    if text_upper not in _TRUE_FALSE_VALUES:
+        raise ValueError(
+            "The value does not match any known value (case insensitive): %s (%s)"
+            % (text, _TRUE_FALSE_VALUES)
+        )
+    return text_upper in _TRUE_VALUES
