@@ -18,7 +18,7 @@ platform-windows:build_batch_commands:
 - |
   cd "%WORKSPACE%/jobs_done10"
   set CONDA_FORCE_32BIT=
-  if "%PLATFORM%" == "win32" set CONDA_FORCE_32BIT=1
+  if "{platform}" == "win32" set CONDA_FORCE_32BIT=1
 
   call conda clean --lock
   call conda env update -n _jobs_done10-{platform} --prune

@@ -1,6 +1,7 @@
 name: jobs_done10
 
 dependencies:
+  - click
   - jenkins-webapi
   - mock
   - pytest
@@ -12,3 +13,5 @@ dependencies:
 environment:
   - PYTHONPATH:
     - {{ os.path.join(root, 'source', 'python') }}
+  - PATH:
+    - {{ os.path.join(root, 'bin') }}
