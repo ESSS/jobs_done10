@@ -578,16 +578,26 @@ class JenkinsJobPublisher(object):
         # If the above was not found, we might be dealing with multiple repositories
         scms = root.findall('scm/scms/hudson.plugins.git.GitSCM')
 
+        checked_urls = []
         # Process them all until we find the SCM for the correct repository
         for scm in scms:
             url = scm.find('userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url').text.strip()
+            checked_urls.append(url)
 
             if url == self.repository.url:
                 return scm.find('branches/hudson.plugins.git.BranchSpec/name').text.strip()
 
-        raise RuntimeError(
-            'Could not find SCM for repository "%s" in job "%s"' % (self.repository.url, jenkins_job)
-        )
+        error_msg = [
+            'Could not find SCM for repository "%s" in job "%s"' % (self.repository.url, jenkins_job),
+            'The local repository origin is set to "%s".' % (self.repository.url,),
+            'And the possible matches are:',
+        ]
+        error_msg.extend([' - %s' % (url,) for url in checked_urls])
+        error_msg.extend([
+            '',
+            'If needed a repository origin url can be set with "git remote set-url origin <URL>".',
+        ])
+        raise RuntimeError('\n'.join(error_msg))
 
 
 
