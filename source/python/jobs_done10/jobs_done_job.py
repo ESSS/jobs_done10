@@ -41,6 +41,11 @@ class JobsDoneJob(object):
         # Python commands used to build a project.
         'build_python_commands' : list,
 
+        # Process job output to handle ansi color escapes.
+        # Should be one of xterm (default if empty), vga, css, gnome-terminal.
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
+        'console_color': unicode,
+
         # Time based triggers for job (Jenkins)
         'cron' : unicode,
 

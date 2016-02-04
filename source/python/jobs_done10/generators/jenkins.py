@@ -371,6 +371,25 @@ class JenkinsXmlJobGenerator(object):
         endpoint['loglines'] = '1'
 
 
+    def SetConsoleColor(self, option):
+        wrapper_xpath = 'buildWrappers/hudson.plugins.ansicolor.AnsiColorBuildWrapper'
+        ansi_color_wrapper = self.xml[wrapper_xpath]
+
+        option = option.strip()
+        if option not in ('', 'xterm', 'vga', 'css', 'gnome-terminal'):
+            msg = [
+                'Received unknown console_color option.',
+                'Received %s but expected one of xterm, vga, css, gnome-terminal.',
+                '(case sensitive, empty string ins interpreted as xterm)',
+            ]
+            raise RuntimeError('\n'.join(msg))
+        if len(option) == 0:
+            option = 'xterm'
+
+        ansi_color_wrapper['@plugin'] = 'ansicolor@0.4.2'
+        ansi_color_wrapper['colorMapName'] = option
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns
