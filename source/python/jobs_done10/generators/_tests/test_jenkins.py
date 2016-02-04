@@ -1395,6 +1395,43 @@ class TestJenkinsXmlJobGenerator(object):
             )
         ),
 
+    @pytest.mark.parametrize('conf_value, expected_name', [
+        ('', 'xterm'),
+        ('xterm', 'xterm'),
+        ('vga', 'vga'),
+    ])
+    def testAnsiColor(self, conf_value, expected_name):
+        self._DoTest(
+            yaml_contents=dedent(
+                '''
+                console_color: %s
+                '''
+            ) % (conf_value,),
+            expected_diff=dedent(
+                '''\
+                @@ @@
+                +  <buildWrappers>
+                +    <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.2">
+                +      <colorMapName>%s</colorMapName>
+                +    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+                +  </buildWrappers>'''
+            ) % (expected_name,)
+        ),
+
+
+    def testAnsiColorUnknowOption(self):
+        with pytest.raises(RuntimeError) as excinfo:
+            self._DoTest(
+                yaml_contents=dedent(
+                    '''
+                    console_color: unknown-value
+                    '''
+                ),
+                expected_diff='',
+            ),
+        assert 'Received unknown console_color option.' in excinfo.value.message
+
+
 
     def _DoTest(self, yaml_contents, expected_diff):
         '''
