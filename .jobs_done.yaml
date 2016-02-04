@@ -14,6 +14,8 @@ git:
 junit_patterns:
 - "**/build/*.xml"
 
+console_color:
+
 platform-windows:build_batch_commands:
 - |
   cd "%WORKSPACE%/jobs_done10"
