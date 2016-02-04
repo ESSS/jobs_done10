@@ -129,18 +129,6 @@ class XmlFactory(object):
         WritePrettyXMLElement(oss, self.root)
 
 
-    def Write(self, filename, xml_header=False):
-        '''
-        Writes the XML in a file with the given filename.
-
-        :param unicode filename:
-            A filename.
-        '''
-        from ben10.filesystem import CreateFile
-
-        CreateFile(filename, self.GetContents(xml_header=xml_header))
-
-
     def GetContents(self, xml_header=False):
         '''
         Returns the resulting XML.
