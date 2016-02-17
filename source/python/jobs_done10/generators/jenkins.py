@@ -502,7 +502,7 @@ class JenkinsJobPublisher(object):
                     func(*args, **kwargs)
                     break
                 except HTTPError as http_error:
-                    if http_error.response.status_code == 403:  # Proxy error
+                    if http_error.response.status_code in (403, 502):  # 403 Forbidden, 502 Proxy error
                         # This happens sometimes for no apparent reason, and we want to retry.
                         from time import sleep
                         sleep(self.RETRY_SLEEP)
