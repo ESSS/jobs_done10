@@ -50,3 +50,5 @@ display_name: "[{branch}] {name} {platform}"
 label_expression: "{platform} && !12.0"
 
 timeout: 20
+
+timestamps: 
