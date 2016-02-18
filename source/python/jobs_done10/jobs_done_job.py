@@ -46,6 +46,10 @@ class JobsDoneJob(object):
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
         'console_color': unicode,
 
+        # Enable timestamps on the build output
+        # https://wiki.jenkins-ci.org/display/JENKINS/Timestamper
+        'timestamps': unicode,
+
         # Time based triggers for job (Jenkins)
         'cron' : unicode,
 
