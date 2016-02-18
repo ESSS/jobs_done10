@@ -1416,7 +1416,24 @@ class TestJenkinsXmlJobGenerator(object):
                 +    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
                 +  </buildWrappers>'''
             ) % (expected_name,)
-        ),
+        )
+
+
+    def testTimestamps(self):
+        self._DoTest(
+            yaml_contents=dedent(
+                '''
+                timestamps:
+                '''
+            ),
+            expected_diff=dedent(
+                '''\
+                @@ @@
+                +  <buildWrappers>
+                +    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.7.4"/>
+                +  </buildWrappers>'''
+            )
+        )
 
 
     def testAnsiColorUnknowOption(self):

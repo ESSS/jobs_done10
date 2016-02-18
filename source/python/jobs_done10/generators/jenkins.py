@@ -390,6 +390,12 @@ class JenkinsXmlJobGenerator(object):
         ansi_color_wrapper['colorMapName'] = option
 
 
+    def SetTimestamps(self, ignored):
+        wrapper_xpath = 'buildWrappers/hudson.plugins.timestamper.TimestamperBuildWrapper'
+        wrapper = self.xml[wrapper_xpath]
+        wrapper['@plugin'] = 'timestamper@1.7.4'
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns
