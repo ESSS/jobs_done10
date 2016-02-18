@@ -29,7 +29,7 @@ platform-windows:build_batch_commands:
   call activate _jobs_done10-{platform}
   if not "%ERRORLEVEL%" == "0" exit /B 1
 
-  py.test --junitxml=build/tests.xml --showlocals
+  py.test --color=yes --junitxml=build/tests.xml --showlocals
 
 platform-linux:build_shell_commands:
 - |
@@ -39,7 +39,7 @@ platform-linux:build_shell_commands:
       conda clean --lock
       conda env create --force
       source activate jobs_done10
-      py.test --junitxml=build/tests.xml --showlocals
+      py.test --color=yes --junitxml=build/tests.xml --showlocals
   "
 
 
