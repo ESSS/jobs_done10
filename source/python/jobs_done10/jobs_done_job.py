@@ -283,10 +283,7 @@ class JobsDoneJob(object):
                 'name':repository.name
             }
             format_dict.update(matrix_row.simple_dict)
-            jd_string = (yaml.dump(jd_data, default_flow_style=False)[:-1])
-            formatted_jd_string = jd_string.format(**format_dict)
-            jd_formatted_data = yaml.load(formatted_jd_string)
-
+            jd_formatted_data = cls._GetFormattedYAMLData(jd_data, format_dict)
             # Re-write formatted_data dict ignoring/replacing dict keys based on matrix
             for yaml_dict in cls._IterDicts(jd_formatted_data):
                 for key, option_value in yaml_dict.items():
@@ -317,6 +314,20 @@ class JobsDoneJob(object):
             jobs_done_jobs.append(jobs_done_job)
 
         return jobs_done_jobs
+
+
+    @classmethod
+    def _GetFormattedYAMLData(cls, yaml_data, format_dict):
+        if isinstance(yaml_data, unicode):
+            return yaml_data.format(**format_dict)
+        elif isinstance(yaml_data, list):
+            return [cls._GetFormattedYAMLData(d, format_dict) for d in yaml_data]
+        elif isinstance(yaml_data, dict):
+            return {k.format(**format_dict): cls._GetFormattedYAMLData(v, format_dict)
+                    for k, v
+                    in yaml_data.iteritems()}
+        else:
+            raise ValueError('Invalid yaml data type: {}'.format(yaml_data.__class__))
 
 
     @classmethod
