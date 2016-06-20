@@ -11,6 +11,9 @@ branch_patterns:
 git:
   reference: "$WORKSPACE/../../Shared/ref_repos/jobs_done10"
 
+branch-master:cron: |
+  H 22 * * *
+
 junit_patterns:
 - "**/build/*.xml"
 
