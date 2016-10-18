@@ -72,7 +72,8 @@ def WritePrettyXMLElement(oss, element, indent=0):
 
     # Text
     if element.text is not None:
-        oss.write(escape(element.text))
+        # "&#xd;" is the hexadecimal xml entity for "\r".
+        oss.write(escape(element.text, {'\r': '&#xd;'}))
 
     # End tag
     if element.text is None:

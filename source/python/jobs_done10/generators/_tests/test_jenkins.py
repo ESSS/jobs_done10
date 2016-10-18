@@ -585,7 +585,7 @@ class TestJenkinsXmlJobGenerator(object):
                 @@ @@
                 +  <builders>
                 +    <hudson.tasks.BatchFile>
-                +      <command>multi_line
+                +      <command>multi_line&#xd;
                 +command</command>
                 +    </hudson.tasks.BatchFile>
                 +  </builders>'''
