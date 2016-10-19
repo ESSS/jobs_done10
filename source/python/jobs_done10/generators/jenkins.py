@@ -171,7 +171,8 @@ class JenkinsXmlJobGenerator(object):
 
     def SetBuildBatchCommands(self, build_batch_commands):
         for command in build_batch_commands:
-            self.xml['builders/hudson.tasks.BatchFile+/command'] = command
+            # batch files must have \r\n as EOL or weird bugs happen (jenkins web ui add \r).
+            self.xml['builders/hudson.tasks.BatchFile+/command'] = command.replace('\n', '\r\n')
 
 
     def SetBuildShellCommands(self, build_shell_commands):
