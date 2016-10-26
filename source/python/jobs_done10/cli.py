@@ -4,8 +4,8 @@ import click
 
 @click.command()
 @click.argument('url')
-@click.option('--username', help='Jenkins username.')
-@click.option('--password', help='Jenkins password.')
+@click.option('--username', prompt=True, help='Jenkins username.')
+@click.option('--password', prompt=True, hide_input=True, help='Jenkins password.')
 def jenkins(url, username=None, password=None):
     """
     Push jobs to Jenkins instance.
