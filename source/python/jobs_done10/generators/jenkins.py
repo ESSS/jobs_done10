@@ -397,6 +397,62 @@ class JenkinsXmlJobGenerator(object):
         wrapper['@plugin'] = 'timestamper@1.7.4'
 
 
+    def SetCoverage(self, options):
+        report_pattern = options.get('report_pattern')
+        if not report_pattern:
+            raise ValueError("Report pattern is required by coverage")
+
+        cobertura_publisher = self.xml[
+            'publishers/hudson.plugins.cobertura.CoberturaPublisher']
+        cobertura_publisher['@plugin'] = 'cobertura@1.9.7'
+        # This is a file name pattern that can be used to locate the cobertura xml report files
+        # (for example with Maven2 use **/target/site/cobertura/coverage.xml). The path is relative
+        # to the module root unless you have configured your SCM with multiple modules, in which
+        # case it is relative to the workspace root. Note that the module root is SCM-specific,
+        # and may not be the same as the workspace root. Cobertura must be configured to generate
+        # XML reports for this plugin to function.
+        cobertura_publisher['coberturaReportFile'] = report_pattern
+        cobertura_publisher['onlyStable'] = 'false'  # Include only stable builds, i.e. exclude unstable and failed ones.
+        cobertura_publisher['failUnhealthy'] = 'true'  # fail builds if No coverage reports are found.
+        cobertura_publisher['failUnstable'] = 'true'  # Unhealthy projects will be failed.
+        cobertura_publisher['autoUpdateHealth'] = 'false'  # Unstable projects will be failed.
+        cobertura_publisher['autoUpdateStability'] = 'false'  # Auto update threshold for health on successful build.
+        cobertura_publisher['autoUpdateStability'] = 'false'  # Auto update threshold for stability on successful build.
+        cobertura_publisher['zoomCoverageChart'] = 'false'  # Zoom the coverage chart and crop area below the minimum and above the maximum coverage of the past reports.
+        cobertura_publisher['maxNumberOfBuilds'] = '0'  # Only graph the most recent N builds in the coverage chart, 0 disables the limit.
+        cobertura_publisher['sourceEncoding'] = 'UTF_8'  # Encoding when showing files.
+
+        def FormatMetricValue(metric):
+            # It seems to use more places for precision reasons
+            return str(int(metric) * 100000)
+
+        def WriteMetrics(target_name, metrics_options, default):
+            metrics = cobertura_publisher['{}'.format(target_name)]
+            targets = metrics['targets']
+            targets['@class'] = 'enum-map'
+            targets['@enum-type'] = 'hudson.plugins.cobertura.targets.CoverageMetric'
+            entry = targets['entry']
+            entry['hudson.plugins.cobertura.targets.CoverageMetric'] = 'METHOD'
+            entry['int'] = FormatMetricValue(metrics_options.get('method', default))
+
+            entry = targets['entry+']
+            entry['hudson.plugins.cobertura.targets.CoverageMetric'] = 'LINE'
+            entry['int'] = FormatMetricValue(metrics_options.get('line', default))
+
+            entry = targets['entry+']
+            entry['hudson.plugins.cobertura.targets.CoverageMetric'] = 'CONDITIONAL'
+            entry['int'] = FormatMetricValue(metrics_options.get('conditional', default))
+
+        healthy_options = options.get('healthy', {})
+        WriteMetrics('healthyTarget', healthy_options, default=80)
+
+        unhealthy_options = options.get('unhealthy', {})
+        WriteMetrics('unhealthyTarget', unhealthy_options, default=0)
+
+        failing_options = options.get('failing', {})
+        WriteMetrics('failingTarget', failing_options, default=0)
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns

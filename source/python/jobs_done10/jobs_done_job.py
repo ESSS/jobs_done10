@@ -116,6 +116,23 @@ class JobsDoneJob(object):
         # * format: JSON (optional)
         # * url: https://requestb.in/12345678
         'notification' : dict,
+
+        # Configures coverage in a CI job
+        #
+        # Options:
+        # * report_pattern: unicode
+        #   File name pattern that can be used to locate the cobertura xml report files, for
+        #   instance, `**/build/coverage/*.xml`
+        # * healthy: dict|None
+        #   Defines threshold necessary for build to be healthy. Can have keys `method`, `line` and
+        #   `conditional`. Any omitted key is defaulted to 80.
+        # * unhealthy: dict|None
+        #   Defines threshold necessary for build to be unhealthy. Can have keys `method`, `line`
+        #   and `conditional`. Any omitted key is defaulted to 0.
+        # * failing: dict|None
+        #   Defines threshold necessary for build to fail. Can have keys `method`, `line`
+        #   and `conditional`. Any omitted key is defaulted to 0.
+        'coverage': dict,
     }
 
     # All parsed options
