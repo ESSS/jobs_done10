@@ -22,102 +22,36 @@ class JobsDoneJob(object):
 
     # Options that should be forwarded to generators. These are set in JobsDoneJob instances
     # after parsing (setattr(option_name, self, value)), and are available as object fields
+    #
+    # NOTE TO DEVELOPERS: try to keep options in alphabetical order to simplify maintenance
     GENERATOR_OPTIONS = {
         # Additional repositories to be used in a job.
-        'additional_repositories' : list,
+        'additional_repositories': list,
 
         # Job authentication token used to execute it remotely.
-        'auth_token' : unicode,
+        'auth_token': unicode,
 
         # Patterns to match when looking for boosttest results.
-        'boosttest_patterns' : list,
+        'boosttest_patterns': list,
 
         # Batch script commands used to build a project.
-        'build_batch_commands' : list,
+        'build_batch_commands': list,
 
         # Shell script commands used to build a project.
-        'build_shell_commands' : list,
+        'build_shell_commands': list,
 
         # Python commands used to build a project.
-        'build_python_commands' : list,
+        'build_python_commands': list,
 
         # Process job output to handle ansi color escapes.
         # Should be one of xterm (default if empty), vga, css, gnome-terminal.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
         'console_color': unicode,
 
-        # Enable timestamps on the build output
-        # https://wiki.jenkins-ci.org/display/JENKINS/Timestamper
-        'timestamps': unicode,
-
-        # Time based triggers for job (Jenkins)
-        'cron' : unicode,
-
-        # Custom workspace. To maintain the same location as the default workspace prefix it with
-        # "workspace/"
-        'custom_workspace' : unicode,
-
-        # Regex pattern to be matched from a job output and used as job description. (Jenkins)
-        # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
-        'description_regex' : unicode,
-
-        # The format for the job display name.
-        'display_name' : unicode,
-
-        # Emails to be sent out for failed builds
-        'email_notification' : (dict, unicode),
-
-        # Additional git options.
-        # Uses same options available for git repos under `additional_repositories`
-        'git' : dict,
-
-        # List of patterns to match when looking for jsunit test results.
-        # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
-        'jsunit_patterns' : list,
-
-        # List of patterns to match when looking for junit test results.
-        'junit_patterns' : list,
-
-        # A "label expression" that is used to match slave nodes.
-        'label_expression' : unicode,
-
-        # Notifies Stash when a build passes
-        # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
-        # e.g.
-        #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
-        'notify_stash' : (dict, unicode),
-
-        # Definition of parameters available to this job.
-        # Uses jenkins-job-builder syntax parsed by yaml.
-        # .. seealso:: http://ci.openstack.org/jenkins-job-builder/parameters.html
-        #
-        # e.g.
-        #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
-        'parameters' : list,
-
-        # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
-        'scm_poll' : unicode,
-
-        # Job timeout in minutes
-        'timeout' : unicode,
-
-        # Job timeout in seconds without console activity
-        'timeout_no_activity' : unicode,
-
-        # Slack notification
-        # * room: general
-        # * token: 123123123123123123123
-        # * url: http://eden.esss.com.br/jenkins
-        'slack' : dict,
-
-        # Notification (HTTP/JSON)
-        # https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
-        # * protocol: HTTP (optional)
-        # * format: JSON (optional)
-        # * url: https://requestb.in/12345678
-        'notification' : dict,
-
         # Configures coverage in a CI job
+        #
+        # On Jenkins, this requires [Cobertura Plugin](
+        # https://wiki.jenkins-ci.org/display/JENKINS/Cobertura+Plugin) to work.
         #
         # Options:
         # * report_pattern: unicode
@@ -125,14 +59,85 @@ class JobsDoneJob(object):
         #   instance, `**/build/coverage/*.xml`
         # * healthy: dict|None
         #   Defines threshold necessary for build to be healthy. Can have keys `method`, `line` and
-        #   `conditional`. Any omitted key is defaulted to 80.
+        #   `conditional`. If key is omitted it defaults to 80.
         # * unhealthy: dict|None
         #   Defines threshold necessary for build to be unhealthy. Can have keys `method`, `line`
-        #   and `conditional`. Any omitted key is defaulted to 0.
+        #   and `conditional`. If key is omitted it defaults to 0.
         # * failing: dict|None
         #   Defines threshold necessary for build to fail. Can have keys `method`, `line`
-        #   and `conditional`. Any omitted key is defaulted to 0.
+        #   and `conditional`. If key is omitted it defaults to 0.
         'coverage': dict,
+
+        # Time based triggers for job (Jenkins)
+        'cron': unicode,
+
+        # Custom workspace. To maintain the same location as the default workspace prefix it with
+        # "workspace/"
+        'custom_workspace': unicode,
+
+        # Regex pattern to be matched from a job output and used as job description. (Jenkins)
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
+        'description_regex': unicode,
+
+        # The format for the job display name.
+        'display_name': unicode,
+
+        # Emails to be sent out for failed builds
+        'email_notification': (dict, unicode),
+
+        # Additional git options.
+        # Uses same options available for git repos under `additional_repositories`
+        'git': dict,
+
+        # List of patterns to match when looking for jsunit test results.
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/JSUnit+plugin
+        'jsunit_patterns': list,
+
+        # List of patterns to match when looking for junit test results.
+        'junit_patterns': list,
+
+        # A "label expression" that is used to match slave nodes.
+        'label_expression': unicode,
+
+        # Notification (HTTP/JSON)
+        # https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
+        # * protocol: HTTP (optional)
+        # * format: JSON (optional)
+        # * url: https://requestb.in/12345678
+        'notification': dict,
+
+        # Notifies Stash when a build passes
+        # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
+        # e.g.
+        #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
+        'notify_stash': (dict, unicode),
+
+        # Definition of parameters available to this job.
+        # Uses jenkins-job-builder syntax parsed by yaml.
+        # .. seealso:: http://ci.openstack.org/jenkins-job-builder/parameters.html
+        #
+        # e.g.
+        #     parameters = [{'choices' : ['1', '2'], 'name' : 'my_param'}]
+        'parameters': list,
+
+        # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
+        'scm_poll': unicode,
+
+        # Slack notification
+        # * room: general
+        # * token: 123123123123123123123
+        # * url: http://eden.esss.com.br/jenkins
+        'slack': dict,
+
+        # Job timeout in minutes
+        'timeout': unicode,
+
+        # Job timeout in seconds without console activity
+        'timeout_no_activity' : unicode,
+
+        # Enable timestamps on the build output
+        # https://wiki.jenkins-ci.org/display/JENKINS/Timestamper
+        'timestamps': unicode,
     }
 
     # All parsed options

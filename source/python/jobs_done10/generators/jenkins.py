@@ -431,7 +431,7 @@ class JenkinsXmlJobGenerator(object):
             targets = metrics['targets']
             targets['@class'] = 'enum-map'
             targets['@enum-type'] = 'hudson.plugins.cobertura.targets.CoverageMetric'
-            entry = targets['entry']
+            entry = targets['entry+']
             entry['hudson.plugins.cobertura.targets.CoverageMetric'] = 'METHOD'
             entry['int'] = FormatMetricValue(metrics_options.get('method', default))
 
