@@ -1448,7 +1448,191 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         assert 'Received unknown console_color option.' in excinfo.value.message
 
+    @pytest.mark.parametrize(
+        'scenario',
+        [
+            'complete',
+            'incomplete_metrics',
+            'incomplete_values',
+        ]
+    )
+    def testCoverage(self, scenario):
+        # Expected defaults
+        healthy_method = 80
+        healthy_line = 80
+        healthy_conditional = 80
 
+        unhealthy_method = 0
+        unhealthy_line = 0
+        unhealthy_conditional = 0
+
+        failing_method = 0
+        failing_line = 0
+        failing_conditional = 0
+
+        if scenario == 'complete':
+            healthy_method = 100
+            healthy_line = 100
+            healthy_conditional = 90
+
+            unhealthy_method = 70
+            unhealthy_line = 70
+            unhealthy_conditional = 60
+
+            failing_method = 60
+            failing_line = 60
+            failing_conditional = 50
+            contents = dedent(
+                r'''
+                coverage:
+                  report_pattern: "**/build/coverage/*.xml"
+                  healthy:
+                    method: {healthy_method}
+                    line: {healthy_line}
+                    conditional: {healthy_conditional}
+                  unhealthy:
+                    method: {unhealthy_method}
+                    line: {unhealthy_line}
+                    conditional: {unhealthy_conditional}
+                  failing:
+                    method: {failing_method}
+                    line: {failing_line}
+                    conditional: {failing_conditional}
+                '''
+            )
+        elif scenario == 'incomplete_metrics':
+            healthy_method = 100
+            healthy_line = 100
+            healthy_conditional = 90
+
+            contents = dedent(
+                r'''
+                coverage:
+                  report_pattern: "**/build/coverage/*.xml"
+                  healthy:
+                    method: {healthy_method}
+                    line: {healthy_line}
+                    conditional: {healthy_conditional}
+                '''
+            )
+        else:
+            assert scenario == 'incomplete_values', "Unknown scenario"
+            healthy_method = 100
+            healthy_line = 100
+
+            contents = dedent(
+                r'''
+                coverage:
+                  report_pattern: "**/build/coverage/*.xml"
+                  healthy:
+                    method: {healthy_method}
+                    line: {healthy_line}
+                '''
+            )
+
+        expected_diff = dedent(
+                '''\
+                @@ @@
+                +  <publishers>
+                +    <hudson.plugins.cobertura.CoberturaPublisher plugin="cobertura@1.9.7">
+                +      <coberturaReportFile>**/build/coverage/*.xml</coberturaReportFile>
+                +      <onlyStable>false</onlyStable>
+                +      <failUnhealthy>true</failUnhealthy>
+                +      <failUnstable>true</failUnstable>
+                +      <autoUpdateHealth>false</autoUpdateHealth>
+                +      <autoUpdateStability>false</autoUpdateStability>
+                +      <zoomCoverageChart>false</zoomCoverageChart>
+                +      <maxNumberOfBuilds>0</maxNumberOfBuilds>
+                +      <sourceEncoding>UTF_8</sourceEncoding>
+                +      <healthyTarget>
+                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{healthy_method}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{healthy_line}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{healthy_conditional}</int>
+                +          </entry>
+                +        </targets>
+                +      </healthyTarget>
+                +      <unhealthyTarget>
+                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{unhealthy_method}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{unhealthy_line}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{unhealthy_conditional}</int>
+                +          </entry>
+                +        </targets>
+                +      </unhealthyTarget>
+                +      <failingTarget>
+                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{failing_method}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{failing_line}</int>
+                +          </entry>
+                +          <entry>
+                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
+                +            <int>{failing_conditional}</int>
+                +          </entry>
+                +        </targets>
+                +      </failingTarget>
+                +    </hudson.plugins.cobertura.CoberturaPublisher>
+                +  </publishers>'''
+            )
+
+        contents_ = contents.format(**locals())
+
+        healthy_method *= 100000
+        healthy_line *= 100000
+        healthy_conditional *= 100000
+        unhealthy_method *= 100000
+        unhealthy_line *= 100000
+        unhealthy_conditional *= 100000
+        failing_method *= 100000
+        failing_line *= 100000
+        failing_conditional *= 100000
+        expected_diff_ = expected_diff.format(**locals())
+
+        self._DoTest(
+            yaml_contents=contents_,
+            expected_diff=expected_diff_,
+        )
+
+    def testCoverageFailWhenMissingReportPattern(self):
+        with pytest.raises(ValueError) as e:
+            self._GenerateJob(yaml_contents=dedent(
+                r'''
+                coverage:
+                  healthy:
+                    method: 100
+                    line: 100
+                '''
+            ))
+        assert e.value.message == 'Report pattern is required by coverage'
+
+    def _GenerateJob(self, yaml_contents):
+        repository = Repository(url='http://fake.git', branch='not_master')
+        jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository)
+
+        job_generator = JenkinsXmlJobGenerator()
+        JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
+        return job_generator.GetJob()
 
     def _DoTest(self, yaml_contents, expected_diff):
         '''
@@ -1458,12 +1642,7 @@ class TestJenkinsXmlJobGenerator(object):
         :param unicode expected_diff:
             Expected diff from build jobs from `yaml_contents`, when compared to BASIC_EXPECTED_XML.
         '''
-        repository = Repository(url='http://fake.git', branch='not_master')
-        jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository)
-
-        job_generator = JenkinsXmlJobGenerator()
-        JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
-        jenkins_job = job_generator.GetJob()
+        jenkins_job = self._GenerateJob(yaml_contents=yaml_contents)
         self._AssertDiff(jenkins_job.xml, expected_diff)
 
 
