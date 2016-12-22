@@ -1202,7 +1202,6 @@ class TestJenkinsXmlJobGenerator(object):
                   reference: "/home/reference.git"
                   target_dir: "main_application"
                   timeout: 30
-                  recursive_submodules: true
                 '''
             ),
             expected_diff=dedent(
