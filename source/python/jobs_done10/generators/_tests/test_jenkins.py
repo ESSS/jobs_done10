@@ -60,6 +60,7 @@ class TestJenkinsXmlJobGenerator(object):
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
+              <hudson.plugins.git.extensions.impl.CleanCheckout/>
             </extensions>
             <localBranch>not_master</localBranch>
           </scm>
@@ -1038,9 +1039,11 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>not_master</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 -    </extensions>
                 -    <localBranch>not_master</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1061,6 +1064,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 +        </extensions>
                 +        <localBranch>my_branch</localBranch>
                 +      </hudson.plugins.git.GitSCM>
@@ -1096,6 +1100,7 @@ class TestJenkinsXmlJobGenerator(object):
             -      <hudson.plugins.git.extensions.impl.LocalBranch>
             -        <localBranch>not_master</localBranch>
             -      </hudson.plugins.git.extensions.impl.LocalBranch>
+            -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
             -    </extensions>
             -    <localBranch>not_master</localBranch>
             +  <assignedNode>fake</assignedNode>
@@ -1118,6 +1123,7 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_main</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
             +        </extensions>
             +        <localBranch>custom_main</localBranch>
             +      </hudson.plugins.git.GitSCM>
@@ -1138,6 +1144,7 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_additional</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
             +        </extensions>
             +        <localBranch>custom_additional</localBranch>
             +      </hudson.plugins.git.GitSCM>
@@ -1202,7 +1209,7 @@ class TestJenkinsXmlJobGenerator(object):
                   reference: "/home/reference.git"
                   target_dir: "main_application"
                   timeout: 30
-                  recursive_submodules: true
+                  clean_checkout: false
                 '''
             ),
             expected_diff=dedent(

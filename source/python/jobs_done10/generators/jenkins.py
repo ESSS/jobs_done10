@@ -266,6 +266,14 @@ class JenkinsXmlJobGenerator(object):
         _Set('reference', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/reference')
         _Set('timeout', 'extensions/hudson.plugins.git.extensions.impl.CloneOption/timeout')
 
+        value = git_options.pop('clean_checkout', 'true')
+        if value == 'true':
+            # just accessing the attribute will create a tag without text
+            clean_checkout_tag = 'extensions/hudson.plugins.git.extensions.impl.CleanCheckout'
+            # noinspection PyStatementEffect
+            git_xml[clean_checkout_tag]
+
+
         self._CheckUnknownOptions('git', git_options)
 
 
