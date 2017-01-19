@@ -36,14 +36,11 @@ platform-windows:build_batch_commands:
 
 platform-linux:build_shell_commands:
 - |
-  # run-chroot-command is here temporarily: ETK-1158
-  $WORKSPACE/jobs_done10/run-chroot-command bash -c "
-      cd $WORKSPACE/jobs_done10
-      conda clean --lock
-      conda env create --force
-      source activate jobs_done10
-      py.test --color=yes --junitxml=build/tests.xml --showlocals
-  "
+  cd $WORKSPACE/jobs_done10
+  conda clean --lock
+  conda env create --force
+  source activate jobs_done10
+  py.test --color=yes --junitxml=build/tests.xml --showlocals
 
 
 notify_stash:
