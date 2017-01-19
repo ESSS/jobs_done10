@@ -308,17 +308,30 @@ class JobsDoneJob(object):
             jd_formatted_data = cls._GetFormattedYAMLData(jd_data, format_dict)
             # Re-write formatted_data dict ignoring/replacing dict keys based on matrix
             for yaml_dict in cls._IterDicts(jd_formatted_data):
+                matched_conditions = {}
                 for key, option_value in yaml_dict.items():
-                    if ':' in key:
-                        conditions = key.split(':')[:-1]
-                        option_name = key.split(':')[-1]
+                    if ':' not in key:
+                        continue
 
-                        # Remove the key with condition text
-                        del yaml_dict[key]
+                    conditions = key.split(':')[:-1]
+                    option_name = key.split(':')[-1]
 
-                        # If the condition matches, add the new key (containing just the option_name)
-                        if cls._MatchConditions(conditions, matrix_row.full_dict, branch=[repository.branch]):
-                            yaml_dict[option_name] = option_value
+                    # Remove the key with condition text
+                    del yaml_dict[key]
+
+                    # If the condition matches, add the new key (containing just the option_name)
+                    if not cls._MatchConditions(conditions, matrix_row.full_dict, branch=[repository.branch]):
+                        continue
+
+                    cls._CheckAmbiguousConditions(yaml_dict,
+                                                  matched_conditions,
+                                                  option_name,
+                                                  option_value,
+                                                  conditions)
+
+                    if cls._ShouldOverride(matched_conditions, option_name, conditions):
+                        yaml_dict[option_name] = option_value
+                        matched_conditions[option_name] = set(conditions)
 
             # Set surviving options in job.
             for option_name, option_value in jd_formatted_data.iteritems():
@@ -350,6 +363,51 @@ class JobsDoneJob(object):
                     in yaml_data.iteritems()}
         else:
             raise ValueError('Invalid yaml data type: {}'.format(yaml_data.__class__))
+
+
+    @classmethod
+    def _CheckAmbiguousConditions(cls,
+                                  yaml_dict,
+                                  previous_matched_conditions,
+                                  option_name,
+                                  option_value,
+                                  conditions):
+        if option_name not in previous_matched_conditions:
+            return
+        # If the value is the same we don't care if the conditions are ambiguous
+        if yaml_dict[option_name] == option_value:
+            return
+
+        previous_conditions = set(previous_matched_conditions[option_name])
+        conditions = set(conditions)
+        def _IsAmbiguous():
+            return not previous_conditions.issubset(conditions) and \
+                not conditions.issubset(previous_conditions)
+
+        if _IsAmbiguous():
+            import textwrap
+            raise ValueError(
+                textwrap.dedent('''\
+                Option {option_name} has ambiguous conditions and would be overridden
+                Old value: {old_value}
+                New value: {new_value}
+                Old conditions: {old_conditions}
+                New conditions: {new_conditions}''')
+                .format(option_name=option_name,
+                        old_value=yaml_dict[option_name],
+                        new_value=option_value,
+                        old_conditions=previous_conditions,
+                        new_conditions=conditions))
+
+
+    @classmethod
+    def _ShouldOverride(cls, previous_matched_conditions, option_name, conditions):
+        if option_name not in previous_matched_conditions:
+            return True
+
+        previous_conditions = set(previous_matched_conditions[option_name])
+        conditions = set(conditions)
+        return conditions.issuperset(previous_conditions)
 
 
     @classmethod

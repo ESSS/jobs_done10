@@ -322,6 +322,118 @@ def testMatrixAndFlagsForSubDicts():
             ]
 
 
+def testRaiseWithAmbiguousConditionsAndDifferentValues():
+    '''
+    When we match more than one line for the same key, we need to choose only one of them
+    consistently regardless of the order in which they appear.
+    To do that the conditions present on one line should be a superset of other one. In the end
+    the largest superset will be chosen.
+
+    For example, for "platform=linux" and "slave=slave2" the following lines would be ambiguous:
+
+        platform-linux:display_name: "Linux job"
+        slave-slave2:display_name: "slave2 job"
+
+    In this case, there are some matrix combinations that will match both lines and there is no
+    obvious rule we can apply to choose one of them. Which one has priority: platform or slave?
+
+    For the above example to work we need to make one line a superset of the other:
+
+        platform-linux:display_name: "Linux job"
+        platform-linux:slave-slave2:display_name: "slave2 job"
+
+    And the second line would be chosen.
+
+
+    NOTE:
+
+    These rules are only relevant when multiple lines match. For example, if we have two
+    exclusive lines like:
+
+        platform-linux:display_name: "Linux job"
+        platform-windows:display_name: "slave2 job"
+
+    They are not ambiguous as only one will match for every matrix combination.
+    '''
+    yaml_contents = dedent(
+        '''
+        matrix:
+            platform:
+            - linux
+            - windows
+
+            slave:
+            - slave1
+            - slave2
+
+        platform-linux:display_name: "Linux job"
+        slave-slave2:display_name: "slave2 job"
+        '''
+    )
+    with pytest.raises(ValueError):
+        JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
+
+
+def testIgnoreAmbiguousConditionsWithEqualValues():
+    '''
+    ..see: `testRaiseWithAmbiguousConditionsAndDifferentValues` for more details
+
+    Even though we should raise when there are multiple matched lines with ambiguous conditions, we
+    should ignore when the value does not change. This is very useful when you have a large matrix
+    and need to set the same value for a lot of them.
+    '''
+    yaml_contents = dedent(
+        '''
+        matrix:
+            platform:
+            - linux
+            - windows
+
+            slave:
+            - slave1
+            - slave2
+
+        platform-linux:display_name: "Foo job"
+        slave-slave2:display_name: "Foo job"
+        '''
+    )
+    for jd_file in JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY):
+        if jd_file.matrix_row['platform'] == 'linux' or jd_file.matrix_row['slave'] == 'slave2':
+            assert jd_file.display_name == 'Foo job'
+        else:
+            assert jd_file.display_name is None
+
+
+def testAllowOverridingConditions():
+    '''
+    ..see: `testRaiseWithAmbiguousConditionsAndDifferentValues` for more details
+    '''
+    yaml_contents = dedent(
+        '''
+        matrix:
+            platform:
+            - linux
+            - windows
+
+            slave:
+            - slave1
+            - slave2
+
+        display_name: "Generic job"
+        platform-linux:display_name: "Linux job"
+        platform-linux:slave-slave2:display_name: "slave2 job"
+        '''
+    )
+    for jd_file in JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY):
+        if jd_file.matrix_row['platform'] == 'linux':
+            if jd_file.matrix_row['slave'] == 'slave1':
+                assert jd_file.display_name == 'Linux job'
+            else:
+                assert jd_file.display_name == 'slave2 job'
+        else:
+            assert jd_file.display_name == 'Generic job'
+
+
 def testBranchPatterns():
     base_contents = dedent(
         '''
