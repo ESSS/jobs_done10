@@ -271,7 +271,7 @@ class JobsDoneJob(object):
             from jobs_done10.common import AsList
             expected_types = AsList(JobsDoneJob.PARSEABLE_OPTIONS[option_name])
             if obtained_type not in expected_types:
-                raise JobsDoneFileTypeError(option_name, obtained_type, expected_types)
+                raise JobsDoneFileTypeError(option_name, obtained_type, expected_types, option_value)
 
         # List all possible matrix_rows
         matrix_rows = cls._MatrixRow.CreateFromDict(jd_data.get('matrix', {}))
@@ -586,15 +586,16 @@ class JobsDoneFileTypeError(TypeError):
             (list,)
             (dict, unicode)
     '''
-    def __init__(self, option_name, obtained_type, accepted_types):
+    def __init__(self, option_name, obtained_type, accepted_types, option_value):
         self.option_name = option_name
         self.obtained_type = obtained_type
         self.accepted_types = accepted_types
+        self.option_value = option_value
 
         TypeError.__init__(
             self,
-            'On option "%s". Expected one of "%s" but got "%s".' % \
-            (option_name, accepted_types, obtained_type)
+            'On option "%s". Expected one of "%s" but got "%s". Value:\n%r' % \
+            (option_name, accepted_types, obtained_type, option_value)
         )
 
 

@@ -530,6 +530,7 @@ def testTypeChecking():
     assert e.value.option_name == 'build_batch_commands'
     assert e.value.accepted_types == [JobsDoneJob.PARSEABLE_OPTIONS['build_batch_commands']]
     assert e.value.obtained_type == unicode
+    assert e.value.option_value == 'string item'
 
 
 def testCreateFromFile(tmpdir):
