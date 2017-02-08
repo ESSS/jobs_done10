@@ -461,6 +461,60 @@ class JenkinsXmlJobGenerator(object):
         WriteMetrics('failingTarget', failing_options, default=0)
 
 
+    def SetWarnings(self, options):
+        if 'console' not in options and 'file' not in options:
+            return
+        
+        warnings_xml = self.xml['publishers/hudson.plugins.warnings.WarningsPublisher']
+        warnings_xml['@plugin'] = 'warnings@4.59'
+        warnings_xml['healthy']
+        warnings_xml['unHealthy']
+        warnings_xml['thresholdLimit'] = 'low'
+        warnings_xml['pluginName'] = '[WARNINGS]'
+        warnings_xml['defaultEncoding']
+        warnings_xml['canRunOnFailed'] = 'true'
+        warnings_xml['usePreviousBuildAsReference'] = 'false'
+        warnings_xml['useStableBuildAsReference'] = 'false'
+        warnings_xml['useDeltaValues'] = 'false'
+        
+        thresholds_xml = warnings_xml['thresholds']
+        thresholds_xml['@plugin'] = 'analysis-core@1.82'
+        thresholds_xml['unstableTotalAll']
+        thresholds_xml['unstableTotalHigh']
+        thresholds_xml['unstableTotalNormal']
+        thresholds_xml['unstableTotalLow']
+        thresholds_xml['unstableNewAll']
+        thresholds_xml['unstableNewHigh']
+        thresholds_xml['unstableNewNormal']
+        thresholds_xml['unstableNewLow']
+        thresholds_xml['failedTotalAll']
+        thresholds_xml['failedTotalHigh']
+        thresholds_xml['failedTotalNormal']
+        thresholds_xml['failedTotalLow']
+        thresholds_xml['failedNewAll']
+        thresholds_xml['failedNewHigh']
+        thresholds_xml['failedNewNormal']
+        thresholds_xml['failedNewLow']
+        
+        warnings_xml['shouldDetectModules'] = 'false'
+        warnings_xml['dontComputeNew'] = 'true'
+        warnings_xml['doNotResolveRelativePaths'] = 'false'
+        warnings_xml['includePattern']
+        warnings_xml['excludePattern']
+        warnings_xml['messagesPattern']
+        
+        file_parsers_xml = warnings_xml['parserConfigurations']
+        for parser_options in options.get('file', []):
+            parser_xml = file_parsers_xml['hudson.plugins.warnings.ParserConfiguration+']
+            parser_xml['pattern'] = parser_options.get('file_pattern')
+            parser_xml['parserName'] = parser_options.get('parser')
+        
+        console_parsers_xml = warnings_xml['consoleParsers']
+        for parser_options in options.get('console', []):
+            parser_xml = console_parsers_xml['hudson.plugins.warnings.ConsoleParser+']
+            parser_xml['parserName'] = parser_options.get('parser')
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns

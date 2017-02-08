@@ -1633,6 +1633,82 @@ class TestJenkinsXmlJobGenerator(object):
             ))
         assert e.value.message == 'Report pattern is required by coverage'
 
+
+    def testWarnings(self):
+        self._DoTest(
+            yaml_contents=dedent(
+                '''
+                warnings:
+                  console:
+                    - parser: Clang (LLVM based)
+                    - parser: PyLint
+                  file:
+                    - parser: CppLint
+                      file_pattern: "*.cpplint"
+                    - parser: CodeAnalysis
+                      file_pattern: "*.codeanalysis"
+                '''
+            ),
+            expected_diff='@@ @@\n' + '\n'.join('+  ' + s for s in dedent(
+            '''\
+            <publishers>
+              <hudson.plugins.warnings.WarningsPublisher plugin="warnings@4.59">
+                <healthy/>
+                <unHealthy/>
+                <thresholdLimit>low</thresholdLimit>
+                <pluginName>[WARNINGS]</pluginName>
+                <defaultEncoding/>
+                <canRunOnFailed>true</canRunOnFailed>
+                <usePreviousBuildAsReference>false</usePreviousBuildAsReference>
+                <useStableBuildAsReference>false</useStableBuildAsReference>
+                <useDeltaValues>false</useDeltaValues>
+                <thresholds plugin="analysis-core@1.82">
+                  <unstableTotalAll/>
+                  <unstableTotalHigh/>
+                  <unstableTotalNormal/>
+                  <unstableTotalLow/>
+                  <unstableNewAll/>
+                  <unstableNewHigh/>
+                  <unstableNewNormal/>
+                  <unstableNewLow/>
+                  <failedTotalAll/>
+                  <failedTotalHigh/>
+                  <failedTotalNormal/>
+                  <failedTotalLow/>
+                  <failedNewAll/>
+                  <failedNewHigh/>
+                  <failedNewNormal/>
+                  <failedNewLow/>
+                </thresholds>
+                <shouldDetectModules>false</shouldDetectModules>
+                <dontComputeNew>true</dontComputeNew>
+                <doNotResolveRelativePaths>false</doNotResolveRelativePaths>
+                <includePattern/>
+                <excludePattern/>
+                <messagesPattern/>
+                <parserConfigurations>
+                  <hudson.plugins.warnings.ParserConfiguration>
+                    <pattern>*.cpplint</pattern>
+                    <parserName>CppLint</parserName>
+                  </hudson.plugins.warnings.ParserConfiguration>
+                  <hudson.plugins.warnings.ParserConfiguration>
+                    <pattern>*.codeanalysis</pattern>
+                    <parserName>CodeAnalysis</parserName>
+                  </hudson.plugins.warnings.ParserConfiguration>
+                </parserConfigurations>
+                <consoleParsers>
+                  <hudson.plugins.warnings.ConsoleParser>
+                    <parserName>Clang (LLVM based)</parserName>
+                  </hudson.plugins.warnings.ConsoleParser>
+                  <hudson.plugins.warnings.ConsoleParser>
+                    <parserName>PyLint</parserName>
+                  </hudson.plugins.warnings.ConsoleParser>
+                </consoleParsers>
+              </hudson.plugins.warnings.WarningsPublisher>
+            </publishers>''').splitlines()),
+        )
+
+
     def _GenerateJob(self, yaml_contents):
         repository = Repository(url='http://fake.git', branch='not_master')
         jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository)
