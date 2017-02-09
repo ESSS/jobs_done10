@@ -138,6 +138,25 @@ class JobsDoneJob(object):
         # Enable timestamps on the build output
         # https://wiki.jenkins-ci.org/display/JENKINS/Timestamper
         'timestamps': unicode,
+
+        # Configures parsing of warnings and static analysis in a CI job
+        #
+        # On Jenkins, this requires [Warnings Plugin](
+        # https://wiki.jenkins-ci.org/display/JENKINS/Warnings+Plugin) to work.
+        #
+        # Configuration Example:
+        # ```yaml
+        # warnings:
+        #   console:
+        #     - parser: Clang (LLCM based)
+        #     - parser: PyLint
+        #   file:
+        #     - parser: CppLint
+        #       file_pattern: *.cpplint
+        #     - parser: CodeAnalysis
+        #       file_pattern: *.codeanalysis
+        # ```
+        'warnings': dict,
     }
 
     # All parsed options
