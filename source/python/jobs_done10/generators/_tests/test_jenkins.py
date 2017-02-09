@@ -8,11 +8,11 @@ from textwrap import dedent
 
 import jenkins
 import pytest
-
-from jobs_done10.generators.jenkins import (GetJobsFromDirectory, GetJobsFromFile, JenkinsJob,
-    JenkinsJobPublisher, JenkinsXmlJobGenerator, UploadJobsFromFile)
+from jobs_done10.generators.jenkins import (
+    GetJobsFromDirectory, GetJobsFromFile, JenkinsJob, JenkinsJobPublisher, JenkinsXmlJobGenerator,
+    UploadJobsFromFile)
 from jobs_done10.job_generator import JobGeneratorConfigurator
-from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneJob
+from jobs_done10.jobs_done_job import JOBS_DONE_FILENAME, JobsDoneFileTypeError, JobsDoneJob
 from jobs_done10.repository import Repository
 
 
@@ -1707,6 +1707,28 @@ class TestJenkinsXmlJobGenerator(object):
               </hudson.plugins.warnings.WarningsPublisher>
             </publishers>''').splitlines()),
         )
+
+
+    def testWarningsEmpty(self):
+        with pytest.raises(JobsDoneFileTypeError):
+            self._GenerateJob(yaml_contents='warnings:')
+        with pytest.raises(ValueError) as excinfo:
+            self._GenerateJob(yaml_contents='warnings: {}')
+        assert "Empty 'warnings' options" in excinfo.value.message
+
+
+    def testWarningsWrongOption(self):
+        with pytest.raises(ValueError) as excinfo:
+            self._GenerateJob(yaml_contents=dedent('''\
+                warnings:
+                  zucchini:
+                    - parser: Pizza
+                  file:
+                    - parser: CppLint
+                      file_pattern: "*.cpplint"
+                ''')
+            )
+        assert "Received unknown 'warnings' options: zucchini." in excinfo.value.message
 
 
     def _GenerateJob(self, yaml_contents):
