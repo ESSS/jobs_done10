@@ -1,6 +1,5 @@
 matrix:
   platform:
-  - win32,windows
   - win64,windows
   - linux64,linux
 
@@ -47,7 +46,7 @@ notify_stash:
 
 display_name: "[{branch}] {name} {platform}"
 
-label_expression: "{platform} && !12.0"
+label_expression: "{platform}"
 
 timeout: 20
 
