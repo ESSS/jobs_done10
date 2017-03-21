@@ -21,17 +21,14 @@ console_color:
 platform-windows:build_batch_commands:
 - |
   cd "%WORKSPACE%/jobs_done10"
-  set CONDA_FORCE_32BIT=
-  if "{platform}" == "win32" set CONDA_FORCE_32BIT=1
-
   call conda clean --lock
   call conda devenv
-  if not "%ERRORLEVEL%" == "0" exit /B 1
+  if errorlevel 1 exit /B 1
 
-  call activate _jobs_done10
-  if not "%ERRORLEVEL%" == "0" exit /B 1
+  call activate jobs_done10
+  if errorlevel 1 exit /B 1
 
-  pytest --color=yes --junitxml=build/tests.xml --showlocals
+  py.test --color=yes --junitxml=build/tests.xml --showlocals
 
 platform-linux:build_shell_commands:
 - |
@@ -39,7 +36,7 @@ platform-linux:build_shell_commands:
   conda clean --lock
   conda devenv
   source activate jobs_done10
-  pytest --color=yes --junitxml=build/tests.xml --showlocals
+  py.test --color=yes --junitxml=build/tests.xml --showlocals
 
 
 notify_stash:
