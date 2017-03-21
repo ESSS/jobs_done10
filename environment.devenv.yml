@@ -11,7 +11,7 @@ dependencies:
   {% endif %}
 
 environment:
-  - PYTHONPATH:
+  PYTHONPATH:
     - {{ os.path.join(root, 'source', 'python') }}
-  - PATH:
+  PATH:
     - {{ os.path.join(root, 'bin') }}
