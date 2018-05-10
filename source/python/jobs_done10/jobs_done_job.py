@@ -157,6 +157,22 @@ class JobsDoneJob(object):
         #       file_pattern: *.codeanalysis
         # ```
         'warnings': dict,
+
+        # Trigger other jobs after this jobs finishes
+        # On Jenkins this requires the [Parameterized Trigger Plugin]
+        # (https://wiki.jenkins.io/display/JENKINS/Parameterized+Trigger+Plugin) to work.
+        #
+        # Configuration example:
+        # ```yaml
+        # trigger_jobs:
+        #   names:
+        #     - myrepo-{branch}-synthetic-{platform}
+        #   condition: SUCCESS  # can be one of: SUCCESS, UNSTABLE, FAILED, ALWAYS. Defaults to SUCCESS.
+        #   parameters:  # optional
+        #     - PARAM1=VALUE1
+        #     - PARAM2=VALUE2
+        # ```
+        'trigger_jobs': dict,
     }
 
     # All parsed options
