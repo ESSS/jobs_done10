@@ -1450,6 +1450,90 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
+    @pytest.mark.parametrize('condition', ('SUCCESS', 'UNSTABLE', 'FAILED', 'ALWAYS'))
+    def testTriggerJobNoParameters(self, condition):
+        self._DoTest(
+            yaml_contents=dedent(
+                '''
+                trigger_jobs:
+                  names:
+                    - etk-master-linux64-27
+                    - etk-master-linux64-36
+                  condition: {condition}
+                '''.format(condition=condition)
+            ),
+            expected_diff=dedent(
+                '''\
+                @@ @@
+                +  <publishers>
+                +    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.33">
+                +      <configs>
+                +        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                +          <configs class="empty-list"/>
+                +          <projects>etk-master-linux64-27, etk-master-linux64-36</projects>
+                +          <condition>{condition}</condition>
+                +          <triggerWithNoParameters>true</triggerWithNoParameters>
+                +          <triggerFromChildProjects>false</triggerFromChildProjects>
+                +        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                +      </configs>
+                +    </hudson.plugins.parameterizedtrigger.BuildTrigger>
+                +  </publishers>'''.format(condition=condition)
+            )
+        )
+
+
+    def testTriggerJobInvalidCondition(self):
+        with pytest.raises(RuntimeError, match=r"Invalid value for condition: u?'UNKNOWN', expected one of .*"):
+            self._DoTest(
+                yaml_contents=dedent(
+                    '''
+                    trigger_jobs:
+                      names:
+                        - etk-master-linux64-27
+                        - etk-master-linux64-36
+                      condition: UNKNOWN
+                    '''
+                ),
+                expected_diff='',
+            )
+
+    def testTriggerJobParameters(self):
+        self._DoTest(
+            yaml_contents=dedent(
+                '''
+                trigger_jobs:
+                  names:
+                    - etk-master-linux64-27
+                    - etk-master-linux64-36
+                  parameters:
+                    - KEY1=VALUE1
+                    - KEY2=VALUE2
+                '''
+            ),
+            expected_diff=dedent(
+                '''\
+                @@ @@
+                +  <publishers>
+                +    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.33">
+                +      <configs>
+                +        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                +          <configs>
+                +            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                +              <properties>KEY1=VALUE1 KEY2=VALUE2</properties>
+                +            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
+                +          </configs>
+                +          <projects>etk-master-linux64-27, etk-master-linux64-36</projects>
+                +          <condition>SUCCESS</condition>
+                +          <triggerWithNoParameters>false</triggerWithNoParameters>
+                +          <triggerFromChildProjects>false</triggerFromChildProjects>
+                +        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+                +      </configs>
+                +    </hudson.plugins.parameterizedtrigger.BuildTrigger>
+                +  </publishers>'''
+            )
+        )
+
+
     def testAnsiColorUnknowOption(self):
         with pytest.raises(RuntimeError) as excinfo:
             self._DoTest(
@@ -1459,7 +1543,7 @@ class TestJenkinsXmlJobGenerator(object):
                     '''
                 ),
                 expected_diff='',
-            ),
+            )
         assert 'Received unknown console_color option.' in excinfo.value.message
 
     @pytest.mark.parametrize(

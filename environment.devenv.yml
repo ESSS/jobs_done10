@@ -4,7 +4,7 @@ dependencies:
   - click
   - jenkins-webapi
   - mock
-  - pytest
+  - pytest >=3
   - pyyaml
   {% if os.sys.platform.startswith('linux') %}
   - git

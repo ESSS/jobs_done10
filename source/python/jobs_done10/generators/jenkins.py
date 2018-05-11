@@ -526,6 +526,28 @@ class JenkinsXmlJobGenerator(object):
             parser_xml['parserName'] = parser_options.get('parser')
 
 
+    def SetTriggerJobs(self, options):
+        condition = options.get('condition', 'SUCCESS')
+        valid_conditions = ('SUCCESS', 'UNSTABLE', 'FAILED', 'ALWAYS')
+        if condition not in valid_conditions:
+            msg = 'Invalid value for condition: {!r}, expected one of {!r}'
+            raise RuntimeError(msg.format(condition, valid_conditions))
+        xml_trigger = self.xml['publishers/hudson.plugins.parameterizedtrigger.BuildTrigger']
+        xml_trigger['@plugin'] = "parameterized-trigger@2.33"
+        xml_config = xml_trigger['configs/hudson.plugins.parameterizedtrigger.BuildTriggerConfig']
+        parameters = options.get('parameters', [])
+        xml_configs = xml_config['configs']
+        if parameters:
+            xml_configs['hudson.plugins.parameterizedtrigger.PredefinedBuildParameters/properties'] = ' '.join(parameters)
+        else:
+            xml_configs['@class'] = 'empty-list'
+        xml_config['projects'] = ', '.join(options['names'])
+        xml_config['condition'] = condition
+
+        xml_config['triggerWithNoParameters'] = 'true' if not parameters else 'false'
+        xml_config['triggerFromChildProjects'] = 'false'
+
+
     # Internal functions ---------------------------------------------------------------------------
     def _SetXunit(self, xunit_type, patterns):
         # Set common xunit patterns
