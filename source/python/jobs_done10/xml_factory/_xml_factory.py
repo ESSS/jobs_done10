@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from io import StringIO
 from xml.etree import ElementTree
@@ -31,7 +31,7 @@ class XmlFactory(object):
         :type root_element: str | Element
         :param root_element:
         '''
-        if isinstance(root_element, (str, unicode)):
+        if isinstance(root_element, str):
             self.root = ElementTree.Element(root_element)
         elif isinstance(root_element, ElementTree._ElementInterface):
             self.root = root_element
@@ -63,7 +63,7 @@ class XmlFactory(object):
             result.attrib[attr_name] = str(value)
         else:
             result = self._ObtainElement(name)
-            result.text = unicode(value)
+            result.text = str(value)
         return XmlFactory(result)
 
 
@@ -158,16 +158,16 @@ class XmlFactory(object):
             children = elem.getchildren()
 
             if children:
-                cur = map(_elem2list, children)
+                cur = list(map(_elem2list, children))
 
                 # create meaningful lists
                 scalar = False
                 try:
                     if elem[0].tag != elem[1].tag:  # [{a: 1}, {b: 2}, {c: 3}] => {a: 1, b: 2, c: 3}
-                        cur = dict(zip(
-                            map(lambda e: e.keys()[0], cur),
-                            map(lambda e: e.values()[0], cur)
-                        ))
+                        cur = dict(list(zip(
+                            [list(e.keys())[0] for e in cur],
+                            [list(e.values())[0] for e in cur]
+                        )))
                     else:
                         scalar = True
                 except Exception as e:  # [{a: 1}, {a: 2}, {a: 3}] => {a: [1, 2, 3]}
@@ -175,9 +175,9 @@ class XmlFactory(object):
 
                 if scalar:
                     if len(cur) > 1:
-                        cur = {elem[0].tag: [e.values()[0] for e in cur if e.values()[0] is not None]}
+                        cur = {elem[0].tag: [list(e.values())[0] for e in cur if list(e.values())[0] is not None]}
                     else:
-                        cur = {elem[0].tag: cur[0].values()[0] }
+                        cur = {elem[0].tag: list(cur[0].values())[0] }
 
                 block[elem.tag] = cur
                 if return_children:

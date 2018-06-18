@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import contextlib
 
@@ -65,7 +65,7 @@ def ExpectedCalls(obj, **function_expected_calls):
         return Wrapped
 
     # __enter__
-    for function_name, expected_calls in function_expected_calls.iteritems():
+    for function_name, expected_calls in function_expected_calls.items():
         hash_ = (obj, function_name)
 
         original_function = getattr(obj, function_name)
@@ -80,11 +80,11 @@ def ExpectedCalls(obj, **function_expected_calls):
 
     # __exit__
     try:
-        for (_, function_name), (obtained, expected, _) in calls.items():
+        for (_, function_name), (obtained, expected, _) in list(calls.items()):
             assert obtained == expected, \
                 'Expected "%d" calls for function "%s", but got "%d"' % \
                 (expected, function_name, obtained)
     finally:
         # Clear all mocks
-        for (obj, function_name), (_, _, original_function) in calls.items():
+        for (obj, function_name), (_, _, original_function) in list(calls.items()):
             setattr(obj, function_name, original_function)

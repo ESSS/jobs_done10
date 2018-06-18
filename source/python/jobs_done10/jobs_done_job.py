@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import io
 
@@ -29,7 +29,7 @@ class JobsDoneJob(object):
         'additional_repositories': list,
 
         # Job authentication token used to execute it remotely.
-        'auth_token': unicode,
+        'auth_token': str,
 
         # Patterns to match when looking for boosttest results.
         'boosttest_patterns': list,
@@ -46,7 +46,7 @@ class JobsDoneJob(object):
         # Process job output to handle ansi color escapes.
         # Should be one of xterm (default if empty), vga, css, gnome-terminal.
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin
-        'console_color': unicode,
+        'console_color': str,
 
         # Configures coverage in a CI job
         #
@@ -69,21 +69,21 @@ class JobsDoneJob(object):
         'coverage': dict,
 
         # Time based triggers for job (Jenkins)
-        'cron': unicode,
+        'cron': str,
 
         # Custom workspace. To maintain the same location as the default workspace prefix it with
         # "workspace/"
-        'custom_workspace': unicode,
+        'custom_workspace': str,
 
         # Regex pattern to be matched from a job output and used as job description. (Jenkins)
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/Description+Setter+Plugin
-        'description_regex': unicode,
+        'description_regex': str,
 
         # The format for the job display name.
-        'display_name': unicode,
+        'display_name': str,
 
         # Emails to be sent out for failed builds
-        'email_notification': (dict, unicode),
+        'email_notification': (dict, str),
 
         # Additional git options.
         # Uses same options available for git repos under `additional_repositories`
@@ -97,7 +97,7 @@ class JobsDoneJob(object):
         'junit_patterns': list,
 
         # A "label expression" that is used to match slave nodes.
-        'label_expression': unicode,
+        'label_expression': str,
 
         # Notification (HTTP/JSON)
         # https://wiki.jenkins-ci.org/display/JENKINS/Notification+Plugin
@@ -110,7 +110,7 @@ class JobsDoneJob(object):
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}
-        'notify_stash': (dict, unicode),
+        'notify_stash': (dict, str),
 
         # Definition of parameters available to this job.
         # Uses jenkins-job-builder syntax parsed by yaml.
@@ -121,7 +121,7 @@ class JobsDoneJob(object):
         'parameters': list,
 
         # Poll SCM for changes and trigger jobs based on a schedule (Jenkins)
-        'scm_poll': unicode,
+        'scm_poll': str,
 
         # Slack notification
         # * room: general
@@ -130,14 +130,14 @@ class JobsDoneJob(object):
         'slack': dict,
 
         # Job timeout in minutes
-        'timeout': unicode,
+        'timeout': str,
 
         # Job timeout in seconds without console activity
-        'timeout_no_activity' : unicode,
+        'timeout_no_activity' : str,
 
         # Enable timestamps on the build output
         # https://wiki.jenkins-ci.org/display/JENKINS/Timestamper
-        'timestamps': unicode,
+        'timestamps': str,
 
         # Configures parsing of warnings and static analysis in a CI job
         #
@@ -187,12 +187,12 @@ class JobsDoneJob(object):
         # unicode exclude:
         #     Determines if a job should be excluded (usually used with matrix flags)
         #     Defaults to 'false'
-        'exclude': unicode,
+        'exclude': str,
 
         # unicode ignore_unmatchable:
         #    If 'true', will not raise errors when an unmatchable condition is found.
         #    Defaults to 'false'
-        'ignore_unmatchable':unicode,
+        'ignore_unmatchable':str,
 
         # dict matrix:
         #     A dict that represents all possible job combinations created from this file.
@@ -297,7 +297,7 @@ class JobsDoneJob(object):
             raise ValueError('Could not parse anything from .yaml contents')
 
         # Search for unknown options and type errors
-        for option_name, option_value in jd_data.iteritems():
+        for option_name, option_value in jd_data.items():
             option_name = option_name.rsplit(':', 1)[-1]
             if option_name not in JobsDoneJob.PARSEABLE_OPTIONS:
                 raise UnknownJobsDoneFileOption(option_name)
@@ -315,7 +315,7 @@ class JobsDoneJob(object):
         if not ignore_unmatchable:
             # Raise an error if a condition can never be matched
             for yaml_dict in cls._IterDicts(jd_data):
-                for key, _value in yaml_dict.iteritems():
+                for key, _value in yaml_dict.items():
                     if ':' in key:
                         conditions = key.split(':')[:-1]
 
@@ -344,7 +344,7 @@ class JobsDoneJob(object):
             # Re-write formatted_data dict ignoring/replacing dict keys based on matrix
             for yaml_dict in cls._IterDicts(jd_formatted_data):
                 matched_conditions = {}
-                for key, option_value in yaml_dict.items():
+                for key, option_value in list(yaml_dict.items()):
                     if ':' not in key:
                         continue
 
@@ -369,7 +369,7 @@ class JobsDoneJob(object):
                         matched_conditions[option_name] = set(conditions)
 
             # Set surviving options in job.
-            for option_name, option_value in jd_formatted_data.iteritems():
+            for option_name, option_value in jd_formatted_data.items():
                 setattr(jobs_done_job, option_name, option_value)
 
             # Do not create a job if exclude=='yes'
@@ -388,14 +388,14 @@ class JobsDoneJob(object):
 
     @classmethod
     def _GetFormattedYAMLData(cls, yaml_data, format_dict):
-        if isinstance(yaml_data, unicode):
+        if isinstance(yaml_data, str):
             return yaml_data.format(**format_dict)
         elif isinstance(yaml_data, list):
             return [cls._GetFormattedYAMLData(d, format_dict) for d in yaml_data]
         elif isinstance(yaml_data, dict):
             return {k.format(**format_dict): cls._GetFormattedYAMLData(v, format_dict)
                     for k, v
-                    in yaml_data.iteritems()}
+                    in yaml_data.items()}
         else:
             raise ValueError('Invalid yaml data type: {}'.format(yaml_data.__class__))
 
@@ -533,8 +533,8 @@ class JobsDoneJob(object):
                 One value for each name in names parameter.
             '''
             values = tuple(i.split(',') for i in values)
-            self.full_dict = dict(zip(names, values))
-            self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.iteritems())
+            self.full_dict = dict(list(zip(names, values)))
+            self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.items())
 
 
         @classmethod
@@ -550,8 +550,8 @@ class JobsDoneJob(object):
             import itertools as it
 
             # Create all combinations of values available in the matrix
-            names = matrix_dict.keys()
-            value_combinations = it.product(*matrix_dict.values())
+            names = list(matrix_dict.keys())
+            value_combinations = it.product(*list(matrix_dict.values()))
             return [JobsDoneJob._MatrixRow(names, v) for v in value_combinations]
 
 
@@ -570,7 +570,7 @@ class JobsDoneJob(object):
         if isinstance(obj, dict):
             yield obj
 
-            for sub_obj in obj.itervalues():
+            for sub_obj in obj.values():
                 for x in cls._IterDicts(sub_obj):
                     yield x
 

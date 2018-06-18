@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from textwrap import dedent
 
@@ -529,7 +529,7 @@ def testTypeChecking():
 
     assert e.value.option_name == 'build_batch_commands'
     assert e.value.accepted_types == [JobsDoneJob.PARSEABLE_OPTIONS['build_batch_commands']]
-    assert e.value.obtained_type == unicode
+    assert e.value.obtained_type == str
     assert e.value.option_value == 'string item'
 
 
@@ -547,7 +547,7 @@ def testCreateFromFile(tmpdir):
     f = tmpdir / '.jobs_done.yaml'
     f.write(contents)
 
-    jobs = JobsDoneJob.CreateFromFile(unicode(f), repository=_REPOSITORY)
+    jobs = JobsDoneJob.CreateFromFile(str(f), repository=_REPOSITORY)
 
     assert len(jobs) == 3
 

@@ -1,4 +1,4 @@
-from __future__ import print_function, unicode_literals
+
 from _pytest.pytester import LineMatcher
 from click.testing import CliRunner
 from jobs_done10.cli import jobs_done

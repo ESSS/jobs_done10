@@ -1,6 +1,6 @@
-from __future__ import unicode_literals
 
-from StringIO import StringIO
+
+from io import StringIO
 from textwrap import dedent
 from xml.etree import ElementTree
 

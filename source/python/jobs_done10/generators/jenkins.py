@@ -3,7 +3,7 @@ Module containing everything related to Jenkins in jobs_done10.
 
 This includes a generator, job publishers, constants and command line interface commands.
 '''
-from __future__ import absolute_import, unicode_literals
+
 
 import io
 from collections import namedtuple
@@ -202,7 +202,7 @@ class JenkinsXmlJobGenerator(object):
         mailer = self.xml['publishers/hudson.tasks.Mailer']
 
         # Handle short mode where user only gives a list of recipients
-        if isinstance(notification_info, basestring):
+        if isinstance(notification_info, str):
             notification_info = {'recipients' : notification_info}
 
         mailer['recipients'] = notification_info.pop('recipients')
@@ -294,7 +294,7 @@ class JenkinsXmlJobGenerator(object):
     def SetNotifyStash(self, args):
         notifier = self.xml['publishers/org.jenkinsci.plugins.stashNotifier.StashNotifier']
 
-        if isinstance(args, basestring):
+        if isinstance(args, str):
             # Happens when no parameter is given, we just set the URL and assume that
             # username/password if the default configuration set in Jenkins server
             notifier['stashServerBaseUrl'] = args
@@ -309,7 +309,7 @@ class JenkinsXmlJobGenerator(object):
     def SetParameters(self, parameters):
         parameters_xml = self.xml['properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions']
         for i_parameter in parameters:
-            for name, j_dict  in i_parameter.iteritems():
+            for name, j_dict  in i_parameter.items():
                 if name == 'choice':
                     p = parameters_xml['hudson.model.ChoiceParameterDefinition+']
                     p['choices@class'] = 'java.util.Arrays$ArrayList'
@@ -333,7 +333,7 @@ class JenkinsXmlJobGenerator(object):
 
     def SetTimeout(self, timeout):
         timeout_xml = self.xml['buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper']
-        timeout_xml['timeoutMinutes'] = unicode(timeout)
+        timeout_xml['timeoutMinutes'] = str(timeout)
         timeout_xml['failBuild'] = xmls(True)
 
 
@@ -574,7 +574,7 @@ class JenkinsXmlJobGenerator(object):
 
     def _CheckUnknownOptions(self, configuration_name, options_dict):
         if len(options_dict) > 0:
-            raise RuntimeError('Received unknown %s options: %s' % (configuration_name, options_dict.keys()))
+            raise RuntimeError('Received unknown %s options: %s' % (configuration_name, list(options_dict.keys())))
 
 
 
@@ -589,7 +589,7 @@ def _AsXmlString(boolean):
     :return unicode:
         `boolean` representation as a string used by Jenkins XML
     '''
-    return unicode(boolean).lower()
+    return str(boolean).lower()
 xmls = _AsXmlString
 
 
@@ -680,7 +680,7 @@ class JenkinsJobPublisher(object):
         for job_name in deleted_jobs:
             retry(jenkins_api.job_delete, job_name)
 
-        return map(sorted, (new_jobs, updated_jobs, deleted_jobs))
+        return list(map(sorted, (new_jobs, updated_jobs, deleted_jobs)))
 
 
     def PublishToDirectory(self, output_directory):
@@ -691,7 +691,7 @@ class JenkinsJobPublisher(object):
              Target directory for outputting job .xmls
         '''
         import os
-        for job in self.jobs.values():
+        for job in list(self.jobs.values()):
             with io.open(os.path.join(output_directory, job.name), 'w', encoding='utf-8') as f:
                 f.write(job.xml)
 

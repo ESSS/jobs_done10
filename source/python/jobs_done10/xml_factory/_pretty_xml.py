@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from xml.etree import ElementTree
 
@@ -18,7 +18,7 @@ def WritePrettyXML(input, output):
     :param output:
         The output filename or file opened for writing.
     '''
-    if isinstance(output, unicode):
+    if isinstance(output, str):
         out_stream = file(output, 'w')
         close_output = True
     else:
@@ -56,7 +56,7 @@ def WritePrettyXMLElement(oss, element, indent=0):
 
     # Start tag
     oss.write(INDENT * indent + '<%s' % element.tag)
-    for i_name, i_value in sorted(element.attrib.iteritems()):
+    for i_name, i_value in sorted(element.attrib.items()):
         oss.write(' %s="%s"' % (i_name, escape(i_value)))
 
     if len(element) == 0 and element.text is None:

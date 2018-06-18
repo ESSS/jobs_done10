@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 import difflib
 import os
@@ -76,7 +76,7 @@ class TestJenkinsXmlJobGenerator(object):
     def testEmpty(self):
         with pytest.raises(ValueError) as e:
             self._DoTest(yaml_contents='', expected_diff=None)
-        assert unicode(e.value) == 'Could not parse anything from .yaml contents'
+        assert str(e.value) == 'Could not parse anything from .yaml contents'
 
 
     def testChoiceParameters(self):
@@ -1204,7 +1204,7 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff=''
             )
-        assert unicode(e.value) == "Received unknown git options: [u'unknown']"
+        assert str(e.value) == "Received unknown git options: [u'unknown']"
 
 
     def testGitOptions(self):
@@ -1845,13 +1845,13 @@ class TestJenkinsXmlJobGenerator(object):
     def _AssertDiff(self, obtained_xml, expected_diff):
         diff = ''.join(difflib.unified_diff(
             self.BASIC_EXPECTED_XML.splitlines(1),
-            unicode(obtained_xml).splitlines(1),
+            str(obtained_xml).splitlines(1),
             n=0,
         ))
         diff = '\n'.join(diff.splitlines()[2:])
         diff = re.sub('@@.*@@', '@@ @@', diff, flags=re.MULTILINE)
 
-        print obtained_xml
+        print(obtained_xml)
 
         # print diff
         assert expected_diff == diff

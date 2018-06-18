@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 
 from jobs_done10.repository import Repository
 
