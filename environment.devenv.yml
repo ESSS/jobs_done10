@@ -1,9 +1,9 @@
-name: jobs_done10
+name: jobs_done10-py36
 
 dependencies:
   - click
   - jenkins-webapi
-  - mock
+  - python >=3.6
   - pytest >=3
   - pyyaml
   {% if os.sys.platform.startswith('linux') %}

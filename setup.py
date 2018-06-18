@@ -10,15 +10,19 @@ setup(
     # Requirements
     #===============================================================================================
     install_requires=[
-        'boltons',
+        'click',
+        'jenkins-webapi',
         'python-jenkins',
         'pyyaml',
     ],
+    extras_require={
+        'testing': ['pytest'],
+    },
 
     #===============================================================================================
     # Packaging
     #===============================================================================================
-    scripts=['scripts/jobs_done.py'],
+    entry_points={'console_scripts': ['jobs_done=jobs_done10:__main__.py']},
     packages=find_packages('source/python'),
     package_dir={
         '' : 'source/python',
