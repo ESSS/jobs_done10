@@ -31,7 +31,7 @@ class Test(object):
             == dedent(self.testSimplest.__doc__)
         )
         assert factory.AsDict() == {"login": "Bravo", "name": "Alpha"}
-        assert factory.AsJson() == '{"login": "Bravo", "name": "Alpha"}'
+        assert factory.AsJson() == '{"name": "Alpha", "login": "Bravo"}'
 
 
     def testSimple(self):
@@ -53,7 +53,7 @@ class Test(object):
             == dedent(self.testSimple.__doc__)
         )
         assert factory.AsDict() == {"login": "Bravo", "name": "Alpha", "location": {"city": "Charlie"}}
-        assert factory.AsJson() == '{"login": "Bravo", "name": "Alpha", "location": {"city": "Charlie"}}'
+        assert factory.AsJson() == '{"name": "Alpha", "login": "Bravo", "location": {"city": "Charlie"}}'
 
 
     def testAttributes(self):
@@ -210,7 +210,7 @@ class Test(object):
         iss = StringIO(input_xml)
         obtained_filename = tmpdir / 'pretty.obtained.xml'
 
-        with file(str(obtained_filename), 'w') as f:
+        with open(str(obtained_filename), 'w') as f:
             WritePrettyXML(iss, f)
         assert obtained_filename.read() == dedent(
             '''\

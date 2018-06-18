@@ -492,7 +492,7 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
 
-    def testMulitpleTestResults(self):
+    def testMultipleTestResults(self):
         self._DoTest(
             yaml_contents=dedent(
                 '''
@@ -516,13 +516,6 @@ class TestJenkinsXmlJobGenerator(object):
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
                 +      <types>
-                +        <JUnitType>
-                +          <pattern>junit*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JUnitType>
                 +        <BoostTestJunitHudsonTestType>
                 +          <pattern>boosttest*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -530,6 +523,13 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </BoostTestJunitHudsonTestType>
+                +        <JUnitType>
+                +          <pattern>junit*.xml</pattern>
+                +          <skipNoTestFiles>true</skipNoTestFiles>
+                +          <failIfNotNew>false</failIfNotNew>
+                +          <deleteOutputFiles>true</deleteOutputFiles>
+                +          <stopProcessingIfError>true</stopProcessingIfError>
+                +        </JUnitType>
                 +      </types>
                 +    </xunit>
                 +  </publishers>
@@ -537,11 +537,11 @@ class TestJenkinsXmlJobGenerator(object):
                 +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
                 +      <patterns>
                 +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>junit*.xml</pattern>
+                +          <pattern>boosttest*.xml</pattern>
                 +          <type>INCLUDE</type>
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>boosttest*.xml</pattern>
+                +          <pattern>junit*.xml</pattern>
                 +          <type>INCLUDE</type>
                 +        </hudson.plugins.ws__cleanup.Pattern>
                 +      </patterns>
@@ -1204,7 +1204,7 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff=''
             )
-        assert str(e.value) == "Received unknown git options: [u'unknown']"
+        assert str(e.value) == "Received unknown git options: ['unknown']"
 
 
     def testGitOptions(self):
@@ -1535,7 +1535,7 @@ class TestJenkinsXmlJobGenerator(object):
 
 
     def testAnsiColorUnknowOption(self):
-        with pytest.raises(RuntimeError) as excinfo:
+        with pytest.raises(RuntimeError, match='Received unknown console_color option.'):
             self._DoTest(
                 yaml_contents=dedent(
                     '''
@@ -1544,7 +1544,6 @@ class TestJenkinsXmlJobGenerator(object):
                 ),
                 expected_diff='',
             )
-        assert 'Received unknown console_color option.' in excinfo.value.message
 
     @pytest.mark.parametrize(
         'scenario',
@@ -1713,7 +1712,7 @@ class TestJenkinsXmlJobGenerator(object):
         )
 
     def testCoverageFailWhenMissingReportPattern(self):
-        with pytest.raises(ValueError) as e:
+        with pytest.raises(ValueError, match='Report pattern is required by coverage') as e:
             self._GenerateJob(yaml_contents=dedent(
                 r'''
                 coverage:
@@ -1722,7 +1721,6 @@ class TestJenkinsXmlJobGenerator(object):
                     line: 100
                 '''
             ))
-        assert e.value.message == 'Report pattern is required by coverage'
 
 
     def testWarnings(self):
@@ -1803,13 +1801,12 @@ class TestJenkinsXmlJobGenerator(object):
     def testWarningsEmpty(self):
         with pytest.raises(JobsDoneFileTypeError):
             self._GenerateJob(yaml_contents='warnings:')
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match="Empty 'warnings' options.*"):
             self._GenerateJob(yaml_contents='warnings: {}')
-        assert "Empty 'warnings' options" in excinfo.value.message
 
 
     def testWarningsWrongOption(self):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match="Received unknown 'warnings' options: zucchini."):
             self._GenerateJob(yaml_contents=dedent('''\
                 warnings:
                   zucchini:
@@ -1819,7 +1816,6 @@ class TestJenkinsXmlJobGenerator(object):
                       file_pattern: "*.cpplint"
                 ''')
             )
-        assert "Received unknown 'warnings' options: zucchini." in excinfo.value.message
 
 
     def _GenerateJob(self, yaml_contents):
@@ -2134,7 +2130,7 @@ class TestJenkinsPublisher(object):
             def job_delete(self, name):
                 if self.proxy_errors_raised < proxy_errors:
                     self.proxy_errors_raised += 1
-                    from mock import Mock
+                    from unittest.mock import Mock
                     from requests.exceptions import HTTPError
                     response = Mock()
                     response.status_code = 403

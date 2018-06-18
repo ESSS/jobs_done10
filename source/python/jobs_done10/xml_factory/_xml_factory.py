@@ -33,7 +33,7 @@ class XmlFactory(object):
         '''
         if isinstance(root_element, str):
             self.root = ElementTree.Element(root_element)
-        elif isinstance(root_element, ElementTree._ElementInterface):
+        elif isinstance(root_element, ElementTree.Element):
             self.root = root_element
         else:
             raise TypeError("Unknown root_element parameter type: %s" % type(root_element))

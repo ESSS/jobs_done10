@@ -659,7 +659,8 @@ class JenkinsJobPublisher(object):
                 try:
                     func(*args, **kwargs)
                     break
-                except HTTPError as http_error:
+                except HTTPError as e:
+                    http_error = e
                     if http_error.response.status_code in (403, 502):  # 403 Forbidden, 502 Proxy error
                         # This happens sometimes for no apparent reason, and we want to retry.
                         from time import sleep
@@ -826,8 +827,8 @@ def GetJobsFromDirectory(directory='.'):
     import os
 
     from subprocess import check_output
-    url = check_output('git config --local --get remote.origin.url', shell=True, cwd=directory).strip()
-    branches = check_output('git branch', shell=True, cwd=directory).strip()
+    url = check_output('git config --local --get remote.origin.url', shell=True, cwd=directory).strip().decode('ascii')
+    branches = check_output('git branch', shell=True, cwd=directory).strip().decode('ascii')
     for branch in branches.splitlines():
         branch = branch.strip()
         if '*' in branch:  # Current branch
