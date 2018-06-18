@@ -21,22 +21,28 @@ console_color:
 platform-windows:build_batch_commands:
 - |
   cd "%WORKSPACE%/jobs_done10"
-  call conda clean --lock
-  call conda devenv
+
+  for /F %%i in ('conda info --root') do set CONDA_ROOT=%%i
+  "%CONDA_ROOT%\python" -m virtualenv .env
   if errorlevel 1 exit /B 1
 
-  call activate jobs_done10
+  call .env\Scripts\activate
   if errorlevel 1 exit /B 1
 
-  py.test --color=yes --junitxml=build/tests.xml --showlocals
+  pip install -e .[testing]
+  if errorlevel 1 exit /B 1
+
+  pytest --color=yes --junitxml=build/tests.xml --showlocals
 
 platform-linux:build_shell_commands:
 - |
-  cd $WORKSPACE/jobs_done10
-  conda clean --lock
-  conda devenv
-  source activate jobs_done10
-  py.test --color=yes --junitxml=build/tests.xml --showlocals
+  cd "$WORKSPACE/jobs_done10"
+
+  $(conda info --root)/bin/python -m virtualenv .env
+  source .env/bin/activate
+  pip install -e .[testing]
+
+  pytest --color=yes --junitxml=build/tests.xml --showlocals
 
 
 notify_stash:
