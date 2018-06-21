@@ -1932,8 +1932,7 @@ class TestJenkinsActions(object):
             assert username == 'jenkins_user'
             assert password == 'jenkins_pass'
 
-            assert set(self.jobs.keys()) == set([
-                'space-branch-venus', 'space-branch-jupiter', 'space-branch-mercury'])
+            assert set(self.jobs.keys()) == {'space-branch-venus', 'space-branch-jupiter', 'space-branch-mercury'}
 
             return 'mock publish result'
 
@@ -1974,9 +1973,9 @@ class TestJenkinsPublisher(object):
             username='jenkins_user',
             password='jenkins_pass',
         )
-        assert set(new_jobs) == mock_jenkins.NEW_JOBS == set(['space-milky_way-venus', 'space-milky_way-jupiter'])
-        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set(['space-milky_way-mercury'])
-        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-saturn'])
+        assert set(new_jobs) == mock_jenkins.NEW_JOBS == {'space-milky_way-venus', 'space-milky_way-jupiter'}
+        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == {'space-milky_way-mercury'}
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {'space-milky_way-saturn'}
 
 
     def testPublishToUrlProxyErrorOnce(self, monkeypatch):
@@ -1990,9 +1989,9 @@ class TestJenkinsPublisher(object):
             username='jenkins_user',
             password='jenkins_pass',
         )
-        assert set(new_jobs) == mock_jenkins.NEW_JOBS == set(['space-milky_way-venus', 'space-milky_way-jupiter'])
-        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set(['space-milky_way-mercury'])
-        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-saturn'])
+        assert set(new_jobs) == mock_jenkins.NEW_JOBS == {'space-milky_way-venus', 'space-milky_way-jupiter'}
+        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == {'space-milky_way-mercury'}
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {'space-milky_way-saturn'}
 
 
     def testPublishToUrlProxyErrorTooManyTimes(self, monkeypatch):
@@ -2025,7 +2024,7 @@ class TestJenkinsPublisher(object):
         )
         assert set(new_jobs) == mock_jenkins.NEW_JOBS == set()
         assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == set()
-        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == set(['space-milky_way-mercury', 'space-milky_way-saturn'])
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {'space-milky_way-mercury', 'space-milky_way-saturn'}
 
 
     def _GetPublisher(self):
@@ -2051,11 +2050,10 @@ class TestJenkinsPublisher(object):
                 assert password == 'jenkins_pass'
                 self.proxy_errors_raised = 0
 
-            @property
-            def jobnames(self):
-                return ['space-milky_way-mercury', 'space-milky_way-saturn']
+            def get_jobs(self):
+                return [{'name': 'space-milky_way-mercury'}, {'name': 'space-milky_way-saturn'}]
 
-            def job_config(self, job_name):
+            def get_job_config(self, job_name):
                 # Test with single, and multiple scms
                 if job_name == 'space-milky_way-mercury':
                     return dedent(
@@ -2120,14 +2118,17 @@ class TestJenkinsPublisher(object):
                         </project>
                         '''
                     )
+                else:
+                    assert 0, f'unknown job name: {job_name}'
 
-            def job_create(self, name, xml):
+            def create_job(self, name, xml):
+                assert type(xml) is str
                 self.NEW_JOBS.add(name)
 
-            def job_reconfigure(self, name, xml):
+            def reconfig_job(self, name, xml):
                 self.UPDATED_JOBS.add(name)
 
-            def job_delete(self, name):
+            def delete_job(self, name):
                 if self.proxy_errors_raised < proxy_errors:
                     self.proxy_errors_raised += 1
                     from unittest.mock import Mock

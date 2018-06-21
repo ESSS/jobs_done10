@@ -642,6 +642,7 @@ class JenkinsJobPublisher(object):
             Tuple with lists of {new, updated, deleted} job names (sorted alphabetically)
         '''
         import jenkins
+
         jenkins_api = jenkins.Jenkins(url, username, password)
 
         # Get all jobs
@@ -673,13 +674,13 @@ class JenkinsJobPublisher(object):
 
         # Process everything
         for job_name in new_jobs:
-            retry(jenkins_api.job_create, job_name, self.jobs[job_name].xml)
+            retry(jenkins_api.create_job, job_name, self.jobs[job_name].xml)
 
         for job_name in updated_jobs:
-            retry(jenkins_api.job_reconfigure, job_name, self.jobs[job_name].xml)
+            retry(jenkins_api.reconfig_job, job_name, self.jobs[job_name].xml)
 
         for job_name in deleted_jobs:
-            retry(jenkins_api.job_delete, job_name)
+            retry(jenkins_api.delete_job, job_name)
 
         return list(map(sorted, (new_jobs, updated_jobs, deleted_jobs)))
 
@@ -709,10 +710,10 @@ class JenkinsJobPublisher(object):
         '''
         matching_jobs = set()
 
-        for jenkins_job in jenkins_api.jobnames:
+        common_prefix = self.repository.name + '-' + self.repository.branch
+        for jenkins_job in (x['name'] for x in jenkins_api.get_jobs()):
             # Filter jobs that belong to this repository (this would be safer to do reading SCM
             # information, but a lot more expensive
-            common_prefix = self.repository.name + '-' + self.repository.branch
             if not jenkins_job.startswith(common_prefix):
                 continue
 
@@ -741,7 +742,7 @@ class JenkinsJobPublisher(object):
         from xml.etree import ElementTree
 
         # Read config to see if this job is in the same branch
-        config = jenkins_api.job_config(jenkins_job)
+        config = jenkins_api.get_job_config(jenkins_job)
 
         # We should be able to get this information from jenkins API, but it seems that git
         # plugin for Jenkins has a bug that prevents its data from being shown in the API
