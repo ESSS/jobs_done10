@@ -14,18 +14,18 @@ def client_(monkeypatch, tmpdir):
     monkeypatch.setenv('JOBSDONE_DOTENV', str(env_vars))
 
     env_vars.write("""
-        JENKINS_URL=https://example.com/jenkins
-        JENKINS_USERNAME=jenkins_user
-        JENKINS_PASSWORD=jenkins_password
+        JD_JENKINS_URL=https://example.com/jenkins
+        JD_JENKINS_USERNAME=jenkins_user
+        JD_JENKINS_PASSWORD=jenkins_password
 
-        STASH_URL=https://example.com/stash
-        STASH_USERNAME=stash_user
-        STASH_PASSWORD=stash_password
+        JD_STASH_URL=https://example.com/stash
+        JD_STASH_USERNAME=stash_user
+        JD_STASH_PASSWORD=stash_password
 
-        EMAIL_SERVER=smtp.example.com
-        EMAIL_PORT=5900
-        EMAIL_USER=email_user
-        EMAIL_PASSWORD=email_password
+        JD_EMAIL_SERVER=smtp.example.com
+        JD_EMAIL_PORT=5900
+        JD_EMAIL_USER=email_user
+        JD_EMAIL_PASSWORD=email_password
     """)
 
     return app.test_client()

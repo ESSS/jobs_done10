@@ -78,9 +78,9 @@ def process_jobs_done(data) -> flask.Response:
 
     app.logger.info(f'Received request:\n{pprint.pformat(data)}')
 
-    stash_url = os.environ['STASH_URL']
-    stash_username = os.environ['STASH_USERNAME']
-    stash_password = os.environ['STASH_PASSWORD']
+    stash_url = os.environ['JD_STASH_URL'].rstrip()
+    stash_username = os.environ['JD_STASH_USERNAME']
+    stash_password = os.environ['JD_STASH_PASSWORD']
     project_key = data['repository']['project']['key']
     slug = data['repository']['slug']
 
@@ -113,11 +113,9 @@ def process_jobs_done(data) -> flask.Response:
             raise RuntimeError(f'Unknown branch prefix for "{branch}"": expected "{prefix}"')
         branch = branch[len(prefix):]
         repository = Repository(url=clone_url, branch=branch)
-        jenkins_url = os.environ['JENKINS_URL']
-        if jenkins_url.endswith('/'):
-            jenkins_url = jenkins_url[:-1]
-        jenkins_username = os.environ['JENKINS_USERNAME']
-        jenkins_password = os.environ['JENKINS_PASSWORD']
+        jenkins_url = os.environ['JD_JENKINS_URL'].rstrip('/')
+        jenkins_username = os.environ['JD_JENKINS_USERNAME']
+        jenkins_password = os.environ['JD_JENKINS_PASSWORD']
 
         new_jobs, updated_jobs, deleted_jobs = jenkins.UploadJobsFromFile(
             repository=repository,
@@ -243,11 +241,11 @@ def send_email_with_error(data: dict, error_traceback: str) -> str:
     message.Html = html
 
     sender = mailer.Mailer(
-        host=os.environ['EMAIL_SERVER'],
-        port=int(os.environ['EMAIL_PORT']),
+        host=os.environ['JD_EMAIL_SERVER'],
+        port=int(os.environ['JD_EMAIL_PORT']),
         use_tls=True,
-        usr=os.environ['EMAIL_USER'],
-        pwd=os.environ['EMAIL_PASSWORD'],
+        usr=os.environ['JD_EMAIL_USER'],
+        pwd=os.environ['JD_EMAIL_PASSWORD'],
     )
     sender.send(message)
     return recipient
