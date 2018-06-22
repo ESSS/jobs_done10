@@ -22,7 +22,7 @@ def index():
     """
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(dotenv_path=os.environ.get('JOBSDONE_DOTENV'))
 
     data = flask.request.json
     try:

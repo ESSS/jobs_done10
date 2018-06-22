@@ -7,21 +7,26 @@ from jobs_done10.repository import Repository
 
 
 @pytest.fixture(name='client')
-def client_(monkeypatch):
+def client_(monkeypatch, tmpdir):
     from jobs_done10.server import app
 
-    monkeypatch.setenv('JENKINS_URL', 'https://example.com/jenkins')
-    monkeypatch.setenv('JENKINS_USERNAME', 'jenkins_user')
-    monkeypatch.setenv('JENKINS_PASSWORD', 'jenkins_password')
+    env_vars = tmpdir.join('env_vars')
+    monkeypatch.setenv('JOBSDONE_DOTENV', str(env_vars))
 
-    monkeypatch.setenv('STASH_URL', 'https://example.com/stash')
-    monkeypatch.setenv('STASH_USERNAME', 'stash_user')
-    monkeypatch.setenv('STASH_PASSWORD', 'stash_password')
+    env_vars.write("""
+        JENKINS_URL=https://example.com/jenkins
+        JENKINS_USERNAME=jenkins_user
+        JENKINS_PASSWORD=jenkins_password
 
-    monkeypatch.setenv('EMAIL_SERVER', 'smtp.example.com')
-    monkeypatch.setenv('EMAIL_PORT', 5900)
-    monkeypatch.setenv('EMAIL_USER', 'email_user')
-    monkeypatch.setenv('EMAIL_PASSWORD', 'email_password')
+        STASH_URL=https://example.com/stash
+        STASH_USERNAME=stash_user
+        STASH_PASSWORD=stash_password
+
+        EMAIL_SERVER=smtp.example.com
+        EMAIL_PORT=5900
+        EMAIL_USER=email_user
+        EMAIL_PASSWORD=email_password
+    """)
 
     return app.test_client()
 
