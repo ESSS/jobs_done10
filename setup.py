@@ -11,12 +11,20 @@ setup(
     #===============================================================================================
     install_requires=[
         'click',
+        'flask',
         'jenkins-webapi',
+        'mailer',
+        'pygments',
+        'python-dotenv',
         'python-jenkins',
         'pyyaml',
+        'requests-mock',
     ],
     extras_require={
-        'testing': ['pytest'],
+        'testing': [
+            'pytest',
+            'pytest-mock',
+        ],
     },
 
     #===============================================================================================
