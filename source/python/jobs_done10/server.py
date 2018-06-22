@@ -236,7 +236,6 @@ def send_email_with_error(data: dict, error_traceback: str) -> str:
         error_traceback_html=highlight(error_traceback, PythonTracebackLexer(), HtmlFormatter(style=style)),
         pretty_json_html=highlight(pretty_json, JsonLexer(), HtmlFormatter(style=style)),
     )
-    app.logger.info(html)
 
     message.Html = html
 
