@@ -217,7 +217,7 @@ def send_email_with_error(data: dict, error_traceback: str) -> str:
     project_key = data['repository']['project']['key']
     slug = data['repository']['slug']
     changes = [(change['ref']['id'], change['toHash']) for change in data['changes']]
-    changes_msg = ', '.join(f'{branch.replace("refs/heads/", "")} @ {commit[:8]}' for (branch, commit) in changes)
+    changes_msg = ', '.join(f'{branch.replace("refs/heads/", "")} @ {commit[:7]}' for (branch, commit) in changes)
     subject = f'JobsDone failure during push to {project_key}/{slug} ({changes_msg})'
 
     message = mailer.Message(

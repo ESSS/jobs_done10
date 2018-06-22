@@ -156,6 +156,6 @@ def test_error_handling(client, post_json_data, mocker):
     message = args[-1]
     assert message.To == ['bugreport+jenkins@esss.co']
     assert message.From == 'JobsDone Bot <bugreport@esss.com.br>'
-    assert message.Subject == 'JobsDone failure during push to ESSS/eden (stable-pwda11-master @ 8522b06a)'
+    assert message.Subject == 'JobsDone failure during push to ESSS/eden (stable-pwda11-master @ 8522b06)'
     assert message.charset == 'UTF-8'
     assert 'An error happened when processing your push' in message.Body
