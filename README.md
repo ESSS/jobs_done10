@@ -20,7 +20,25 @@ This will create/update existing jobs.
 ## Server ##
 
 jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker. This end point
-is tailored to receive the push event from a Webhook of a BitBucket Server instance. 
+is tailored to receive the push event from a Webhook of a BitBucket Server instance.
+
+Configuration is done by having a `.env` file in the root of this repository with the following variables:
+
+```ini
+JD_JENKINS_URL=https://example.com/jenkins
+JD_JENKINS_USERNAME=jenkins-user
+JD_JENKINS_PASSWORD=some password
+
+JD_STASH_URL=https://example.com/stash
+JD_STASH_USERNAME=stash-user
+JD_STASH_PASSWORD=some password
+
+JD_EMAIL_USER=mail-sender@example.com
+JD_EMAIL_FROM=JobsDone Bot <mail-sender@example.com>
+JD_EMAIL_PASSWORD=email password
+JD_EMAIL_SERVER=smtp.example.com
+JD_EMAIL_PORT=587
+``` 
 
 # Hello World #
 

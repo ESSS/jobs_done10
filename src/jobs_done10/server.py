@@ -87,6 +87,7 @@ def process_jobs_done(data) -> flask.Response:
     all_new_jobs = []
     all_updated_jobs = []
     all_deleted_jobs = []
+    lines = []
     for change in data['changes']:
         try:
             jobs_done_file_contents = get_file_contents(
@@ -110,7 +111,8 @@ def process_jobs_done(data) -> flask.Response:
         branch = change['ref']['id']
         prefix = 'refs/heads/'
         if not branch.startswith(prefix):
-            raise RuntimeError(f'Unknown branch prefix for "{branch}"": expected "{prefix}"')
+            lines.append(f'WARNING: ignoring branch {branch}: expected {prefix}')
+            continue
         branch = branch[len(prefix):]
         repository = Repository(url=clone_url, branch=branch)
         jenkins_url = os.environ['JD_JENKINS_URL'].rstrip('/')
@@ -128,7 +130,6 @@ def process_jobs_done(data) -> flask.Response:
         all_updated_jobs.extend(updated_jobs)
         all_deleted_jobs.extend(deleted_jobs)
 
-    lines = []
     lines.extend(f'NEW - {x}' for x in all_new_jobs)
     lines.extend(f'UPD - {x}' for x in all_updated_jobs)
     lines.extend(f'DEL - {x}' for x in all_deleted_jobs)
