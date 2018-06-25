@@ -3,8 +3,10 @@ from setuptools import find_packages, setup
 
 setup(
     name='jobs_done10',
-    version='1.0',
     provides=['jobs_done10'],
+
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
 
     #===============================================================================================
     # Requirements
