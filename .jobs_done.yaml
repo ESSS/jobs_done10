@@ -34,6 +34,7 @@ platform-windows:build_batch_commands:
 
   pytest --color=yes --junitxml=build/tests.xml --showlocals
 
+
 platform-linux:build_shell_commands:
 - |
   cd "$WORKSPACE/jobs_done10"
@@ -43,6 +44,8 @@ platform-linux:build_shell_commands:
   pip install -e .[testing]
 
   pytest --color=yes --junitxml=build/tests.xml --showlocals
+
+  docker build . -t jobsdone
 
 
 notify_stash:
