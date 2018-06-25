@@ -1,16 +1,19 @@
 FROM python:3.6.5
 
-COPY ./.env /jobsdone/.env
-COPY ./src /jobsdone/src
+# pass with --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=VERSION; this is needed by setuptools_scm
+ARG SETUPTOOLS_SCM_PRETEND_VERSION
+
 COPY ./requirements.txt /jobsdone/requirements.txt
-COPY ./setup.py /jobsdone/setup.py
 
 WORKDIR /jobsdone
 
-ARG SETUPTOOLS_SCM_PRETEND_VERSION
-
 RUN pip install pip==10.0.1
-RUN pip install . -r requirements.txt
+RUN pip install -r requirements.txt
+
+COPY ./setup.py /jobsdone/setup.py
+COPY ./.env /jobsdone/.env
+COPY ./src /jobsdone/src
+RUN pip install .
 
 ENV JOBSDONE_DOTENV /jobsdone/.env
 
