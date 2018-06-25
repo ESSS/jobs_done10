@@ -828,8 +828,8 @@ def GetJobsFromDirectory(directory='.'):
     import os
 
     from subprocess import check_output
-    url = check_output('git config --local --get remote.origin.url', shell=True, cwd=directory).strip().decode('ascii')
-    branches = check_output('git branch', shell=True, cwd=directory).strip().decode('ascii')
+    url = check_output('git config --local --get remote.origin.url', shell=True, cwd=directory).strip().decode('UTF-8')
+    branches = check_output('git branch', shell=True, cwd=directory).strip().decode('UTF-8')
     for branch in branches.splitlines():
         branch = branch.strip()
         if '*' in branch:  # Current branch
