@@ -667,7 +667,7 @@ class JenkinsJobPublisher(object):
                         from time import sleep
                         sleep(self.RETRY_SLEEP)
                     else:
-                        raise http_error
+                        raise
             else:
                 # If we got here, this mean we ran out of retries. Raise the last error we received.
                 raise http_error
