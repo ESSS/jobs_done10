@@ -344,7 +344,7 @@ class JobsDoneJob(object):
             # Re-write formatted_data dict ignoring/replacing dict keys based on matrix
             for yaml_dict in cls._IterDicts(jd_formatted_data):
                 matched_conditions = {}
-                for key, option_value in list(yaml_dict.items()):
+                for key, option_value in yaml_dict.items():
                     if ':' not in key:
                         continue
 
@@ -533,7 +533,7 @@ class JobsDoneJob(object):
                 One value for each name in names parameter.
             '''
             values = tuple(i.split(',') for i in values)
-            self.full_dict = dict(list(zip(names, values)))
+            self.full_dict = dict(zip(names, values))
             self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.items())
 
 
