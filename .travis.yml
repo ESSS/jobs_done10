@@ -1,0 +1,8 @@
+python: "3.6"
+
+install:
+- pip install .[testing]
+
+script:
+- pytest src
+- docker build . -t jobsdone
