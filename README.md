@@ -248,6 +248,20 @@ branch-rb.*:build_batch_commands:
 
 # Development #
 
+Create a virtual environment and install it in development mode:
+
+```console
+$ python -m virtualenv .env36
+$ source .env36/bin/activate
+$ pip install -e .[testing]
+```
+
+Run tests:
+
+```console
+$ pytest src
+```
+
 # Deployment #
 
 Jobs done can be deployed using [Docker](https://www.docker.com/).
