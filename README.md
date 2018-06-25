@@ -4,7 +4,7 @@ Job's Done
 About
 -----
 
-Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way in that configuring a file (`.jobs_done.yaml`) in your repository's root directory should be all you need to create and trigger Continuous Integration jobs.
+Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way in that configuring a `.jobs_done.yaml` file in your repository's root to create and trigger Continuous Integration jobs.
 
 Documentation
 -----------

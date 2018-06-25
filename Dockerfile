@@ -1,7 +1,7 @@
 FROM python:3.6.5
 
 COPY ./.env /jobsdone/.env
-COPY ./source/python /jobsdone/source/python
+COPY ./src /jobsdone/src
 COPY ./setup.py /jobsdone/setup.py
 
 WORKDIR /jobsdone
