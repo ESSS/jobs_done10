@@ -273,7 +273,7 @@ Run tests:
 $ pytest src
 ```
 
-# Deployment #
+# Server Deployment #
 
 Jobs done can be deployed using [Docker](https://www.docker.com/).
 
@@ -288,6 +288,11 @@ $ docker build . --tag jobsdone
 ```console
 $ docker run --publish 5000:5000 jobsdone
 ```
+
+# Deploy to PyPI
+
+Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
+Travis will see the tag and publish the package to PyPI automatically.
 
 # All options #
 
