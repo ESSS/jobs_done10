@@ -1,8 +1,19 @@
 Job's Done
 ===========
 
-# About #
+![[link](https://pypi.org/project/jobs_done10/)](https://img.shields.io/pypi/v/jobs_done10.svg)
 
+
+![[link](https://pypi.org/project/jobs_done10)](https://img.shields.io/pypi/pyversions/jobs_done10.svg)
+
+
+![[link](https://travis-ci.org/ESSS/jobs_done10)](https://travis-ci.org/ESSS/jobs_done10.svg?branch=master)
+
+
+![[link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
+
+
+# About #
 
 Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way 
 in that configuring a `.jobs_done.yaml` file in your repository's root to create and trigger Continuous Integration jobs.
