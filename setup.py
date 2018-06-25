@@ -30,7 +30,7 @@ setup(
     #===============================================================================================
     # Packaging
     #===============================================================================================
-    entry_points={'console_scripts': ['jobs_done=jobs_done10:__main__.py']},
+    entry_points={'console_scripts': ['jobs_done=jobs_done10.__main__.py']},
     packages=find_packages('src'),
     package_dir={
         '' : 'src',
