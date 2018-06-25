@@ -221,7 +221,7 @@ def send_email_with_error(data: dict, error_traceback: str) -> str:
     subject = f'JobsDone failure during push to {project_key}/{slug} ({changes_msg})'
 
     message = mailer.Message(
-        From='JobsDone Bot <bugreport@esss.com.br>',
+        From=os.environ['JD_EMAIL_FROM'],
         To=[recipient],
         # RTo=None,
         # Cc=self.cc,

@@ -23,6 +23,7 @@ def client_(monkeypatch, tmpdir):
         JD_STASH_PASSWORD=stash_password
 
         JD_EMAIL_SERVER=smtp.example.com
+        JD_EMAIL_FROM=JobsDone Bot <jobsdone@example.com>
         JD_EMAIL_PORT=5900
         JD_EMAIL_USER=email_user
         JD_EMAIL_PASSWORD=email_password
@@ -155,7 +156,7 @@ def test_error_handling(client, post_json_data, mocker):
     assert len(args) == 2  # (self, message)
     message = args[-1]
     assert message.To == ['bugreport+jenkins@esss.co']
-    assert message.From == 'JobsDone Bot <bugreport@esss.com.br>'
+    assert message.From == 'JobsDone Bot <jobsdone@example.com>'
     assert message.Subject == 'JobsDone failure during push to ESSS/eden (stable-pwda11-master @ 8522b06)'
     assert message.charset == 'UTF-8'
     assert 'An error happened when processing your push' in message.Body
