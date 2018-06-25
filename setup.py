@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+
 from setuptools import find_packages, setup
 
 setup(
@@ -10,30 +10,42 @@ setup(
     # Requirements
     #===============================================================================================
     install_requires=[
-        'boltons',
+        'click',
+        'flask',
+        'jenkins-webapi',
+        'mailer',
+        'pygments',
+        'python-dotenv',
         'python-jenkins',
         'pyyaml',
+        'requests-mock',
     ],
+    extras_require={
+        'testing': [
+            'pytest',
+            'pytest-mock',
+        ],
+    },
 
     #===============================================================================================
     # Packaging
     #===============================================================================================
-    scripts=['scripts/jobs_done.py'],
-    packages=find_packages('source/python'),
+    entry_points={'console_scripts': ['jobs_done=jobs_done10.cli:jobs_done']},
+    packages=find_packages('src'),
     package_dir={
-        '' : 'source/python',
+        '' : 'src',
     },
     include_package_data=True,
 
     #===============================================================================================
     # Project description
     #===============================================================================================
-    author='Diogo de Campos, Alexandre Motta de Andrade',
-    author_email='campos@esss.com.br, ama@esss.com.br',
+    author='ESSS',
+    author_email='dev@esss.com.br',
 
     url='https://github.com/ESSS/jobs_done10',
 
-    license='LGPL v3+',
+    license='MIT',
     description=\
         "Job's Done is a tool heavily inspired by Travis, where you can configure a file "
         "(.jobs_done.yaml) in your repository to create Continuous Integration jobs. "
@@ -44,9 +56,9 @@ setup(
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Software Development',
     ],
 )
