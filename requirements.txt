@@ -24,6 +24,8 @@ pluggy==0.6.0
 premailer==3.2.0
 py==1.5.3
 Pygments==2.2.0
+pytest==3.6.1
+pytest-mock==1.10.0
 python-dotenv==0.8.2
 python-jenkins==1.0.2
 PyYAML==3.12

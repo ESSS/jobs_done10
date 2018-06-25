@@ -2,9 +2,8 @@ language: python
 python: "3.6"
 
 install:
-- pip install .[testing]
+- "touch .env"
+- "docker build . -t jobsdone"
 
 script:
-- pytest src
-- touch .env
-- docker build . -t jobsdone
+- "docker run jobsdone pytest src --color=yes"

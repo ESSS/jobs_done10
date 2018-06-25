@@ -1904,6 +1904,8 @@ class TestJenkinsActions(object):
         # Prepare git repository
         with repo_path.as_cwd():
             check_call('git init', shell=True)
+            check_call('git config user.name Bob', shell=True)
+            check_call('git config user.email bob@example.com', shell=True)
             check_call('git remote add origin %s' % self._REPOSITORY.url, shell=True)
             check_call('git checkout -b %s' % self._REPOSITORY.branch, shell=True)
             repo_path.join('.gitignore').write('')
