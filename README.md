@@ -280,7 +280,7 @@ Jobs done can be deployed using [Docker](https://www.docker.com/).
 ## Build ##
 
 ```console
-$ docker build . --tag jobsdone
+$ docker build . --tag jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=1.0
 ```
 
 ## Run server ##

@@ -7,6 +7,8 @@ COPY ./setup.py /jobsdone/setup.py
 
 WORKDIR /jobsdone
 
+ARG SETUPTOOLS_SCM_PRETEND_VERSION
+
 RUN pip install pip==10.0.1
 RUN pip install . -r requirements.txt
 
