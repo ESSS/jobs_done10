@@ -6,4 +6,5 @@ install:
 
 script:
 - pytest src
+- touch .env
 - docker build . -t jobsdone
