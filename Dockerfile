@@ -2,11 +2,13 @@ FROM python:3.6.5
 
 COPY ./.env /jobsdone/.env
 COPY ./src /jobsdone/src
+COPY ./requirements.txt /jobsdone/requirements.txt
 COPY ./setup.py /jobsdone/setup.py
 
 WORKDIR /jobsdone
 
-RUN pip install . gunicorn
+RUN pip install pip==10.0.1
+RUN pip install . -r requirements.txt
 
 ENV JOBSDONE_DOTENV /jobsdone/.env
 
