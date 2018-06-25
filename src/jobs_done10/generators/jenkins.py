@@ -693,7 +693,7 @@ class JenkinsJobPublisher(object):
              Target directory for outputting job .xmls
         '''
         import os
-        for job in list(self.jobs.values()):
+        for job in self.jobs.values():
             with io.open(os.path.join(output_directory, job.name), 'w', encoding='utf-8') as f:
                 f.write(job.xml)
 
