@@ -19,7 +19,8 @@ This will create/update existing jobs.
 
 ## Server ##
 
-jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker: 
+jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker. This end point
+is tailored to receive the push event from a Webhook of a BitBucket Server instance. 
 
 # Hello World #
 
