@@ -5,7 +5,7 @@ jobs:
     - python: "3.6"
       install:
       - "touch .env"
-      - "docker build . -t jobsdone"
+      - "docker build . -t jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=0.1"
       script:
       - "docker run jobsdone pytest src --color=yes"
 
