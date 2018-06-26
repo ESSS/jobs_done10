@@ -16,3 +16,4 @@ __pycache__
 *environment.yml
 *compile_environment.*yml
 .env
+.eggs/

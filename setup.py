@@ -1,10 +1,16 @@
 
 from setuptools import find_packages, setup
 
+
+with open("README.md") as fd:
+    long_description = fd.read()
+
 setup(
     name='jobs_done10',
-    version='1.0',
     provides=['jobs_done10'],
+
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
 
     #===============================================================================================
     # Requirements
@@ -47,11 +53,9 @@ setup(
 
     license='MIT',
     description=\
-        "Job's Done is a tool heavily inspired by Travis, where you can configure a file "
-        "(.jobs_done.yaml) in your repository to create Continuous Integration jobs. "
-        "Unlike Travis, jobs_done focuses on creating jobs in known CI servers instead of running "
-        "in anonymous servers over the cloud. Currently only supports Jenkins",
-
+        "Job's Done uses a .jobs_done.yaml file in your repository to create Continuous Integration jobs on Jenkins.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     keywords='jenkins continuous integration ci jobs job build',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

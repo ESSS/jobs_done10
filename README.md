@@ -1,17 +1,10 @@
 Job's Done
 ===========
 
-![[link](https://pypi.org/project/jobs_done10/)](https://img.shields.io/pypi/v/jobs_done10.svg)
-
-
-![[link](https://pypi.org/project/jobs_done10)](https://img.shields.io/pypi/pyversions/jobs_done10.svg)
-
-
-![[link](https://travis-ci.org/ESSS/jobs_done10)](https://travis-ci.org/ESSS/jobs_done10.svg?branch=master)
-
-
-![[link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
-
+[![link](https://img.shields.io/pypi/v/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
+[![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
+[![link](https://travis-ci.org/ESSS/jobs_done10.svg?branch=master)](https://travis-ci.org/ESSS/jobs_done10)
+[![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
 
 # About #
 
@@ -30,10 +23,13 @@ This will create/update existing jobs.
 
 ## Server ##
 
-jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker. This end point
-is tailored to receive the push event from a Webhook of a BitBucket Server instance.
+jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/). 
+This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance.
 
-Configuration is done by having a `.env` file in the root of this repository with the following variables:
+### Configuration ###
+
+Configuration is done by having a `.env` file (cortesy of [python-dotenv](https://github.com/theskumar/python-dotenv))
+in the root of this repository with the following variables:
 
 ```ini
 JD_JENKINS_URL=https://example.com/jenkins
@@ -50,6 +46,18 @@ JD_EMAIL_PASSWORD=email password
 JD_EMAIL_SERVER=smtp.example.com
 JD_EMAIL_PORT=587
 ``` 
+
+### Build ###
+
+```console
+$ docker build . --tag jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=1.0.3
+```
+
+### Run server ###
+
+```console
+$ docker run --publish 5000:5000 jobsdone
+```
 
 # Hello World #
 
@@ -273,21 +281,10 @@ Run tests:
 $ pytest src
 ```
 
-# Deployment #
+## Deploy to PyPI ##
 
-Jobs done can be deployed using [Docker](https://www.docker.com/).
-
-## Build ##
-
-```console
-$ docker build . --tag jobsdone
-```
-
-## Run server ##
-
-```console
-$ docker run --publish 5000:5000 jobsdone
-```
+Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
+Travis will see the tag and publish the package to PyPI automatically.
 
 # All options #
 
