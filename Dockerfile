@@ -10,6 +10,7 @@ WORKDIR /jobsdone
 RUN pip install pip==10.0.1
 RUN pip install -r requirements.txt
 
+COPY ./README.md /jobsdone/README.md
 COPY ./setup.py /jobsdone/setup.py
 COPY ./.env /jobsdone/.env
 COPY ./src /jobsdone/src
