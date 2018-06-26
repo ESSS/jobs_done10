@@ -23,8 +23,10 @@ This will create/update existing jobs.
 
 ## Server ##
 
-jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker. This end point
-is tailored to receive the push event from a Webhook of a BitBucket Server instance.
+jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/). 
+This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance.
+
+### Configuration ###
 
 Configuration is done by having a `.env` file (cortesy of [python-dotenv](https://github.com/theskumar/python-dotenv))
 in the root of this repository with the following variables:
@@ -44,6 +46,18 @@ JD_EMAIL_PASSWORD=email password
 JD_EMAIL_SERVER=smtp.example.com
 JD_EMAIL_PORT=587
 ``` 
+
+### Build ###
+
+```console
+$ docker build . --tag jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=1.0.3
+```
+
+### Run server ###
+
+```console
+$ docker run --publish 5000:5000 jobsdone
+```
 
 # Hello World #
 
@@ -267,23 +281,7 @@ Run tests:
 $ pytest src
 ```
 
-# Server Deployment #
-
-Jobs done can be deployed using [Docker](https://www.docker.com/).
-
-## Build ##
-
-```console
-$ docker build . --tag jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=1.0
-```
-
-## Run server ##
-
-```console
-$ docker run --publish 5000:5000 jobsdone
-```
-
-# Deploy to PyPI
+## Deploy to PyPI ##
 
 Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
 Travis will see the tag and publish the package to PyPI automatically.
