@@ -1,17 +1,10 @@
 Job's Done
 ===========
 
-![[link](https://pypi.org/project/jobs_done10/)](https://img.shields.io/pypi/v/jobs_done10.svg)
-
-
-![[link](https://pypi.org/project/jobs_done10)](https://img.shields.io/pypi/pyversions/jobs_done10.svg)
-
-
-![[link](https://travis-ci.org/ESSS/jobs_done10)](https://travis-ci.org/ESSS/jobs_done10.svg?branch=master)
-
-
-![[link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
-
+[![link](https://img.shields.io/pypi/v/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
+[![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
+[![link](https://travis-ci.org/ESSS/jobs_done10.svg?branch=master)](https://travis-ci.org/ESSS/jobs_done10)
+[![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
 
 # About #
 
