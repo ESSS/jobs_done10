@@ -33,7 +33,8 @@ This will create/update existing jobs.
 jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using Docker. This end point
 is tailored to receive the push event from a Webhook of a BitBucket Server instance.
 
-Configuration is done by having a `.env` file in the root of this repository with the following variables:
+Configuration is done by having a `.env` file (cortesy of [python-dotenv](https://github.com/theskumar/python-dotenv))
+in the root of this repository with the following variables:
 
 ```ini
 JD_JENKINS_URL=https://example.com/jenkins
