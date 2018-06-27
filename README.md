@@ -11,6 +11,36 @@ Job's Done
 Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way 
 in that configuring a `.jobs_done.yaml` file in your repository's root to create and trigger Continuous Integration jobs.
 
+Example of a `.jobs_done.yaml` file:
+
+```yaml
+matrix:
+  platform:
+  - "win64"
+  - "redhat64"
+
+platform-win64:build_batch_commands:
+- | 
+  python -m venv .env3   || goto eof
+  call .env3\Scripts\activate   || goto eof
+  pytest --junitxml=tests-{platform}.xml  
+ 
+platform-redhat64:build_shell_commands:
+- |
+  python3 -m venv .env3
+  source .env3/bin/activate
+  pytest --junitxml=tests-{platform}.xml  
+ 
+junit_patterns:
+- "tests.*.xml"
+```
+
+Considering this file is in the root of repository `myproject` and was pushed to branch `feat-71`, this will generate two Jenkins jobs:
+
+* `myproject-feat-71-win64`
+* `myproject-feat-71-linux64`
+
+
 ## Command-line ###
 
 Jobs done can be executed in the command-line. Execute from the repository's folder:
@@ -24,7 +54,9 @@ This will create/update existing jobs.
 ## Server ##
 
 jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/). 
-This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance.
+
+This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance. A post without any
+json data will return the installed version, useful to check the installed version and that the end point is correct.
 
 ### Configuration ###
 

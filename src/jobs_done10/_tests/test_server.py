@@ -2,7 +2,6 @@ from textwrap import dedent
 
 import pytest
 import requests_mock
-
 from jobs_done10.repository import Repository
 
 
@@ -124,6 +123,14 @@ def test_post(client, post_json_data, mocker, repo_info_json_data):
         username='jenkins_user',
         password='jenkins_password',
     )
+
+
+def test_version(client):
+    import pkg_resources
+
+    version = pkg_resources.get_distribution('jobs_done10').version
+    response = client.post(json=None)
+    assert response.data.decode('UTF-8') == f'jobs_done10 version {version}'
 
 
 def test_error_handling(client, post_json_data, mocker):
