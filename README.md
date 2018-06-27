@@ -35,7 +35,7 @@ junit_patterns:
 - "tests.*.xml"
 ```
 
-Considering this file is in repository `myproject` and was pushed into branch `feat-71`, this will generate two Jenkins jobs:
+Considering this file is in the root of repository `myproject` and was pushed to branch `feat-71`, this will generate two Jenkins jobs:
 
 * `myproject-feat-71-win64`
 * `myproject-feat-71-linux64`
