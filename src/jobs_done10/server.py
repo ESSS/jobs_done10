@@ -4,11 +4,10 @@ import traceback
 
 import flask
 import requests
+from jobs_done10.server_email_templates import EMAIL_HTML, EMAIL_PLAINTEXT
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer, PythonTracebackLexer
-
-from jobs_done10.server_email_templates import EMAIL_HTML, EMAIL_PLAINTEXT
 
 
 app = flask.Flask('jobs_done')
@@ -73,6 +72,19 @@ def process_jobs_done(data) -> flask.Response:
          "refId": "refs/heads/stable-pwda11-master", "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
          "toHash": "8522b06a7c330008814a522d0342be9a997a1460", "type": "UPDATE"}]}
     """
+    if data is None:
+        # return a 200 response when no JSON data is posted; this is useful because
+        # the "Test Connection" in Stash does just that, making it easy to verify we have
+        # the correct version up.
+        import pkg_resources
+
+        version = pkg_resources.get_distribution('jobs_done10').version
+        return app.response_class(
+            response=f'jobs_done10 version {version}',
+            status=200,
+            mimetype='text/plain'
+        )
+
     if not isinstance(data, dict) or 'eventKey' not in data:
         raise RuntimeError(f'Invalid request json data: {pprint.pformat(data)}')
 
