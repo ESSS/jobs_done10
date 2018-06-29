@@ -81,14 +81,24 @@ JD_EMAIL_PORT=587
 
 ### Build ###
 
+Clone the repository and checkout the tag:
+
 ```console
-$ docker build . --tag jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=1.0.3
+$ git clone https://github.com/ESSS/jobs_done10.git
+$ cd jobs_done10
+$ git checkout <VERSION> 
+``` 
+
+Build a docker image:
+
+```console
+$ docker build . --tag jobsdone:<VERSION> --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=<VERSION>
 ```
 
 ### Run server ###
 
 ```console
-$ docker run --publish 5000:5000 jobsdone
+$ docker run --publish 5000:5000 jobsdone:<VERSION>
 ```
 
 # Hello World #
