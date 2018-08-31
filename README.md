@@ -43,13 +43,57 @@ Considering this file is in the root of repository `myproject` and was pushed to
 
 ## Command-line ###
 
-Jobs done can be executed in the command-line. Execute from the repository's folder:
+Jobs done can be executed in the command-line. 
+
+To use it, from the repository's folder that you want to create jobs for, execute:
 
 ```console
 $ jobs_done jenkins --username USER https://example.com/jenkins 
-``` 
+```
 
 This will create/update existing jobs.
+
+Below are the possible installation options.
+
+### PyPI ###
+
+1. Create a virtual environment using Python 3 and activate it:
+
+   ```console
+   $ python -m venv .env
+   $ .env\Scripts\activate  # Windows
+   $ source .env/bin/activate  # Linux
+   ```
+
+3. Install jobs_done10:
+
+   ```console
+   $ pip install jobs_done10
+   ```
+
+### Development ###
+
+1. Clone the repository:
+
+   ```console
+   git clone git@github.com:ESSS/jobs_done10.git
+   cd jobs_done10
+   ```
+
+2. Create a virtual environment using Python 3 and activate it:
+
+   ```console
+   $ python -m venv .env
+   $ .env\Scripts\activate  # Windows
+   $ source .env/bin/activate  # Linux
+   ```
+
+3. Install dependencies:
+
+   ```console
+   $ pip install -e .[testing]
+   ```
+
 
 ## Server ##
 
