@@ -1,5 +1,8 @@
 language: python
-
+stages:
+- test
+- name: deploy
+  if: repo = ESSS/jobs_done10 AND tag IS present
 jobs:
   include:
     - python: "3.6"
