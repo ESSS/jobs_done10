@@ -18,7 +18,6 @@ setup(
     install_requires=[
         'click',
         'flask',
-        'jenkins-webapi',
         'mailer',
         'pygments',
         'python-dotenv',
