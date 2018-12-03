@@ -2089,7 +2089,8 @@ class TestJenkinsPublisher(object):
                                 <userRemoteConfigs>
                                   <hudson.plugins.git.UserRemoteConfig>
                                     <url>
-                                      http://server/space.git
+                                      <!-- An uppercase url without .git extension to test resilience -->
+                                      http://SERVER/space
                                     </url>
                                   </hudson.plugins.git.UserRemoteConfig>
                                 </userRemoteConfigs>

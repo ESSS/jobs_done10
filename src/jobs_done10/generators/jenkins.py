@@ -761,16 +761,24 @@ class JenkinsJobPublisher(object):
 
         # Account for case-differences
         repo_lower = self.repository.url.lower()
+        repo_urls = [repo_lower]
+
         # Account for the fact that ssh://example.com/repo and ssh://example.com/repo.git
         # refer to the same repo
-        repo_lower_git = repo_lower + '.git'
+        if not repo_lower.endswith('.git'):
+            repo_urls.append(repo_lower + '.git')
 
         # Process them all until we find the SCM for the correct repository
         for scm in scms:
             url = scm.find('userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url').text.strip()
             checked_urls.append(url)
 
-            if url.lower() in (repo_lower, repo_lower_git):
+            urls = [url.lower()]
+            # Same as above (account for urls ending with '.git')
+            if not url.endswith('.git'):
+                urls.append(url.lower() + '.git')
+
+            if any(url in repo_urls for url in urls):
                 return scm.find('branches/hudson.plugins.git.BranchSpec/name').text.strip()
 
         error_msg = [
