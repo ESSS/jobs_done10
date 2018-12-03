@@ -723,8 +723,8 @@ class TestJenkinsXmlJobGenerator(object):
                 @@ @@
                 +  <publishers>
                 +    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
-                +      <regexp>JENKINS DESCRIPTION\: (.*)</regexp>
-                +      <regexpForFailed>JENKINS DESCRIPTION\: (.*)</regexpForFailed>
+                +      <regexp>JENKINS DESCRIPTION\\: (.*)</regexp>
+                +      <regexpForFailed>JENKINS DESCRIPTION\\: (.*)</regexpForFailed>
                 +      <setForMatrix>false</setForMatrix>
                 +    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
                 +  </publishers>'''
