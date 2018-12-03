@@ -29,7 +29,7 @@ class Repository(object):
     @property
     def name(self):
         import re
-        return re.match('.*/([^\./]+)(\.git/?)?$', self.url).groups()[0]
+        return re.match(r'.*/([^\./]+)(\.git/?)?$', self.url).groups()[0]
 
 
     def __eq__(self, other):

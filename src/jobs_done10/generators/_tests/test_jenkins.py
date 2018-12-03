@@ -723,8 +723,8 @@ class TestJenkinsXmlJobGenerator(object):
                 @@ @@
                 +  <publishers>
                 +    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
-                +      <regexp>JENKINS DESCRIPTION\: (.*)</regexp>
-                +      <regexpForFailed>JENKINS DESCRIPTION\: (.*)</regexpForFailed>
+                +      <regexp>JENKINS DESCRIPTION\\: (.*)</regexp>
+                +      <regexpForFailed>JENKINS DESCRIPTION\\: (.*)</regexpForFailed>
                 +      <setForMatrix>false</setForMatrix>
                 +    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
                 +  </publishers>'''
@@ -2089,7 +2089,8 @@ class TestJenkinsPublisher(object):
                                 <userRemoteConfigs>
                                   <hudson.plugins.git.UserRemoteConfig>
                                     <url>
-                                      http://server/space.git
+                                      <!-- An uppercase url without .git extension to test resilience -->
+                                      http://SERVER/space
                                     </url>
                                   </hudson.plugins.git.UserRemoteConfig>
                                 </userRemoteConfigs>
