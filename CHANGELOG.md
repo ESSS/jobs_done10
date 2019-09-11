@@ -1,3 +1,7 @@
+# 1.2.0 (2019-09-11)
+
+* Add new parsable option `auto-updater`. 
+
 # 1.1.1 (2018-08-31)
 
 * Drop unnecessary dependency to `jenkins-webapi`.
