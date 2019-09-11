@@ -735,3 +735,20 @@ warnings:
     - parser: CodeAnalysis
       file_pattern: *.codeanalysis
 ```
+
+### auto-updater ###
+
+This option is not used by jobs_done. It's used by Auto-Updater (aka Marvin from tHGttG) to obtain infos about the repository such as default branch, jobs to run and pull request reviewers. Note that ``Jobs Done`` doesn't really use this entry, it is present here just because the schema is fully validated.
+
+```yaml
+auto-updater:
+  default-branch: "master"
+  jobs:
+    - "*-linux64"
+    - "*-win64"
+
+  pull-request-reviewers:
+    - "joão"
+    - "marcelo"
+    - "teodoro"
+```

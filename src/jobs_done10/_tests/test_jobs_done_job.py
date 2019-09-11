@@ -42,6 +42,8 @@ def testCreateJobsDoneJobFromYAML():
 
           moon:
           - europa
+        auto-updater:
+          default-branch: "solar-system"
         '''
     )
     jobs_done_jobs = JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
