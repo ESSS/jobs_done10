@@ -220,30 +220,6 @@ class JobsDoneJob(object):
         #         {'planet' : 'mars', 'moon' : 'europa'}
         #         {'planet' : 'mars', 'moon' : 'ganymede'}
         'matrix':dict,
-
-        # auto-updater:
-        #   A dict used in auto-updater job (aka Marvin) to get infos like, default branch, reviewers and jobs glob.
-        #
-        #   It's used by Auto-Updater (aka Marvin from tHGttG) to obtain infos about the repository such as default branch,
-        #   jobs to run and pull request reviewers. Note that ``Jobs Done`` doesn't really use this entry, it is present here just
-        #   because the schema is fully validated.
-        #
-        #   Auto-updater will read the '.jobs_done.yaml' file for each repository, to obtain it's 'default-branch' to create branches,
-        #   filter the jobs to run using the glob in 'jobs' and add the reviewers to the pull request in 'pull-request-reviewers'.
-        #
-        #   For example:
-        #     auto-updater:
-        #       default-branch: "master"
-        #       jobs:
-        #         - "*-linux64"
-        #
-        #       pull-request-reviewers:
-        #         - <user_name1>
-        #         - <user_name2>
-        #         - <user_name3>
-        'auto-updater': dict,
-
-    #end
     })
 
 
