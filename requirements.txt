@@ -19,7 +19,7 @@ mock==2.0.0
 more-itertools==4.2.0
 multi-key-dict==2.0.3
 pbr==4.0.4
-pluggy==0.6.0
+pluggy==0.13.0
 premailer==3.2.0
 py==1.5.3
 Pygments==2.2.0
