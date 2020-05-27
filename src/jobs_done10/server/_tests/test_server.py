@@ -7,26 +7,23 @@ from jobs_done10.repository import Repository
 
 @pytest.fixture(name='client')
 def client_(monkeypatch, tmpdir):
-    from jobs_done10.server import app
+    from jobs_done10.server.app import app
 
-    env_vars = tmpdir.join('env_vars')
-    monkeypatch.setenv('JOBSDONE_DOTENV', str(env_vars))
-
-    env_vars.write("""
-        JD_JENKINS_URL=https://example.com/jenkins
-        JD_JENKINS_USERNAME=jenkins_user
-        JD_JENKINS_PASSWORD=jenkins_password
-
-        JD_STASH_URL=https://example.com/stash
-        JD_STASH_USERNAME=stash_user
-        JD_STASH_PASSWORD=stash_password
-
-        JD_EMAIL_SERVER=smtp.example.com
-        JD_EMAIL_FROM=JobsDone Bot <jobsdone@example.com>
-        JD_EMAIL_PORT=5900
-        JD_EMAIL_USER=email_user
-        JD_EMAIL_PASSWORD=email_password
-    """)
+    test_env = {
+        'JD_JENKINS_URL': 'https://example.com/jenkins',
+        'JD_JENKINS_USERNAME': 'jenkins_user',
+        'JD_JENKINS_PASSWORD': 'jenkins_password',
+        'JD_STASH_URL': 'https://example.com/stash',
+        'JD_STASH_USERNAME': 'stash_user',
+        'JD_STASH_PASSWORD': 'stash_password',
+        'JD_EMAIL_SERVER': 'smtp.example.com',
+        'JD_EMAIL_FROM': 'JobsDone Bot <jobsdone@example.com>',
+        'JD_EMAIL_PORT': '5900',
+        'JD_EMAIL_USER': 'email_user',
+        'JD_EMAIL_PASSWORD': 'email_password',
+    }
+    for env_var, value in test_env.items():
+        monkeypatch.setenv(env_var, value)
 
     return app.test_client()
 
@@ -103,7 +100,7 @@ def test_post(client, post_json_data, mocker, repo_info_json_data):
 
         response = client.post(json=post_json_data)
         assert response.status_code == 200
-        assert response.mimetype == 'text/plain'
+        assert response.mimetype == 'text/html'
         assert response.data.decode('UTF-8') == dedent("""
             NEW - new1-eden-master
             NEW - new2-eden-master
@@ -142,7 +139,7 @@ def test_error_handling(client, post_json_data, mocker):
     del post_json_data['eventKey']
     response = client.post(json=post_json_data)
     assert response.status_code == 500
-    assert response.mimetype == 'text/plain'
+    assert response.mimetype == 'text/html'
     obtained_message = response.data.decode('UTF-8')
     assert "ERROR processing request: <Request 'http://localhost/' [POST]>" in obtained_message
     assert "JSON data:" in obtained_message
