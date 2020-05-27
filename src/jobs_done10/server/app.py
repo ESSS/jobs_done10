@@ -4,60 +4,26 @@ import traceback
 
 import flask
 import requests
-from jobs_done10.server_email_templates import EMAIL_HTML, EMAIL_PLAINTEXT
+from dotenv import load_dotenv
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import JsonLexer, PythonTracebackLexer
 
+from jobs_done10.server_email_templates import EMAIL_HTML, EMAIL_PLAINTEXT
+from jobs_done10 import get_version_title
+
 
 app = flask.Flask('jobs_done')
+load_dotenv(dotenv_path=os.environ.get('JOBSDONE_DOTENV'))
+if not app.debug:
+    app.logger.setLevel('INFO')
+app.logger.info(f'Initializing Server App - {get_version_title()}')
 
 
-@app.route('/', methods=['POST'])
+@app.route('/', methods=['GET', 'POST'])
 def index():
     """
-    End point
-    :return:
-    """
-    from dotenv import load_dotenv
-
-    load_dotenv(dotenv_path=os.environ.get('JOBSDONE_DOTENV'))
-
-    data = flask.request.json
-    try:
-        return process_jobs_done(data)
-    except Exception:
-        error_traceback = traceback.format_exc()
-        lines = [
-            f'ERROR processing request: {flask.request}',
-            '',
-            'JSON data:',
-            '',
-            pprint.pformat(data),
-            '',
-            '',
-            error_traceback,
-            '',
-        ]
-        try:
-            recipient = send_email_with_error(data, error_traceback)
-        except Exception:
-            lines.append('*' * 80)
-            lines.append('ERROR SENDING EMAIL:')
-            lines.append(traceback.format_exc())
-        else:
-            lines.append(f'Email sent to {recipient}')
-        message = '\n'.join(lines)
-        app.logger.exception('Uncaught exception')
-        return app.response_class(
-            response=message,
-            status=500,
-            mimetype='text/plain'
-        )
-
-
-def process_jobs_done(data) -> flask.Response:
-    """
+    Jenkins job generation end-point
 
     Example of a post event for a push:
 
@@ -72,35 +38,42 @@ def process_jobs_done(data) -> flask.Response:
          "refId": "refs/heads/stable-pwda11-master", "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
          "toHash": "8522b06a7c330008814a522d0342be9a997a1460", "type": "UPDATE"}]}
     """
-    if data is None:
-        # return a 200 response when no JSON data is posted; this is useful because
-        # the "Test Connection" in Stash does just that, making it easy to verify we have
-        # the correct version up.
-        import pkg_resources
+    payload = flask.request.json
+    if payload is None or flask.request.method == 'GET':
+        # return a 200 response also on POST, when no JSON data is posted; this is useful
+        # because the "Test Connection" in Stash does just that, making it easy to verify
+        # we have the correct version up.
+        app.logger.info("I'm alive")
+        return get_version_title()
 
-        version = pkg_resources.get_distribution('jobs_done10').version
-        return app.response_class(
-            response=f'jobs_done10 version {version}',
-            status=200,
-            mimetype='text/plain'
-        )
+    try:
+        message = _process_jobs_done_request(payload)
+        return message
+    except Exception:
+        err_message = _process_jobs_done_error(payload)
+        return err_message, 500
 
-    if not isinstance(data, dict) or 'eventKey' not in data:
-        raise RuntimeError(f'Invalid request json data: {pprint.pformat(data)}')
 
-    app.logger.info(f'Received request:\n{pprint.pformat(data)}')
+def _process_jobs_done_request(payload) -> str:
+    """
+    Generate/update a Jenkins job from a request and returns a debug message
+    """
+    if not isinstance(payload, dict) or 'eventKey' not in payload:
+        raise RuntimeError(f'Invalid request json data: {pprint.pformat(payload)}')
+
+    app.logger.info(f'Received request:\n{pprint.pformat(payload)}')
 
     stash_url = os.environ['JD_STASH_URL'].rstrip()
     stash_username = os.environ['JD_STASH_USERNAME']
     stash_password = os.environ['JD_STASH_PASSWORD']
-    project_key = data['repository']['project']['key']
-    slug = data['repository']['slug']
+    project_key = payload['repository']['project']['key']
+    slug = payload['repository']['slug']
 
     all_new_jobs = []
     all_updated_jobs = []
     all_deleted_jobs = []
     lines = []
-    for change in data['changes']:
+    for change in payload['changes']:
         try:
             jobs_done_file_contents = get_file_contents(
                 stash_url=stash_url,
@@ -148,11 +121,37 @@ def process_jobs_done(data) -> flask.Response:
 
     message = '\n'.join(lines)
     app.logger.info(message)
-    return app.response_class(
-        response=message,
-        status=200,
-        mimetype='text/plain'
-    )
+    return message
+
+
+def _process_jobs_done_error(payload) -> str:
+    """
+    In case of error while processing the job generation request, sent an e-mail to the user with
+    the traceback.
+    """
+    error_traceback = traceback.format_exc()
+    lines = [
+        f'ERROR processing request: {flask.request}',
+        '',
+        'JSON data:',
+        '',
+        pprint.pformat(payload),
+        '',
+        '',
+        error_traceback,
+        '',
+    ]
+    try:
+        recipient = send_email_with_error(payload, error_traceback)
+    except Exception:
+        lines.append('*' * 80)
+        lines.append('ERROR SENDING EMAIL:')
+        lines.append(traceback.format_exc())
+    else:
+        lines.append(f'Email sent to {recipient}')
+    message = '\n'.join(lines)
+    app.logger.exception('Uncaught exception')
+    return message
 
 
 def get_file_contents(*, stash_url: str, username: str, password: str, project_key: str, slug: str, path: str,

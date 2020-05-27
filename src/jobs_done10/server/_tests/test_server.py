@@ -127,7 +127,7 @@ def test_version(client):
 
     version = pkg_resources.get_distribution('jobs_done10').version
     response = client.post(json=None)
-    assert response.data.decode('UTF-8') == f'jobs_done10 version {version}'
+    assert response.data.decode('UTF-8') == f'jobs_done10 ver. {version}'
 
 
 def test_error_handling(client, post_json_data, mocker):
