@@ -2,6 +2,11 @@
 
 * Revert parsable option `auto-updater`.
 
+# 1.2.2 (2019-09-11)
+
+* Production version now logs to stdout.
+* Refactor internal layout of Server app.
+
 # 1.2.1 (2019-09-11)
 
 * No code changes. Just build scripts
