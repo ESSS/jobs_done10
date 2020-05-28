@@ -26,4 +26,4 @@ ENV JOBSDONE_DOTENV /jobsdone/.env
 
 EXPOSE 5000
 
-CMD ["gunicorn", "jobs_done10.server:app", "-b", "0.0.0.0:5000", "--workers", "4", "--timeout", "300"]
+CMD ["gunicorn", "jobs_done10.server.app:app", "-b", "0.0.0.0:5000", "--workers", "4", "--timeout", "300"]
