@@ -39,9 +39,9 @@ def index():
          "toHash": "8522b06a7c330008814a522d0342be9a997a1460", "type": "UPDATE"}]}
     """
     payload = flask.request.json
-    if payload is None or flask.request.method == 'GET':
+    if flask.request.method == 'GET' or payload is None or payload.get('test'):
         # return a 200 response also on POST, when no JSON data is posted; this is useful
-        # because the "Test Connection" in Stash does just that, making it easy to verify
+        # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
         app.logger.info("I'm alive")
         return get_version_title()

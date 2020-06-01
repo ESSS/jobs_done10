@@ -126,7 +126,7 @@ def test_version(client):
     import pkg_resources
 
     version = pkg_resources.get_distribution('jobs_done10').version
-    response = client.post(json=None)
+    response = client.post(json={'test': True})
     assert response.data.decode('UTF-8') == f'jobs_done10 ver. {version}'
 
 
