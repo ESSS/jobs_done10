@@ -21,7 +21,7 @@ multi-key-dict==2.0.3
 pbr==4.0.4
 pluggy==0.13.0
 premailer==3.2.0
-py==1.5.3
+py==1.10.0
 Pygments==2.7.4
 pytest==5.2.1
 pytest-mock==1.11.1
