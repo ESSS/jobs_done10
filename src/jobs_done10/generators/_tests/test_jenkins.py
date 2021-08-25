@@ -299,7 +299,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <JUnitType>
                 +          <pattern>junit*.xml,others.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -307,7 +307,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JUnitType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -422,7 +422,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <BoostTestJunitHudsonTestType>
                 +          <pattern>boost*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -430,7 +430,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </BoostTestJunitHudsonTestType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -467,7 +467,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -475,7 +475,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -515,7 +515,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <BoostTestJunitHudsonTestType>
                 +          <pattern>boosttest*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -530,7 +530,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JUnitType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +  </publishers>
                 +  <buildWrappers>
@@ -810,7 +810,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -818,7 +818,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
                 +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
@@ -1311,7 +1311,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
                 +      </thresholds>
                 +      <thresholdMode>1</thresholdMode>
-                +      <types>
+                +      <tools>
                 +        <JSUnitPluginType>
                 +          <pattern>jsunit*.xml</pattern>
                 +          <skipNoTestFiles>true</skipNoTestFiles>
@@ -1319,7 +1319,7 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <deleteOutputFiles>true</deleteOutputFiles>
                 +          <stopProcessingIfError>true</stopProcessingIfError>
                 +        </JSUnitPluginType>
-                +      </types>
+                +      </tools>
                 +    </xunit>
                 +    <hudson.tasks.Mailer>
                 +      <recipients>user@company.com other@company.com</recipients>
