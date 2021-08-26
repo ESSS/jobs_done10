@@ -557,7 +557,7 @@ class JenkinsXmlJobGenerator(object):
         xunit['thresholdMode'] = '1'
 
         # Set patterns for the given type
-        xunit_type_xml = xunit['types/' + xunit_type]
+        xunit_type_xml = xunit['tools/' + xunit_type]
         xunit_type_xml['pattern'] = ','.join(patterns)
         xunit_type_xml['skipNoTestFiles'] = xmls(True)
         xunit_type_xml['failIfNotNew'] = xmls(False)
