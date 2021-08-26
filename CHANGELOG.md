@@ -1,6 +1,7 @@
 # 1.3.0 (UNRELEASED)
 
 * Revert parsable option `auto-updater`.
+* Update generated XML for xUnit plugin to support most recent version.
 
 # 1.2.2 (2019-09-11)
 
@@ -13,7 +14,7 @@
 
 # 1.2.0 (2019-09-11)
 
-* Add new parsable option `auto-updater`. 
+* Add new parsable option `auto-updater`.
 
 # 1.1.1 (2018-08-31)
 
