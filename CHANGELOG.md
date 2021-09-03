@@ -1,4 +1,4 @@
-# 1.3.0 (UNRELEASED)
+# 1.3.0 (2021-09-03)
 
 * Revert parsable option `auto-updater`.
 * Update generated XML for xUnit plugin to support most recent version.

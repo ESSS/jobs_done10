@@ -53,7 +53,7 @@ def jenkins_test(output_directory):
 
 
 @click.group(name='jobs_done10')
-@click.version_option(version='1.0')
+@click.version_option(version='1.3.0')
 def jobs_done():
     """
     Creates jobs for Jenkins.
