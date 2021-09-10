@@ -9,7 +9,7 @@ setup(
     name='jobs_done10',
     provides=['jobs_done10'],
 
-    use_scm_version=True,
+    use_scm_version={"write_to": "src/jobs_done10/_version.py"},
     setup_requires=['setuptools_scm'],
 
     #===============================================================================================
