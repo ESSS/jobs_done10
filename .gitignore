@@ -12,6 +12,7 @@ __pycache__
 *.egg-info
 /.pypirc
 /.idea/
+_version.py
 
 *environment.yml
 *compile_environment.*yml

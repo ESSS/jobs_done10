@@ -1,3 +1,8 @@
+# 1.3.1 (2021-09-10)
+
+* Remove usage of xml.ElementTree.Element.getchildren for Python 3.9 compatibility.
+* Use setuptools\_scm version for --version.
+
 # 1.3.0 (2021-09-03)
 
 * Revert parsable option `auto-updater`.

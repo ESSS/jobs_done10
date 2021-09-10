@@ -52,8 +52,14 @@ def jenkins_test(output_directory):
     click.secho('OK', fg='green')
 
 
+try:
+    from ._version import version
+except ImportError:
+    version = 'DEV'
+
+
 @click.group(name='jobs_done10')
-@click.version_option(version='1.3.0')
+@click.version_option(version=version)
 def jobs_done():
     """
     Creates jobs for Jenkins.
