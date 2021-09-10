@@ -156,10 +156,8 @@ class XmlFactory(object):
             block = {}
 
             # get the element's children
-            children = elem.getchildren()
-
-            if children:
-                cur = list(map(_elem2list, children))
+            if elem:
+                cur = list(map(_elem2list, elem))
 
                 # create meaningful lists
                 scalar = False
