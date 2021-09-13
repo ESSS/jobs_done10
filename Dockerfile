@@ -12,15 +12,14 @@ COPY ./requirements.txt /jobsdone/requirements.txt
 
 WORKDIR /jobsdone
 
-RUN pip install pip==20.1.1
-RUN pip install -r requirements.txt
+RUN pip install pip==21.2.4
 
 COPY ./README.md /jobsdone/README.md
 COPY ./setup.py /jobsdone/setup.py
 COPY ./.env /jobsdone/.env
 COPY ./src /jobsdone/src
 
-RUN pip install .
+RUN pip install -r requirements.txt .
 
 ENV JOBSDONE_DOTENV /jobsdone/.env
 
