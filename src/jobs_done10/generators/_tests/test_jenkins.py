@@ -550,6 +550,86 @@ class TestJenkinsXmlJobGenerator(object):
             ),
         )
 
+    @pytest.mark.parametrize(
+        'job_done_key, xml_key',
+        [
+            ('build_batch_commands', 'hudson.tasks.BatchFile'),
+            ('build_shell_commands', 'hudson.tasks.Shell'),
+            ('build_python_commands', 'hudson.plugins.python.Python'),
+        ],
+    )
+    def testBuildCommandsExpandNestedLists(self, job_done_key, xml_key):
+
+        # sanity: no ref
+        self._DoTest(
+            yaml_contents=dedent(
+                f'''
+                branch-foo:{job_done_key}:
+                - someone else command
+                {job_done_key}:
+                - my_command
+                '''
+            ),
+            expected_diff=dedent(
+                f'''\
+                @@ @@
+                +  <builders>
+                +    <{xml_key}>
+                +      <command>my_command</command>
+                +    </{xml_key}>
+                +  </builders>'''
+            ),
+        )
+
+        # expand refs (after)
+        self._DoTest(
+            yaml_contents=dedent(
+                f'''
+                branch-foo:{job_done_key}: &ref_a
+                - someone else command
+                {job_done_key}:
+                - my_command
+                - *ref_a
+                '''
+            ),
+            expected_diff=dedent(
+                f'''\
+                @@ @@
+                +  <builders>
+                +    <{xml_key}>
+                +      <command>my_command</command>
+                +    </{xml_key}>
+                +    <{xml_key}>
+                +      <command>someone else command</command>
+                +    </{xml_key}>
+                +  </builders>'''
+            ),
+        )
+
+        # expand refs (before)
+        self._DoTest(
+            yaml_contents=dedent(
+                f'''
+                branch-foo:{job_done_key}: &ref_a
+                - someone else command
+                {job_done_key}:
+                - *ref_a
+                - my_command
+                '''
+            ),
+            expected_diff=dedent(
+                f'''\
+                @@ @@
+                +  <builders>
+                +    <{xml_key}>
+                +      <command>someone else command</command>
+                +    </{xml_key}>
+                +    <{xml_key}>
+                +      <command>my_command</command>
+                +    </{xml_key}>
+                +  </builders>'''
+            ),
+        )
 
     def testBuildBatchCommand(self):
         # works with a single command

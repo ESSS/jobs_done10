@@ -169,18 +169,27 @@ class JenkinsXmlJobGenerator(object):
 
     def SetBuildBatchCommands(self, build_batch_commands):
         for command in build_batch_commands:
-            # batch files must have \r\n as EOL or weird bugs happen (jenkins web ui add \r).
-            self.xml['builders/hudson.tasks.BatchFile+/command'] = command.replace('\n', '\r\n')
+            if isinstance(command, list):
+                self.SetBuildBatchCommands(command)
+            else:
+                # batch files must have \r\n as EOL or weird bugs happen (jenkins web ui add \r).
+                self.xml['builders/hudson.tasks.BatchFile+/command'] = command.replace('\n', '\r\n')
 
 
     def SetBuildShellCommands(self, build_shell_commands):
         for command in build_shell_commands:
-            self.xml['builders/hudson.tasks.Shell+/command'] = command
+            if isinstance(command, list):
+                self.SetBuildShellCommands(command)
+            else:
+                self.xml['builders/hudson.tasks.Shell+/command'] = command
 
 
     def SetBuildPythonCommands(self, build_shell_commands):
         for command in build_shell_commands:
-            self.xml['builders/hudson.plugins.python.Python+/command'] = command
+            if isinstance(command, list):
+                self.SetBuildPythonCommands(command)
+            else:
+                self.xml['builders/hudson.plugins.python.Python+/command'] = command
 
 
     def SetCron(self, schedule):

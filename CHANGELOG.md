@@ -1,3 +1,7 @@
+# 1.4.0 (unreleased)
+
+* Build commands (shell, batch, python) now flatten their lists allowing the use of references (#33).
+
 # 1.3.1 (2021-09-10)
 
 * Remove usage of xml.ElementTree.Element.getchildren for Python 3.9 compatibility.
