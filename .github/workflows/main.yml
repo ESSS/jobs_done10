@@ -1,0 +1,45 @@
+name: ALFAsim SDK
+
+on:
+  push:
+    branches:
+      - master
+      - rb-*
+    tags:
+      - v*
+
+  pull_request:
+  schedule:
+  - cron: "0 2 * * *"
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - python-version: 3.6
+            env: "py36"
+          - python-version: 3.7
+            env: "py37"
+          - python-version: 3.8
+            env: "py38"
+          - python-version: 3.9
+            env: "py39"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox
+    - name: Run tests
+      run: tox -e ${{matrix.env}}
