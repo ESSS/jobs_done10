@@ -27,6 +27,7 @@ setup(
     ],
     extras_require={
         'testing': [
+            'pre-commit',
             'pytest',
             'pytest-mock',
         ],
