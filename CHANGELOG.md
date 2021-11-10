@@ -1,3 +1,7 @@
+# 1.4.2 (2021-11-10)
+
+* Fixed deploy to PyPI procedure.
+
 # 1.4.0 (2021-10-14)
 
 * Build commands (shell, batch, python) now flatten their lists allowing the use of references (#33).
