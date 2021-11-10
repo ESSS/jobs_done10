@@ -1,4 +1,4 @@
-# 1.4.1 (2021-11-10)
+# 1.4.2 (2021-11-10)
 
 * Fixed deploy to PyPI procedure.
 
