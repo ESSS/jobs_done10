@@ -7,20 +7,22 @@ import requests
 from dotenv import load_dotenv
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import JsonLexer, PythonTracebackLexer
+from pygments.lexers import JsonLexer
+from pygments.lexers import PythonTracebackLexer
 
-from jobs_done10.server_email_templates import EMAIL_HTML, EMAIL_PLAINTEXT
 from jobs_done10 import get_version_title
+from jobs_done10.server_email_templates import EMAIL_HTML
+from jobs_done10.server_email_templates import EMAIL_PLAINTEXT
 
 
-app = flask.Flask('jobs_done')
-load_dotenv(dotenv_path=os.environ.get('JOBSDONE_DOTENV'))
+app = flask.Flask("jobs_done")
+load_dotenv(dotenv_path=os.environ.get("JOBSDONE_DOTENV"))
 if not app.debug:
-    app.logger.setLevel('INFO')
-app.logger.info(f'Initializing Server App - {get_version_title()}')
+    app.logger.setLevel("INFO")
+app.logger.info(f"Initializing Server App - {get_version_title()}")
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/", methods=["GET", "POST"])
 def index():
     """
     Jenkins job generation end-point
@@ -39,7 +41,7 @@ def index():
          "toHash": "8522b06a7c330008814a522d0342be9a997a1460", "type": "UPDATE"}]}
     """
     payload = flask.request.json
-    if flask.request.method == 'GET' or payload is None or payload.get('test'):
+    if flask.request.method == "GET" or payload is None or payload.get("test"):
         # return a 200 response also on POST, when no JSON data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
@@ -58,22 +60,22 @@ def _process_jobs_done_request(payload) -> str:
     """
     Generate/update a Jenkins job from a request and returns a debug message
     """
-    if not isinstance(payload, dict) or 'eventKey' not in payload:
-        raise RuntimeError(f'Invalid request json data: {pprint.pformat(payload)}')
+    if not isinstance(payload, dict) or "eventKey" not in payload:
+        raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
 
-    app.logger.info(f'Received request:\n{pprint.pformat(payload)}')
+    app.logger.info(f"Received request:\n{pprint.pformat(payload)}")
 
-    stash_url = os.environ['JD_STASH_URL'].rstrip()
-    stash_username = os.environ['JD_STASH_USERNAME']
-    stash_password = os.environ['JD_STASH_PASSWORD']
-    project_key = payload['repository']['project']['key']
-    slug = payload['repository']['slug']
+    stash_url = os.environ["JD_STASH_URL"].rstrip()
+    stash_username = os.environ["JD_STASH_USERNAME"]
+    stash_password = os.environ["JD_STASH_PASSWORD"]
+    project_key = payload["repository"]["project"]["key"]
+    slug = payload["repository"]["slug"]
 
     all_new_jobs = []
     all_updated_jobs = []
     all_deleted_jobs = []
     lines = []
-    for change in payload['changes']:
+    for change in payload["changes"]:
         try:
             jobs_done_file_contents = get_file_contents(
                 stash_url=stash_url,
@@ -81,8 +83,8 @@ def _process_jobs_done_request(payload) -> str:
                 password=stash_password,
                 project_key=project_key,
                 slug=slug,
-                path='.jobs_done.yaml',
-                ref=change['toHash'],
+                path=".jobs_done.yaml",
+                ref=change["toHash"],
             )
         except IOError:
             jobs_done_file_contents = None
@@ -90,19 +92,24 @@ def _process_jobs_done_request(payload) -> str:
         from jobs_done10.generators import jenkins
         from jobs_done10.repository import Repository
 
-        clone_url = get_clone_url(stash_url=stash_url, username=stash_username, password=stash_password,
-                                  project_key=project_key, slug=slug)
+        clone_url = get_clone_url(
+            stash_url=stash_url,
+            username=stash_username,
+            password=stash_password,
+            project_key=project_key,
+            slug=slug,
+        )
 
-        branch = change['ref']['id']
-        prefix = 'refs/heads/'
+        branch = change["ref"]["id"]
+        prefix = "refs/heads/"
         if not branch.startswith(prefix):
-            lines.append(f'WARNING: ignoring branch {branch}: expected {prefix}')
+            lines.append(f"WARNING: ignoring branch {branch}: expected {prefix}")
             continue
-        branch = branch[len(prefix):]
+        branch = branch[len(prefix) :]
         repository = Repository(url=clone_url, branch=branch)
-        jenkins_url = os.environ['JD_JENKINS_URL'].rstrip('/')
-        jenkins_username = os.environ['JD_JENKINS_USERNAME']
-        jenkins_password = os.environ['JD_JENKINS_PASSWORD']
+        jenkins_url = os.environ["JD_JENKINS_URL"].rstrip("/")
+        jenkins_username = os.environ["JD_JENKINS_USERNAME"]
+        jenkins_password = os.environ["JD_JENKINS_PASSWORD"]
 
         new_jobs, updated_jobs, deleted_jobs = jenkins.UploadJobsFromFile(
             repository=repository,
@@ -115,11 +122,11 @@ def _process_jobs_done_request(payload) -> str:
         all_updated_jobs.extend(updated_jobs)
         all_deleted_jobs.extend(deleted_jobs)
 
-    lines.extend(f'NEW - {x}' for x in all_new_jobs)
-    lines.extend(f'UPD - {x}' for x in all_updated_jobs)
-    lines.extend(f'DEL - {x}' for x in all_deleted_jobs)
+    lines.extend(f"NEW - {x}" for x in all_new_jobs)
+    lines.extend(f"UPD - {x}" for x in all_updated_jobs)
+    lines.extend(f"DEL - {x}" for x in all_deleted_jobs)
 
-    message = '\n'.join(lines)
+    message = "\n".join(lines)
     app.logger.info(message)
     return message
 
@@ -131,37 +138,45 @@ def _process_jobs_done_error(payload) -> str:
     """
     error_traceback = traceback.format_exc()
     lines = [
-        f'ERROR processing request: {flask.request}',
-        '',
-        'JSON data:',
-        '',
+        f"ERROR processing request: {flask.request}",
+        "",
+        "JSON data:",
+        "",
         pprint.pformat(payload),
-        '',
-        '',
+        "",
+        "",
         error_traceback,
-        '',
+        "",
     ]
     try:
         recipient = send_email_with_error(payload, error_traceback)
     except Exception:
-        lines.append('*' * 80)
-        lines.append('ERROR SENDING EMAIL:')
+        lines.append("*" * 80)
+        lines.append("ERROR SENDING EMAIL:")
         lines.append(traceback.format_exc())
     else:
-        lines.append(f'Email sent to {recipient}')
-    message = '\n'.join(lines)
-    app.logger.exception('Uncaught exception')
+        lines.append(f"Email sent to {recipient}")
+    message = "\n".join(lines)
+    app.logger.exception("Uncaught exception")
     return message
 
 
-def get_file_contents(*, stash_url: str, username: str, password: str, project_key: str, slug: str, path: str,
-                      ref: str) -> str:
+def get_file_contents(
+    *,
+    stash_url: str,
+    username: str,
+    password: str,
+    project_key: str,
+    slug: str,
+    path: str,
+    ref: str,
+) -> str:
     """
     Get the file contents from the stash server.
 
     We are using a "raw" Get which returns the entire file contents as text.
     """
-    file_url = stash_url + f'/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}'
+    file_url = stash_url + f"/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}"
     response = requests.get(file_url, auth=(username, password))
 
     if response.status_code == 404:
@@ -174,7 +189,9 @@ def get_file_contents(*, stash_url: str, username: str, password: str, project_k
     return contents
 
 
-def get_clone_url(*, stash_url: str, username: str, password: str, project_key: str, slug: str) -> str:
+def get_clone_url(
+    *, stash_url: str, username: str, password: str, project_key: str, slug: str
+) -> str:
     """
     Get information about the repository, returning the SSH clone url.
 
@@ -199,19 +216,21 @@ def get_clone_url(*, stash_url: str, username: str, password: str, project_key: 
      'state': 'AVAILABLE',
      'statusMessage': 'Available'}
     """
-    url = f'{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}'
+    url = f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}"
     response = requests.get(url, auth=(username, password))
     if response.status_code != 200:
         response.raise_for_status()
 
     data = response.json()
-    for clone_url in data['links']['clone']:
-        if clone_url['name'] == 'ssh':
-            return clone_url['href']
+    for clone_url in data["links"]["clone"]:
+        if clone_url["name"] == "ssh":
+            return clone_url["href"]
 
     import pprint
 
-    raise RuntimeError(f'Could not find the ssh clone url in json response:\n{pprint.pformat(data)}')
+    raise RuntimeError(
+        f"Could not find the ssh clone url in json response:\n{pprint.pformat(data)}"
+    )
 
 
 def send_email_with_error(data: dict, error_traceback: str) -> str:
@@ -224,39 +243,48 @@ def send_email_with_error(data: dict, error_traceback: str) -> str:
     """
     import mailer
 
-    recipient = data['actor']['emailAddress']
+    recipient = data["actor"]["emailAddress"]
 
-    project_key = data['repository']['project']['key']
-    slug = data['repository']['slug']
-    changes = [(change['ref']['id'], change['toHash']) for change in data['changes']]
-    changes_msg = ', '.join(f'{branch.replace("refs/heads/", "")} @ {commit[:7]}' for (branch, commit) in changes)
-    subject = f'JobsDone failure during push to {project_key}/{slug} ({changes_msg})'
+    project_key = data["repository"]["project"]["key"]
+    slug = data["repository"]["slug"]
+    changes = [(change["ref"]["id"], change["toHash"]) for change in data["changes"]]
+    changes_msg = ", ".join(
+        f'{branch.replace("refs/heads/", "")} @ {commit[:7]}'
+        for (branch, commit) in changes
+    )
+    subject = f"JobsDone failure during push to {project_key}/{slug} ({changes_msg})"
 
     message = mailer.Message(
-        From=os.environ['JD_EMAIL_FROM'],
+        From=os.environ["JD_EMAIL_FROM"],
         To=[recipient],
         # RTo=None,
         # Cc=self.cc,
         Subject=subject,
-        charset='UTF-8',
+        charset="UTF-8",
     )
 
     pretty_json = pprint.pformat(data)
-    message.Body = EMAIL_PLAINTEXT.format(error_traceback=error_traceback, pretty_json=pretty_json)
-    style = 'colorful'
+    message.Body = EMAIL_PLAINTEXT.format(
+        error_traceback=error_traceback, pretty_json=pretty_json
+    )
+    style = "colorful"
     html = EMAIL_HTML.format(
-        error_traceback_html=highlight(error_traceback, PythonTracebackLexer(), HtmlFormatter(style=style)),
-        pretty_json_html=highlight(pretty_json, JsonLexer(), HtmlFormatter(style=style)),
+        error_traceback_html=highlight(
+            error_traceback, PythonTracebackLexer(), HtmlFormatter(style=style)
+        ),
+        pretty_json_html=highlight(
+            pretty_json, JsonLexer(), HtmlFormatter(style=style)
+        ),
     )
 
     message.Html = html
 
     sender = mailer.Mailer(
-        host=os.environ['JD_EMAIL_SERVER'],
-        port=int(os.environ['JD_EMAIL_PORT']),
+        host=os.environ["JD_EMAIL_SERVER"],
+        port=int(os.environ["JD_EMAIL_PORT"]),
         use_tls=True,
-        usr=os.environ['JD_EMAIL_USER'],
-        pwd=os.environ['JD_EMAIL_PASSWORD'],
+        usr=os.environ["JD_EMAIL_USER"],
+        pwd=os.environ["JD_EMAIL_PASSWORD"],
     )
     sender.send(message)
     return recipient
