@@ -372,6 +372,10 @@ $ pytest src
 Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
 Travis will see the tag and publish the package to PyPI automatically.
 
+## Deploy at ESSS ##
+
+There's a job in Jenkins: `jobs_done10-deploy-main`. It takes the tag version to be deployed.
+
 # All options #
 
 ### additional_repositories ###
