@@ -3,12 +3,12 @@ Job's Done
 
 [![link](https://img.shields.io/pypi/v/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
 [![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
-[![link](https://travis-ci.com/ESSS/jobs_done10.svg?branch=master)](https://travis-ci.com/ESSS/jobs_done10)
+[![link](https://github.com/pytest-dev/pytest/workflows/ci/badge.svg)](https://github.com/ESSS/jobs_done10/actions)
 [![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
 
 # About #
 
-Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way 
+Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way
 in that configuring a `.jobs_done.yaml` file in your repository's root to create and trigger Continuous Integration jobs.
 
 Example of a `.jobs_done.yaml` file:
@@ -20,17 +20,17 @@ matrix:
   - "redhat64"
 
 platform-win64:build_batch_commands:
-- | 
+- |
   python -m venv .env3   || goto eof
   call .env3\Scripts\activate   || goto eof
-  pytest --junitxml=tests-{platform}.xml  
- 
+  pytest --junitxml=tests-{platform}.xml
+
 platform-redhat64:build_shell_commands:
 - |
   python3 -m venv .env3
   source .env3/bin/activate
-  pytest --junitxml=tests-{platform}.xml  
- 
+  pytest --junitxml=tests-{platform}.xml
+
 junit_patterns:
 - "tests.*.xml"
 ```
@@ -43,12 +43,12 @@ Considering this file is in the root of repository `myproject` and was pushed to
 
 ## Command-line ###
 
-Jobs done can be executed in the command-line. 
+Jobs done can be executed in the command-line.
 
 To use it, from the repository's folder that you want to create jobs for, execute:
 
 ```console
-$ jobs_done jenkins --username USER https://example.com/jenkins 
+$ jobs_done jenkins --username USER https://example.com/jenkins
 ```
 
 This will create/update existing jobs.
@@ -97,7 +97,7 @@ Below are the possible installation options.
 
 ## Server ##
 
-jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/). 
+jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/).
 
 This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance. A post without any
 json data will return the installed version, useful to check the installed version and that the end point is correct.
@@ -121,7 +121,7 @@ JD_EMAIL_FROM=JobsDone Bot <mail-sender@example.com>
 JD_EMAIL_PASSWORD=email password
 JD_EMAIL_SERVER=smtp.example.com
 JD_EMAIL_PORT=587
-``` 
+```
 
 ### Build ###
 
@@ -130,8 +130,8 @@ Clone the repository and checkout the tag:
 ```console
 $ git clone https://github.com/ESSS/jobs_done10.git
 $ cd jobs_done10
-$ git checkout <VERSION> 
-``` 
+$ git checkout <VERSION>
+```
 
 Build a docker image:
 
@@ -156,7 +156,7 @@ build_batch_commands:
 description_regex: "MESSAGE\\:(.*)"
 ```
 
-Adding this file to a repository hooked into our CI system will create a single job that when executed run a 
+Adding this file to a repository hooked into our CI system will create a single job that when executed run a
 Windows batch command, and later on catches the message echoed and sets that as the build description.
 
 
@@ -173,7 +173,7 @@ junit_patterns:
 - "pytest_results.xml"
 ```
 
-This jobs runs pytest in the repository and outputs test results to a file. We also configure the job to look for that 
+This jobs runs pytest in the repository and outputs test results to a file. We also configure the job to look for that
 file, and present test results to us at then end of the build.
 
 # Multiple platforms #
@@ -185,35 +185,35 @@ The same application as above, but now running on multiple platforms.
 
 platform-win64:build_batch_commands:
 - "pytest --junitxml=pytest_results-{platform}.xml"
- 
+
 platform-redhat64:build_shell_commands:
 - "pytest --junitxml=pytest_results-{platform}.xml"
- 
+
 junit_patterns:
 - "pytest_results.*.xml"
- 
+
 matrix:
   platform:
   - "win64"
   - "redhat64"
 ```
 
-Here we add a **matrix** section to define variations of this job. In this case, we have the platform variable, 
+Here we add a **matrix** section to define variations of this job. In this case, we have the platform variable,
 with two possible values, `win64` and `redhat64`.
 
 One job will be created for each possible combination in the matrix (only two jobs in this case).
 
-Since we can't run batch commands in linux, we add another builder section, `build_shell_commands`. Using some flags 
+Since we can't run batch commands in linux, we add another builder section, `build_shell_commands`. Using some flags
 before defining sections we can choose which one will be available in each job.
 
-Values from the matrix can also be used as variables, in this case, `{platform}` will be replaced by the platform used 
+Values from the matrix can also be used as variables, in this case, `{platform}` will be replaced by the platform used
 in that job (`win64` or `redhat64`).
 
 
 ## Branch patterns ##
 
-Branch patterns are used to filter which branches will produce jobs. This list of regular expressions 
-(using Python syntax), ensures that a branch will only produce jobs if at least one of the regular 
+Branch patterns are used to filter which branches will produce jobs. This list of regular expressions
+(using Python syntax), ensures that a branch will only produce jobs if at least one of the regular
 expressions matches the name of the branch.
 
 Here's an example that filter only `master` and feature branches:
@@ -229,7 +229,7 @@ If this section is not defined in the file, all branches will produce jobs.
 
 ## Job Matrix ##
 
-As shown in the examples above, the job matrix can be used to create multiple variations of a job. 
+As shown in the examples above, the job matrix can be used to create multiple variations of a job.
 One job for each combination of entries in this matrix is created.
 
 ```yaml
@@ -262,8 +262,8 @@ matrix:
   platform:
   - "win64"
   - "linux64"
-  
-mode-cases:platform-win.*:exclude: "yes"  
+
+mode-cases:platform-win.*:exclude: "yes"
 ```
 
 This will exclude all cases jobs from windows.
@@ -283,9 +283,9 @@ matrix:
   platform:
   - "win64"
   - "linux64"
-  
+
 platform-win.*:build_batch_commands:
-- "echo Building project {name} in branch {branch} on platform {platform}"  
+- "echo Building project {name} in branch {branch} on platform {platform}"
 ```
 
 Note that we use Python's format syntax, so if you need an actual `{` or `}` use double braces: `{{`, `}}`.
@@ -293,7 +293,7 @@ Note that we use Python's format syntax, so if you need an actual `{` or `}` use
 
 ## Condition Flags ##
 
-Variables defined in your job matrix can also be used to control some of the contents in your job file. 
+Variables defined in your job matrix can also be used to control some of the contents in your job file.
 A common example here is using different builder for windows (bash) and linux (shell).
 
 This is done by adding a prefix to sections of the YAML file, with the variable name and value necessary to use it:
@@ -301,7 +301,7 @@ This is done by adding a prefix to sections of the YAML file, with the variable 
 ```yaml
 platform-win.*:build_batch_commands:
 - "dir ."
- 
+
 platform-linux.*:build_shell_commands:
 - "ls -la ."
 
@@ -311,13 +311,13 @@ matrix:
   - "linux64"
 ```
 
-Matrix variables can also define aliases, useful to reduce duplication when using such flags. 
+Matrix variables can also define aliases, useful to reduce duplication when using such flags.
 To add aliases, simply use commas to separate additional names for matrix values:
 
 ```yaml
 platform-windows:build_batch_commands:
 - "dir ."
- 
+
 platform-linux:build_shell_commands:
 - "ls -la ."
 
@@ -333,7 +333,7 @@ On top of that you can use a special variable `branch` that's always available, 
 ```yaml
 branch-master:build_batch_commands:
 - "echo Build"
- 
+
 branch-deploy:build_batch_commands:
 - "echo Build + Deploy"
 ```
@@ -343,10 +343,10 @@ Condition values can use Python regex syntax for extra flexibility:
 ```yaml
 branch-master:build_batch_commands:
 - "echo Build"
- 
+
 branch-fb.*:build_batch_commands:
 - "echo Feature branch!"
- 
+
 branch-rb.*:build_batch_commands:
 - "echo Release branch!"
 ```
@@ -461,7 +461,7 @@ Enable support for ANSI escape sequences, including color, to Console Output.
 
 Requires [AnsiColor Plugin](https://wiki.jenkins-ci.org/display/JENKINS/AnsiColor+Plugin).
 
-Accepted values: 
+Accepted values:
 * `xterm` (default)
 * `vga`
 * `css`
@@ -481,7 +481,7 @@ Require [Cobertura Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Cobertura
 Options:
 
 * `report_pattern`: mandatory, pattern where XML coverage files are searched. These XML files are usually in
-  [Cobertura](http://cobertura.github.io/cobertura) format, which is also format by 
+  [Cobertura](http://cobertura.github.io/cobertura) format, which is also format by
   [pytest-cov](https://pypi.python.org/pypi/pytest-cov) XML output (because pytest-cov uses coverage library).
 * `healthy`: optional, specifies desired method, line and conditional metric. Any omitted metric defaults to `80`.
 * `unhealthy`: optional, specifies desired method, line and conditional metric. Any omitted metric defaults to `0`. Builds below these thresholds are marked as unhealthy.
@@ -551,7 +551,7 @@ email_notification: "email1@example.com email2@example.com"
 # or
 
 email_notification:
-  recipients: "email1@example.com email2@example.com" 
+  recipients: "email1@example.com email2@example.com"
   notify_every_build: true
   notify_individuals: true
 ```
@@ -573,7 +573,7 @@ Requires [Git Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Git+Plugin).
 Options available here are shared with `additional_repositories`.
 
 ```yaml
-git:  
+git:
   target_dir: ""
   recursive_submodules: "true"
   reference: "/path/to/ref_repos"
@@ -635,9 +635,9 @@ notify_stash:
   url: "example.com/stash"
   username: "user"
   password: "pass"
-  
+
 # Using default from Jenkins
-notify_stash:  
+notify_stash:
 ```
 
 ### parameters ###
@@ -696,7 +696,7 @@ timeout: 60
 
 ### timestamps ###
 
-Show timestamps on the left side of the console output. 
+Show timestamps on the left side of the console output.
 
 Requires the [Timestamper Plugin](https://wiki.jenkins-ci.org/display/JENKINS/Timestamper).
 
