@@ -3,7 +3,7 @@ Job's Done
 
 [![link](https://img.shields.io/pypi/v/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
 [![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
-[![link](https://github.com/pytest-dev/pytest/workflows/ci/badge.svg)](https://github.com/ESSS/jobs_done10/actions)
+[![link](https://github.com/ESSS/jobs_done10/workflows/tests/badge.svg)](https://github.com/ESSS/jobs_done10/actions)
 [![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
 
 # About #
