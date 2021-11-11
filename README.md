@@ -578,10 +578,20 @@ Options available here are shared with `additional_repositories`.
 
 ```yaml
 git:
-  target_dir: ""
-  recursive_submodules: "true"
-  reference: "/path/to/ref_repos"
+  branch: master
+  clean_checkout: false
+  lfs: true
+  recursive_submodules: true
+  reference: "/home/reference.git"
+  shallow_clone: 50
+  tags: true
+  target_dir: "main_application"
+  timeout: 30
+  url: "ssh://server/somerepo.git"
 ```
+
+Note: by default, `tags` is `false` because we noticed that fetching tags takes quite some time and
+we don't use tags for anything. If tags are needed, set `tags` to `true`.
 
 ### jsunit_patterns ###
 

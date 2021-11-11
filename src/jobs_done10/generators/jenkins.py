@@ -267,6 +267,10 @@ class JenkinsXmlJobGenerator(object):
             "shallow_clone",
             "extensions/hudson.plugins.git.extensions.impl.CloneOption/shallow",
         )
+        tags = git_options.pop("tags", "false")
+        git_xml["extensions/hudson.plugins.git.extensions.impl.CloneOption/noTags"] = (
+            "false" if tags == "true" else "true"
+        )
         _Set(
             "reference",
             "extensions/hudson.plugins.git.extensions.impl.CloneOption/reference",
