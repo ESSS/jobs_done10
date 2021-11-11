@@ -64,6 +64,9 @@ class TestJenkinsXmlJobGenerator(object):
               <hudson.plugins.git.extensions.impl.LocalBranch>
                 <localBranch>not_master</localBranch>
               </hudson.plugins.git.extensions.impl.LocalBranch>
+              <hudson.plugins.git.extensions.impl.CloneOption>
+                <noTags>true</noTags>
+              </hudson.plugins.git.extensions.impl.CloneOption>
               <hudson.plugins.git.extensions.impl.CleanCheckout/>
               <hudson.plugins.git.extensions.impl.GitLFSPull/>
             </extensions>
@@ -1090,11 +1093,17 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>not_master</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <noTags>true</noTags>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
                 +        </extensions>
                 @@ @@
                 -      </hudson.plugins.git.extensions.impl.LocalBranch>
+                -      <hudson.plugins.git.extensions.impl.CloneOption>
+                -        <noTags>true</noTags>
+                -      </hudson.plugins.git.extensions.impl.CloneOption>
                 -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 -      <hudson.plugins.git.extensions.impl.GitLFSPull/>
                 -    </extensions>
@@ -1117,6 +1126,9 @@ class TestJenkinsXmlJobGenerator(object):
                 +          <hudson.plugins.git.extensions.impl.LocalBranch>
                 +            <localBranch>my_branch</localBranch>
                 +          </hudson.plugins.git.extensions.impl.LocalBranch>
+                +          <hudson.plugins.git.extensions.impl.CloneOption>
+                +            <noTags>true</noTags>
+                +          </hudson.plugins.git.extensions.impl.CloneOption>
                 +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
                 +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
                 +        </extensions>
@@ -1153,6 +1165,9 @@ class TestJenkinsXmlJobGenerator(object):
             -      <hudson.plugins.git.extensions.impl.LocalBranch>
             -        <localBranch>not_master</localBranch>
             -      </hudson.plugins.git.extensions.impl.LocalBranch>
+            -      <hudson.plugins.git.extensions.impl.CloneOption>
+            -        <noTags>true</noTags>
+            -      </hudson.plugins.git.extensions.impl.CloneOption>
             -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
             -      <hudson.plugins.git.extensions.impl.GitLFSPull/>
             -    </extensions>
@@ -1177,6 +1192,9 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_main</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.CloneOption>
+            +            <noTags>true</noTags>
+            +          </hudson.plugins.git.extensions.impl.CloneOption>
             +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
             +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
             +        </extensions>
@@ -1199,6 +1217,9 @@ class TestJenkinsXmlJobGenerator(object):
             +          <hudson.plugins.git.extensions.impl.LocalBranch>
             +            <localBranch>custom_additional</localBranch>
             +          </hudson.plugins.git.extensions.impl.LocalBranch>
+            +          <hudson.plugins.git.extensions.impl.CloneOption>
+            +            <noTags>true</noTags>
+            +          </hudson.plugins.git.extensions.impl.CloneOption>
             +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
             +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
             +        </extensions>
@@ -1264,6 +1285,7 @@ class TestJenkinsXmlJobGenerator(object):
                   target_dir: "main_application"
                   timeout: 30
                   clean_checkout: false
+                  tags: true
                 """
             ),
             expected_diff=dedent(
@@ -1272,13 +1294,14 @@ class TestJenkinsXmlJobGenerator(object):
                 -    <relativeTargetDir>fake</relativeTargetDir>
                 +    <relativeTargetDir>main_application</relativeTargetDir>
                 @@ @@
-                +      <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +        <recursiveSubmodules>true</recursiveSubmodules>
-                +      </hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +      <hudson.plugins.git.extensions.impl.CloneOption>
+                -        <noTags>true</noTags>
+                +        <noTags>false</noTags>
                 +        <reference>/home/reference.git</reference>
                 +        <timeout>30</timeout>
-                +      </hudson.plugins.git.extensions.impl.CloneOption>"""
+                @@ @@
+                +      <hudson.plugins.git.extensions.impl.SubmoduleOption>
+                +        <recursiveSubmodules>true</recursiveSubmodules>
+                +      </hudson.plugins.git.extensions.impl.SubmoduleOption>"""
             ),
         )
 

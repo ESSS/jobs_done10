@@ -1,3 +1,7 @@
+# 1.5.0 (UNRELEASED)
+
+* New `tags` configuration added to Git, controlling if should fetch all tags or not during cloning. Default to `false`.
+
 # 1.4.2 (2021-11-10)
 
 * Fixed deploy to PyPI procedure.
