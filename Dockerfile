@@ -12,7 +12,7 @@ COPY ./requirements.txt /jobsdone/requirements.txt
 
 WORKDIR /jobsdone
 
-RUN pip install pip==21.2.4
+RUN pip install pip==21.2.4 setuptools==57.5.0
 
 COPY ./README.md /jobsdone/README.md
 COPY ./setup.py /jobsdone/setup.py

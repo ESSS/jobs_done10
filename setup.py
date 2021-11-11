@@ -17,19 +17,15 @@ setup(
         "click",
         "flask",
         "mailer",
+        "pre-commit",
         "pygments",
+        "pytest",
+        "pytest-mock",
         "python-dotenv",
         "python-jenkins",
         "pyyaml",
         "requests-mock",
     ],
-    extras_require={
-        "testing": [
-            "pre-commit",
-            "pytest",
-            "pytest-mock",
-        ],
-    },
     # ===============================================================================================
     # Packaging
     # ===============================================================================================
