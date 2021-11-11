@@ -1,0 +1,41 @@
+<publishers>
+  <xunit>
+    <thresholds>
+      <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+        <unstableThreshold>0</unstableThreshold>
+        <unstableNewThreshold>0</unstableNewThreshold>
+      </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
+    </thresholds>
+    <thresholdMode>1</thresholdMode>
+    <tools>
+      <BoostTestJunitHudsonTestType>
+        <pattern>boosttest*.xml</pattern>
+        <skipNoTestFiles>true</skipNoTestFiles>
+        <failIfNotNew>false</failIfNotNew>
+        <deleteOutputFiles>true</deleteOutputFiles>
+        <stopProcessingIfError>true</stopProcessingIfError>
+      </BoostTestJunitHudsonTestType>
+      <JUnitType>
+        <pattern>junit*.xml</pattern>
+        <skipNoTestFiles>true</skipNoTestFiles>
+        <failIfNotNew>false</failIfNotNew>
+        <deleteOutputFiles>true</deleteOutputFiles>
+        <stopProcessingIfError>true</stopProcessingIfError>
+      </JUnitType>
+    </tools>
+  </xunit>
+</publishers>
+<buildWrappers>
+  <hudson.plugins.ws__cleanup.PreBuildCleanup>
+    <patterns>
+      <hudson.plugins.ws__cleanup.Pattern>
+        <pattern>boosttest*.xml</pattern>
+        <type>INCLUDE</type>
+      </hudson.plugins.ws__cleanup.Pattern>
+      <hudson.plugins.ws__cleanup.Pattern>
+        <pattern>junit*.xml</pattern>
+        <type>INCLUDE</type>
+      </hudson.plugins.ws__cleanup.Pattern>
+    </patterns>
+  </hudson.plugins.ws__cleanup.PreBuildCleanup>
+</buildWrappers>

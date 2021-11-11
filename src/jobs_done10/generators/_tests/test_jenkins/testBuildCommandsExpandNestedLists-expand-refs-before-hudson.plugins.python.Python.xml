@@ -1,0 +1,8 @@
+<builders>
+  <hudson.plugins.python.Python>
+    <command>someone else command</command>
+  </hudson.plugins.python.Python>
+  <hudson.plugins.python.Python>
+    <command>my_command</command>
+  </hudson.plugins.python.Python>
+</builders>

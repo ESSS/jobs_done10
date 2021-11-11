@@ -1,0 +1,13 @@
+<publishers>
+  <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.33">
+    <configs>
+      <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+        <configs class="empty-list"/>
+        <projects>etk-master-linux64-27, etk-master-linux64-36</projects>
+        <condition>SUCCESS</condition>
+        <triggerWithNoParameters>true</triggerWithNoParameters>
+        <triggerFromChildProjects>false</triggerFromChildProjects>
+      </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
+    </configs>
+  </hudson.plugins.parameterizedtrigger.BuildTrigger>
+</publishers>

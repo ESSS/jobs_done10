@@ -1,0 +1,5 @@
+<buildWrappers>
+  <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.2">
+    <colorMapName>vga</colorMapName>
+  </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
+</buildWrappers>

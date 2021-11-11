@@ -1,0 +1,6 @@
+  <builders>
+    <hudson.tasks.Shell>
+      <command>multi_line
+command</command>
+    </hudson.tasks.Shell>
+  </builders>

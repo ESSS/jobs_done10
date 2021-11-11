@@ -80,8 +80,14 @@ pyparsing==2.4.7
 pytest==6.2.5
     # via
     #   jobs-done10 (setup.py)
+    #   pytest-datadir
     #   pytest-mock
+    #   pytest-regressions
+pytest-datadir==1.3.1
+    # via pytest-regressions
 pytest-mock==3.6.1
+    # via jobs-done10 (setup.py)
+pytest-regressions==2.2.0
     # via jobs-done10 (setup.py)
 python-dotenv==0.19.2
     # via jobs-done10 (setup.py)
@@ -91,6 +97,7 @@ pyyaml==6.0
     # via
     #   jobs-done10 (setup.py)
     #   pre-commit
+    #   pytest-regressions
 requests==2.26.0
     # via
     #   python-jenkins

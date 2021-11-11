@@ -1,0 +1,8 @@
+<builders>
+  <hudson.tasks.BatchFile>
+    <command>someone else command</command>
+  </hudson.tasks.BatchFile>
+  <hudson.tasks.BatchFile>
+    <command>my_command</command>
+  </hudson.tasks.BatchFile>
+</builders>

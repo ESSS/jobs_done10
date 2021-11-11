@@ -1,0 +1,5 @@
+<builders>
+  <hudson.tasks.Shell>
+    <command>my_command</command>
+  </hudson.tasks.Shell>
+</builders>

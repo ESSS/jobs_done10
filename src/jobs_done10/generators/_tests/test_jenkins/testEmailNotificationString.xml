@@ -1,0 +1,7 @@
+<publishers>
+  <hudson.tasks.Mailer>
+    <recipients>user@company.com other@company.com</recipients>
+    <dontNotifyEveryUnstableBuild>true</dontNotifyEveryUnstableBuild>
+    <sendToIndividuals>false</sendToIndividuals>
+  </hudson.tasks.Mailer>
+</publishers>

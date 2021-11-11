@@ -1,0 +1,5 @@
+<builders>
+  <hudson.plugins.python.Python>
+    <command>print 'hello'</command>
+  </hudson.plugins.python.Python>
+</builders>
