@@ -1,4 +1,4 @@
-# 1.5.0 (UNRELEASED)
+# 1.5.0 (2021-11-11)
 
 * New `tags` configuration added to Git, controlling if should fetch all tags or not during cloning. Default to `false`.
 
