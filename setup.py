@@ -10,9 +10,6 @@ setup(
     provides=["jobs_done10"],
     use_scm_version={"write_to": "src/jobs_done10/_version.py"},
     setup_requires=["setuptools_scm"],
-    # ===============================================================================================
-    # Requirements
-    # ===============================================================================================
     install_requires=[
         "click",
         "flask",
@@ -27,18 +24,12 @@ setup(
         "pyyaml",
         "requests-mock",
     ],
-    # ===============================================================================================
-    # Packaging
-    # ===============================================================================================
     entry_points={"console_scripts": ["jobs_done=jobs_done10.cli:jobs_done"]},
     packages=find_packages("src"),
     package_dir={
         "": "src",
     },
     include_package_data=True,
-    # ===============================================================================================
-    # Project description
-    # ===============================================================================================
     author="ESSS",
     author_email="dev@esss.com.br",
     url="https://github.com/ESSS/jobs_done10",

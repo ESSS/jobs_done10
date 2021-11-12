@@ -22,9 +22,6 @@ from jobs_done10.jobs_done_job import JobsDoneJob
 from jobs_done10.repository import Repository
 
 
-# ===================================================================================================
-# TestJenkinsXmlJobGenerator
-# ===================================================================================================
 class TestJenkinsXmlJobGenerator:
 
     # ===============================================================================================
@@ -984,9 +981,6 @@ class TestJenkinsXmlJobGenerator:
         return dedent("".join(new_lines))
 
 
-# ===================================================================================================
-# TestJenkinsActions
-# ===================================================================================================
 class TestJenkinsActions(object):
     """
     Integration tests for Jenkins actions
@@ -1083,9 +1077,6 @@ class TestJenkinsActions(object):
         assert result == "mock publish result"
 
 
-# ===================================================================================================
-# TestJenkinsPublisher
-# ===================================================================================================
 class TestJenkinsPublisher(object):
     def testPublishToDirectory(self, tmpdir):
         self._GetPublisher().PublishToDirectory(str(tmpdir))

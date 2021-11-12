@@ -9,9 +9,6 @@ from jobs_done10.xml_factory import WritePrettyXMLElement
 from jobs_done10.xml_factory import XmlFactory
 
 
-# ===================================================================================================
-# Test
-# ===================================================================================================
 class Test(object):
     def testSimplest(self):
         """\

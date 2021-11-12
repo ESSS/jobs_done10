@@ -49,9 +49,6 @@ def testJobGeneratorConfigurator():
         JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
 
-# ===================================================================================================
-# ExpectedCalls
-# ===================================================================================================
 @contextlib.contextmanager
 def ExpectedCalls(obj, **function_expected_calls):
     calls = {}
