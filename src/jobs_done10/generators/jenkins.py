@@ -8,9 +8,7 @@ from collections import namedtuple
 
 from jobs_done10.common import AsList
 
-# ===================================================================================================
-# JenkinsJob
-# ===================================================================================================
+
 #
 # Represents a Jenkins job.
 #
@@ -25,9 +23,6 @@ from jobs_done10.common import AsList
 JenkinsJob = namedtuple("JenkinsJob", "name repository xml")
 
 
-# ===================================================================================================
-# JenkinsXmlJobGenerator
-# ===================================================================================================
 class JenkinsXmlJobGenerator(object):
     """
     Generates Jenkins jobs.
@@ -634,9 +629,6 @@ class JenkinsXmlJobGenerator(object):
             )
 
 
-# ===================================================================================================
-# Utils
-# ===================================================================================================
 def _AsXmlString(boolean):
     """
     :param bool boolean:
@@ -651,9 +643,6 @@ def _AsXmlString(boolean):
 xmls = _AsXmlString
 
 
-# ===================================================================================================
-# JenkinsJobPublisher
-# ===================================================================================================
 class JenkinsJobPublisher(object):
     """
     Publishes `JenkinsJob`s
@@ -864,9 +853,6 @@ class JenkinsJobPublisher(object):
         raise RuntimeError("\n".join(error_msg))
 
 
-# ===================================================================================================
-# Actions for common uses of Jenkins classes
-# ===================================================================================================
 def UploadJobsFromFile(
     repository, jobs_done_file_contents, url, username=None, password=None
 ):

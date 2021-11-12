@@ -8,9 +8,6 @@ import yaml
 JOBS_DONE_FILENAME = ".jobs_done.yaml"
 
 
-# ===================================================================================================
-# JobsDoneJob
-# ===================================================================================================
 class JobsDoneJob(object):
     """
     Represents a jobs_done job, parsed from a jobs_done file.
@@ -564,9 +561,6 @@ class JobsDoneJob(object):
                     yield x
 
 
-# ===================================================================================================
-# UnknownJobsDoneJobOption
-# ===================================================================================================
 class UnknownJobsDoneFileOption(RuntimeError):
     """
     Raised when parsing an unknown option.
@@ -587,9 +581,6 @@ class UnknownJobsDoneFileOption(RuntimeError):
         )
 
 
-# ===================================================================================================
-# JobsDoneFileTypeError
-# ===================================================================================================
 class JobsDoneFileTypeError(TypeError):
     """
     Raised when parsing an option with a bad type.
@@ -622,9 +613,6 @@ class JobsDoneFileTypeError(TypeError):
         )
 
 
-# ===================================================================================================
-# UnmatchableConditionError
-# ===================================================================================================
 class UnmatchableConditionError(ValueError):
     """
     Raised when declaring a condition that can never be matches based on available matrix rows.
@@ -650,9 +638,7 @@ _FALSE_VALUES = ["FALSE", "NO", "0"]
 _TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES
 _KNOWN_NUMBER_TYPES = None
 
-# ===================================================================================================
-# Boolean
-# ===================================================================================================
+
 def Boolean(text):
     """
     :param unicode text:

@@ -1,6 +1,3 @@
-# ===================================================================================================
-# IJobGenerator
-# ===================================================================================================
 class IJobGenerator(object):
     """
     Interface for job generators.
@@ -49,9 +46,6 @@ class IJobGenerator(object):
         """
 
 
-# ===================================================================================================
-# JobGeneratorConfigurator
-# ===================================================================================================
 class JobGeneratorConfigurator(object):
     """
     Class used to configure `IJobGenerator`s using `JobsDoneJob`.
@@ -97,9 +91,6 @@ class JobGeneratorConfigurator(object):
         return generator
 
 
-# ===================================================================================================
-# JobGeneratorAttributeError
-# ===================================================================================================
 class JobGeneratorAttributeError(AttributeError):
     """
     Raised when trying to access a generator function that is not implemented.

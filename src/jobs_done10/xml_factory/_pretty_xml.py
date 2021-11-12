@@ -1,9 +1,6 @@
 from xml.etree import ElementTree
 
 
-# ===================================================================================================
-# WritePrettyXML
-# ===================================================================================================
 def WritePrettyXML(input, output):
     """
     Writes the input file in pretty xml.
@@ -30,9 +27,6 @@ def WritePrettyXML(input, output):
             out_stream.close()
 
 
-# ===================================================================================================
-# WritePrettyXMLElement
-# ===================================================================================================
 def WritePrettyXMLElement(oss, element, indent=0):
     """
     Writes an xml element in the given file (oss) recursivelly, in pretty xml.
