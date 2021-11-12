@@ -1,0 +1,26 @@
+<properties>
+  <hudson.model.ParametersDefinitionProperty>
+    <parameterDefinitions>
+      <hudson.model.ChoiceParameterDefinition>
+        <choices class="java.util.Arrays$ArrayList">
+          <a class="string-array">
+            <string>choice_1</string>
+            <string>choice_2</string>
+          </a>
+        </choices>
+        <name>PARAM</name>
+        <description>Description</description>
+      </hudson.model.ChoiceParameterDefinition>
+      <hudson.model.ChoiceParameterDefinition>
+        <choices class="java.util.Arrays$ArrayList">
+          <a class="string-array">
+            <string>choice_1</string>
+            <string>choice_2</string>
+          </a>
+        </choices>
+        <name>PARAM_2</name>
+        <description>Description</description>
+      </hudson.model.ChoiceParameterDefinition>
+    </parameterDefinitions>
+  </hudson.model.ParametersDefinitionProperty>
+</properties>

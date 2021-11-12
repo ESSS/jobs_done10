@@ -21,6 +21,7 @@ setup(
         "pygments",
         "pytest",
         "pytest-mock",
+        "pytest-regressions",
         "python-dotenv",
         "python-jenkins",
         "pyyaml",

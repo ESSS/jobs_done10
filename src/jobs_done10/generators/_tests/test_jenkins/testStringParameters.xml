@@ -1,0 +1,11 @@
+<properties>
+  <hudson.model.ParametersDefinitionProperty>
+    <parameterDefinitions>
+      <hudson.model.StringParameterDefinition>
+        <defaultValue>Default</defaultValue>
+        <name>PARAM_VERSION</name>
+        <description>Description</description>
+      </hudson.model.StringParameterDefinition>
+    </parameterDefinitions>
+  </hudson.model.ParametersDefinitionProperty>
+</properties>

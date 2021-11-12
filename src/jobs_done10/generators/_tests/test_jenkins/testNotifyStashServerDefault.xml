@@ -1,0 +1,5 @@
+<publishers>
+  <org.jenkinsci.plugins.stashNotifier.StashNotifier>
+    <stashServerBaseUrl>stash.com</stashServerBaseUrl>
+  </org.jenkinsci.plugins.stashNotifier.StashNotifier>
+</publishers>

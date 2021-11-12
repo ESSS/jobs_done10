@@ -1,0 +1,10 @@
+<buildWrappers>
+  <hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
+      <timeoutSecondsString>600</timeoutSecondsString>
+    </strategy>
+    <operationList>
+      <hudson.plugins.build__timeout.operations.FailOperation/>
+    </operationList>
+  </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+</buildWrappers>

@@ -3,6 +3,8 @@ import os
 import re
 from subprocess import check_call
 from textwrap import dedent
+from typing import Tuple
+from typing import Union
 
 import jenkins
 import pytest
@@ -23,70 +25,20 @@ from jobs_done10.repository import Repository
 # ===================================================================================================
 # TestJenkinsXmlJobGenerator
 # ===================================================================================================
-class TestJenkinsXmlJobGenerator(object):
-
-    # ===============================================================================================
-    # Setup for common results in all tests
-    # ===============================================================================================
-    # Baseline expected XML. All tests are compared against this baseline, this way each test only
-    # has to verify what is expected to be different, this way, if the baseline is changed, we don't
-    # have to fix all tests.
-    BASIC_EXPECTED_XML = dedent(
-        """\
-        <?xml version="1.0" ?>
-        <project>
-          <description>&lt;!-- Managed by Job's Done --&gt;</description>
-          <keepDependencies>false</keepDependencies>
-          <logRotator>
-            <daysToKeep>7</daysToKeep>
-            <numToKeep>-1</numToKeep>
-            <artifactDaysToKeep>-1</artifactDaysToKeep>
-            <artifactNumToKeep>-1</artifactNumToKeep>
-          </logRotator>
-          <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
-          <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
-          <concurrentBuild>false</concurrentBuild>
-          <canRoam>false</canRoam>
-          <scm class="hudson.plugins.git.GitSCM">
-            <configVersion>2</configVersion>
-            <relativeTargetDir>fake</relativeTargetDir>
-            <userRemoteConfigs>
-              <hudson.plugins.git.UserRemoteConfig>
-                <url>http://fake.git</url>
-              </hudson.plugins.git.UserRemoteConfig>
-            </userRemoteConfigs>
-            <branches>
-              <hudson.plugins.git.BranchSpec>
-                <name>not_master</name>
-              </hudson.plugins.git.BranchSpec>
-            </branches>
-            <extensions>
-              <hudson.plugins.git.extensions.impl.LocalBranch>
-                <localBranch>not_master</localBranch>
-              </hudson.plugins.git.extensions.impl.LocalBranch>
-              <hudson.plugins.git.extensions.impl.CloneOption>
-                <noTags>true</noTags>
-              </hudson.plugins.git.extensions.impl.CloneOption>
-              <hudson.plugins.git.extensions.impl.CleanCheckout/>
-              <hudson.plugins.git.extensions.impl.GitLFSPull/>
-            </extensions>
-            <localBranch>not_master</localBranch>
-          </scm>
-          <assignedNode>fake</assignedNode>
-        </project>""",
-    )
+class TestJenkinsXmlJobGenerator:
 
     # ===============================================================================================
     # Tests
     # ===============================================================================================
     def testEmpty(self):
         with pytest.raises(ValueError) as e:
-            self._DoTest(yaml_contents="", expected_diff=None)
+            self._GenerateJob(yaml_contents="")
         assert str(e.value) == "Could not parse anything from .yaml contents"
 
-    def testChoiceParameters(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testChoiceParameters(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """\
                 parameters:
                   - choice:
@@ -97,31 +49,13 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <properties>
-                +    <hudson.model.ParametersDefinitionProperty>
-                +      <parameterDefinitions>
-                +        <hudson.model.ChoiceParameterDefinition>
-                +          <choices class="java.util.Arrays$ArrayList">
-                +            <a class="string-array">
-                +              <string>choice_1</string>
-                +              <string>choice_2</string>
-                +            </a>
-                +          </choices>
-                +          <name>PARAM</name>
-                +          <description>Description</description>
-                +        </hudson.model.ChoiceParameterDefinition>
-                +      </parameterDefinitions>
-                +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>"""
-            ),
+            boundary_tags="properties",
         )
 
-    def testMultipleChoiceParameters(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testMultipleChoiceParameters(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """
                 parameters:
                   - choice:
@@ -138,41 +72,13 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <properties>
-                +    <hudson.model.ParametersDefinitionProperty>
-                +      <parameterDefinitions>
-                +        <hudson.model.ChoiceParameterDefinition>
-                +          <choices class="java.util.Arrays$ArrayList">
-                +            <a class="string-array">
-                +              <string>choice_1</string>
-                +              <string>choice_2</string>
-                +            </a>
-                +          </choices>
-                +          <name>PARAM</name>
-                +          <description>Description</description>
-                +        </hudson.model.ChoiceParameterDefinition>
-                +        <hudson.model.ChoiceParameterDefinition>
-                +          <choices class="java.util.Arrays$ArrayList">
-                +            <a class="string-array">
-                +              <string>choice_1</string>
-                +              <string>choice_2</string>
-                +            </a>
-                +          </choices>
-                +          <name>PARAM_2</name>
-                +          <description>Description</description>
-                +        </hudson.model.ChoiceParameterDefinition>
-                +      </parameterDefinitions>
-                +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>"""
-            ),
+            boundary_tags="properties",
         )
 
-    def testStringParameters(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testStringParameters(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """
                 parameters:
                   - string:
@@ -181,26 +87,13 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <properties>
-                +    <hudson.model.ParametersDefinitionProperty>
-                +      <parameterDefinitions>
-                +        <hudson.model.StringParameterDefinition>
-                +          <defaultValue>Default</defaultValue>
-                +          <name>PARAM_VERSION</name>
-                +          <description>Description</description>
-                +        </hudson.model.StringParameterDefinition>
-                +      </parameterDefinitions>
-                +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>"""
-            ),
+            boundary_tags="properties",
         )
 
-    def testMultipleStringParameters(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testMultipleStringParameters(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """
                 parameters:
                   - string:
@@ -213,31 +106,13 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <properties>
-                +    <hudson.model.ParametersDefinitionProperty>
-                +      <parameterDefinitions>
-                +        <hudson.model.StringParameterDefinition>
-                +          <defaultValue>Default</defaultValue>
-                +          <name>PARAM_VERSION</name>
-                +          <description>Description</description>
-                +        </hudson.model.StringParameterDefinition>
-                +        <hudson.model.StringParameterDefinition>
-                +          <defaultValue>Default</defaultValue>
-                +          <name>PARAM_VERSION_2</name>
-                +          <description>Description</description>
-                +        </hudson.model.StringParameterDefinition>
-                +      </parameterDefinitions>
-                +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>"""
-            ),
+            boundary_tags="properties",
         )
 
-    def testParametersMaintainOrder(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testParametersMaintainOrder(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """
                 parameters:
                   - choice:
@@ -252,35 +127,12 @@ class TestJenkinsXmlJobGenerator(object):
                       description: "Description"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <properties>
-                +    <hudson.model.ParametersDefinitionProperty>
-                +      <parameterDefinitions>
-                +        <hudson.model.ChoiceParameterDefinition>
-                +          <choices class="java.util.Arrays$ArrayList">
-                +            <a class="string-array">
-                +              <string>choice_1</string>
-                +              <string>choice_2</string>
-                +            </a>
-                +          </choices>
-                +          <name>PARAM</name>
-                +          <description>Description</description>
-                +        </hudson.model.ChoiceParameterDefinition>
-                +        <hudson.model.StringParameterDefinition>
-                +          <defaultValue>Default</defaultValue>
-                +          <name>PARAM_VERSION</name>
-                +          <description>Description</description>
-                +        </hudson.model.StringParameterDefinition>
-                +      </parameterDefinitions>
-                +    </hudson.model.ParametersDefinitionProperty>
-                +  </properties>"""
-            ),
+            boundary_tags="properties",
         )
 
-    def testJUnitPatterns(self):
-        self._DoTest(
+    def testJUnitPatterns(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 junit_patterns:
@@ -288,207 +140,81 @@ class TestJenkinsXmlJobGenerator(object):
                 - "others.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <JUnitType>
-                +          <pattern>junit*.xml,others.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JUnitType>
-                +      </tools>
-                +    </xunit>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>junit*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>others.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
-    def testTimeoutAbsolute(self):
-        self._DoTest(
+    def testTimeoutAbsolute(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 timeout: 60
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <buildWrappers>
-                +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +      <timeoutMinutes>60</timeoutMinutes>
-                +      <failBuild>true</failBuild>
-                +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags="buildWrappers",
         )
 
-    def testTimeoutNoActivity(self):
-        self._DoTest(
+    def testTimeoutNoActivity(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 timeout_no_activity: 600
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <buildWrappers>
-                +    <hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +      <strategy class="hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy">
-                +        <timeoutSecondsString>600</timeoutSecondsString>
-                +      </strategy>
-                +      <operationList>
-                +        <hudson.plugins.build__timeout.operations.FailOperation/>
-                +      </operationList>
-                +    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags="buildWrappers",
         )
 
-    def testCustomWorkspace(self):
-        self._DoTest(
+    def testCustomWorkspace(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 custom_workspace: workspace/WS
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <customWorkspace>workspace/WS</customWorkspace>"""
-            ),
-        )
+            boundary_tags="project",
+        ),
 
-    def testAuthToken(self):
-        self._DoTest(
+    def testAuthToken(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 auth_token: my_token
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <authToken>my_token</authToken>"""
-            ),
+            boundary_tags="project",
         )
 
-    def testBoosttestPatterns(self):
-        self._DoTest(
+    def testBoosttestPatterns(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 boosttest_patterns:
                 - "boost*.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <BoostTestJunitHudsonTestType>
-                +          <pattern>boost*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </BoostTestJunitHudsonTestType>
-                +      </tools>
-                +    </xunit>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>boost*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
-    def testJSUnitPatterns(self):
-        self._DoTest(
+    def testJSUnitPatterns(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 jsunit_patterns:
                 - "jsunit*.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <JSUnitPluginType>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JSUnitPluginType>
-                +      </tools>
-                +    </xunit>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
-    def testMultipleTestResults(self):
-        self._DoTest(
-            yaml_contents=dedent(
+    def testMultipleTestResults(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=(
                 """
                 junit_patterns:
                 - "junit*.xml"
@@ -497,51 +223,7 @@ class TestJenkinsXmlJobGenerator(object):
                 - "boosttest*.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <BoostTestJunitHudsonTestType>
-                +          <pattern>boosttest*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </BoostTestJunitHudsonTestType>
-                +        <JUnitType>
-                +          <pattern>junit*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JUnitType>
-                +      </tools>
-                +    </xunit>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>boosttest*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>junit*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
     @pytest.mark.parametrize(
@@ -552,10 +234,13 @@ class TestJenkinsXmlJobGenerator(object):
             ("build_python_commands", "hudson.plugins.python.Python"),
         ],
     )
-    def testBuildCommandsExpandNestedLists(self, job_done_key, xml_key):
+    def testBuildCommandsExpandNestedLists(
+        self, file_regression, job_done_key, xml_key
+    ):
 
         # sanity: no ref
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 f"""
                 branch-foo:{job_done_key}:
@@ -564,19 +249,13 @@ class TestJenkinsXmlJobGenerator(object):
                 - my_command
                 """
             ),
-            expected_diff=dedent(
-                f"""\
-                @@ @@
-                +  <builders>
-                +    <{xml_key}>
-                +      <command>my_command</command>
-                +    </{xml_key}>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename=f"testBuildCommandsExpandNestedLists-noref-{xml_key}",
         )
 
         # expand refs (after)
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 f"""
                 branch-foo:{job_done_key}: &ref_a
@@ -586,22 +265,13 @@ class TestJenkinsXmlJobGenerator(object):
                 - *ref_a
                 """
             ),
-            expected_diff=dedent(
-                f"""\
-                @@ @@
-                +  <builders>
-                +    <{xml_key}>
-                +      <command>my_command</command>
-                +    </{xml_key}>
-                +    <{xml_key}>
-                +      <command>someone else command</command>
-                +    </{xml_key}>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename=f"testBuildCommandsExpandNestedLists-expand-refs-after-{xml_key}",
         )
 
         # expand refs (before)
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 f"""
                 branch-foo:{job_done_key}: &ref_a
@@ -611,42 +281,27 @@ class TestJenkinsXmlJobGenerator(object):
                 - my_command
                 """
             ),
-            expected_diff=dedent(
-                f"""\
-                @@ @@
-                +  <builders>
-                +    <{xml_key}>
-                +      <command>someone else command</command>
-                +    </{xml_key}>
-                +    <{xml_key}>
-                +      <command>my_command</command>
-                +    </{xml_key}>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename=f"testBuildCommandsExpandNestedLists-expand-refs-before-{xml_key}",
         )
 
-    def testBuildBatchCommand(self):
+    def testBuildBatchCommand(self, file_regression):
         # works with a single command
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_batch_commands:
                 - my_command
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.BatchFile>
-                +      <command>my_command</command>
-                +    </hudson.tasks.BatchFile>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildBatchCommand-single",
         )
 
         # Works with multi line commands
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_batch_commands:
@@ -655,20 +310,13 @@ class TestJenkinsXmlJobGenerator(object):
                   command
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.BatchFile>
-                +      <command>multi_line&#xd;
-                +command</command>
-                +    </hudson.tasks.BatchFile>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildBatchCommand-multi",
         )
 
         # Works with multiple commands
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_batch_commands:
@@ -676,62 +324,40 @@ class TestJenkinsXmlJobGenerator(object):
                 - command_2
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.BatchFile>
-                +      <command>command_1</command>
-                +    </hudson.tasks.BatchFile>
-                +    <hudson.tasks.BatchFile>
-                +      <command>command_2</command>
-                +    </hudson.tasks.BatchFile>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildBatchCommand-multi-commands",
         )
 
-    def testBuildPythonCommand(self):
+    def testBuildPythonCommand(self, file_regression):
         # works with a single command
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_python_commands:
                 - print 'hello'
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.plugins.python.Python>
-                +      <command>print 'hello'</command>
-                +    </hudson.plugins.python.Python>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
         )
 
-    def testBuildShellCommand(self):
+    def testBuildShellCommand(self, file_regression):
         # works with a single command
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_shell_commands:
                 - my_command
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.Shell>
-                +      <command>my_command</command>
-                +    </hudson.tasks.Shell>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildShellCommand-single",
         )
 
         # Works with multi line commands
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_shell_commands:
@@ -740,20 +366,13 @@ class TestJenkinsXmlJobGenerator(object):
                   command
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.Shell>
-                +      <command>multi_line
-                +command</command>
-                +    </hudson.tasks.Shell>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildShellCommand-multi",
         )
 
         # Works with multiple commands
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 build_shell_commands:
@@ -761,42 +380,24 @@ class TestJenkinsXmlJobGenerator(object):
                 - command_2
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <builders>
-                +    <hudson.tasks.Shell>
-                +      <command>command_1</command>
-                +    </hudson.tasks.Shell>
-                +    <hudson.tasks.Shell>
-                +      <command>command_2</command>
-                +    </hudson.tasks.Shell>
-                +  </builders>"""
-            ),
+            boundary_tags="builders",
+            basename="testBuildShellCommand-multi-commands",
         )
 
-    def testDescriptionRegex(self):
-        self._DoTest(
+    def testDescriptionRegex(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 r"""
                 description_regex: "JENKINS DESCRIPTION\\: (.*)"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
-                +      <regexp>JENKINS DESCRIPTION\\: (.*)</regexp>
-                +      <regexpForFailed>JENKINS DESCRIPTION\\: (.*)</regexpForFailed>
-                +      <setForMatrix>false</setForMatrix>
-                +    </hudson.plugins.descriptionsetter.DescriptionSetterPublisher>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
-    def testNotifyStash(self):
-        self._DoTest(
+    def testNotifyStash(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 r"""
                 notify_stash:
@@ -805,47 +406,31 @@ class TestJenkinsXmlJobGenerator(object):
                   password: pass
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
-                +      <stashUserName>user</stashUserName>
-                +      <stashUserPassword>pass</stashUserPassword>
-                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
-    def testNotifyStashServerDefault(self):
+    def testNotifyStashServerDefault(self, file_regression):
         """
         When given no parameters, use the default Stash configurations set in the Jenkins server
         """
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 notify_stash: stash.com
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
-                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
-    def testNotifyStashWithTests(self):
+    def testNotifyStashWithTests(self, file_regression):
         """
         When we have both notify_stash, and some test pattern, we have to make sure that the output
         jenkins job xml places the notify_stash publisher AFTER the test publisher, otherwise builds
         with failed tests might be reported as successful to Stash
         """
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 notify_stash:
@@ -857,48 +442,10 @@ class TestJenkinsXmlJobGenerator(object):
                 - "jsunit*.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <JSUnitPluginType>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JSUnitPluginType>
-                +      </tools>
-                +    </xunit>
-                +    <org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +      <stashServerBaseUrl>stash.com</stashServerBaseUrl>
-                +      <stashUserName>user</stashUserName>
-                +      <stashUserPassword>pass</stashUserPassword>
-                +    </org.jenkinsci.plugins.stashNotifier.StashNotifier>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
-    def testMatrix(self):
+    def testMatrix(self, file_regression):
         yaml_contents = dedent(
             """
             planet-earth:build_shell_commands:
@@ -930,25 +477,12 @@ class TestJenkinsXmlJobGenerator(object):
             planet = jd_file.matrix_row["planet"]
 
             # Matrix affects the jobs name, but single value rows are left out
-            assert jenkins_job.name == "fake-not_master-%(planet)s" % locals()
-
-            self._AssertDiff(
-                jenkins_job.xml,
-                dedent(
-                    """\
-                    @@ @@
-                    -  <assignedNode>fake</assignedNode>
-                    +  <assignedNode>fake-%(planet)s</assignedNode>
-                    +  <builders>
-                    +    <hudson.tasks.Shell>
-                    +      <command>%(planet)s_command</command>
-                    +    </hudson.tasks.Shell>
-                    +  </builders>"""
-                    % locals()
-                ),
+            assert jenkins_job.name == f"fake-not_master-{planet}"
+            file_regression.check(
+                jenkins_job.xml, extension=".xml", basename=f"testMatrix-{planet}"
             )
 
-    def testMatrixSingleValueOnly(self):
+    def testMatrixSingleValueOnly(self, file_regression):
         yaml_contents = dedent(
             """
             matrix:
@@ -972,39 +506,34 @@ class TestJenkinsXmlJobGenerator(object):
         assert jenkins_job.name == "fake-not_master"
 
         # XML should have no diff too, because single values do not affect label_expression
-        self._AssertDiff(jenkins_job.xml, "")
+        new_content = self.ExtractTagBoundaries(jenkins_job.xml, "project")
+        file_regression.check(new_content, extension=".xml")
 
-    def testDisplayName(self):
-        self._DoTest(
+    def testDisplayName(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 display_name: "{name}-{branch}"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <displayName>fake-not_master</displayName>"""
-            ),
+            boundary_tags="project",
         )
 
-    def testLabelExpression(self):
-        self._DoTest(
+    def testLabelExpression(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 label_expression: "win32&&dist-12.0"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                -  <assignedNode>fake</assignedNode>
-                +  <assignedNode>win32&amp;&amp;dist-12.0</assignedNode>"""
-            ),
+            boundary_tags="project",
         )
 
-    def testCron(self):
-        self._DoTest(
+    def testCron(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 cron: |
@@ -1012,20 +541,12 @@ class TestJenkinsXmlJobGenerator(object):
                        0 22 * * *
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <triggers>
-                +    <hudson.triggers.TimerTrigger>
-                +      <spec># Everyday at 22 pm
-                +0 22 * * *</spec>
-                +    </hudson.triggers.TimerTrigger>
-                +  </triggers>"""
-            ),
+            boundary_tags="triggers",
         )
 
-    def testSCMPoll(self):
-        self._DoTest(
+    def testSCMPoll(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 scm_poll: |
@@ -1033,20 +554,12 @@ class TestJenkinsXmlJobGenerator(object):
                        0 22 * * *
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <triggers>
-                +    <hudson.triggers.SCMTrigger>
-                +      <spec># Everyday at 22 pm
-                +0 22 * * *</spec>
-                +    </hudson.triggers.SCMTrigger>
-                +  </triggers>"""
-            ),
+            boundary_tags="triggers",
         )
 
-    def testAdditionalRepositories(self):
-        self._DoTest(
+    def testAdditionalRepositories(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 additional_repositories:
@@ -1055,183 +568,16 @@ class TestJenkinsXmlJobGenerator(object):
                     branch: my_branch
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                -  <scm class="hudson.plugins.git.GitSCM">
-                -    <configVersion>2</configVersion>
-                -    <relativeTargetDir>fake</relativeTargetDir>
-                -    <userRemoteConfigs>
-                -      <hudson.plugins.git.UserRemoteConfig>
-                -        <url>http://fake.git</url>
-                -      </hudson.plugins.git.UserRemoteConfig>
-                -    </userRemoteConfigs>
-                -    <branches>
-                -      <hudson.plugins.git.BranchSpec>
-                -        <name>not_master</name>
-                -      </hudson.plugins.git.BranchSpec>
-                -    </branches>
-                -    <extensions>
-                -      <hudson.plugins.git.extensions.impl.LocalBranch>
-                +  <assignedNode>fake</assignedNode>
-                +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
-                +    <scms>
-                +      <hudson.plugins.git.GitSCM>
-                +        <configVersion>2</configVersion>
-                +        <relativeTargetDir>fake</relativeTargetDir>
-                +        <userRemoteConfigs>
-                +          <hudson.plugins.git.UserRemoteConfig>
-                +            <url>http://fake.git</url>
-                +          </hudson.plugins.git.UserRemoteConfig>
-                +        </userRemoteConfigs>
-                +        <branches>
-                +          <hudson.plugins.git.BranchSpec>
-                +            <name>not_master</name>
-                +          </hudson.plugins.git.BranchSpec>
-                +        </branches>
-                +        <extensions>
-                +          <hudson.plugins.git.extensions.impl.LocalBranch>
-                +            <localBranch>not_master</localBranch>
-                +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <noTags>true</noTags>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
-                +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
-                +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
-                +        </extensions>
-                @@ @@
-                -      </hudson.plugins.git.extensions.impl.LocalBranch>
-                -      <hudson.plugins.git.extensions.impl.CloneOption>
-                -        <noTags>true</noTags>
-                -      </hudson.plugins.git.extensions.impl.CloneOption>
-                -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
-                -      <hudson.plugins.git.extensions.impl.GitLFSPull/>
-                -    </extensions>
-                -    <localBranch>not_master</localBranch>
-                +      </hudson.plugins.git.GitSCM>
-                +      <hudson.plugins.git.GitSCM>
-                +        <configVersion>2</configVersion>
-                +        <relativeTargetDir>some_url</relativeTargetDir>
-                +        <userRemoteConfigs>
-                +          <hudson.plugins.git.UserRemoteConfig>
-                +            <url>http://some_url.git</url>
-                +          </hudson.plugins.git.UserRemoteConfig>
-                +        </userRemoteConfigs>
-                +        <branches>
-                +          <hudson.plugins.git.BranchSpec>
-                +            <name>my_branch</name>
-                +          </hudson.plugins.git.BranchSpec>
-                +        </branches>
-                +        <extensions>
-                +          <hudson.plugins.git.extensions.impl.LocalBranch>
-                +            <localBranch>my_branch</localBranch>
-                +          </hudson.plugins.git.extensions.impl.LocalBranch>
-                +          <hudson.plugins.git.extensions.impl.CloneOption>
-                +            <noTags>true</noTags>
-                +          </hudson.plugins.git.extensions.impl.CloneOption>
-                +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
-                +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
-                +        </extensions>
-                +        <localBranch>my_branch</localBranch>
-                +      </hudson.plugins.git.GitSCM>
-                +    </scms>
-                @@ @@
-                -  <assignedNode>fake</assignedNode>"""
-            ),
+            boundary_tags="scm",
         )
 
-    def testGitAndAdditionalRepositories(self):
+    def testGitAndAdditionalRepositories(self, file_regression):
         """
         Make sure that everything works just fine when we mix 'git' and 'additional_repositories'
         """
-        # We expect the same diff for both orders (git -> additional and additional -> git)
-        expected_diff = dedent(
-            """\
-            @@ @@
-            -  <scm class="hudson.plugins.git.GitSCM">
-            -    <configVersion>2</configVersion>
-            -    <relativeTargetDir>fake</relativeTargetDir>
-            -    <userRemoteConfigs>
-            -      <hudson.plugins.git.UserRemoteConfig>
-            -        <url>http://fake.git</url>
-            -      </hudson.plugins.git.UserRemoteConfig>
-            -    </userRemoteConfigs>
-            -    <branches>
-            -      <hudson.plugins.git.BranchSpec>
-            -        <name>not_master</name>
-            -      </hudson.plugins.git.BranchSpec>
-            -    </branches>
-            -    <extensions>
-            -      <hudson.plugins.git.extensions.impl.LocalBranch>
-            -        <localBranch>not_master</localBranch>
-            -      </hudson.plugins.git.extensions.impl.LocalBranch>
-            -      <hudson.plugins.git.extensions.impl.CloneOption>
-            -        <noTags>true</noTags>
-            -      </hudson.plugins.git.extensions.impl.CloneOption>
-            -      <hudson.plugins.git.extensions.impl.CleanCheckout/>
-            -      <hudson.plugins.git.extensions.impl.GitLFSPull/>
-            -    </extensions>
-            -    <localBranch>not_master</localBranch>
-            +  <assignedNode>fake</assignedNode>
-            +  <scm class="org.jenkinsci.plugins.multiplescms.MultiSCM">
-            +    <scms>
-            +      <hudson.plugins.git.GitSCM>
-            +        <configVersion>2</configVersion>
-            +        <relativeTargetDir>fake</relativeTargetDir>
-            +        <userRemoteConfigs>
-            +          <hudson.plugins.git.UserRemoteConfig>
-            +            <url>http://fake.git</url>
-            +          </hudson.plugins.git.UserRemoteConfig>
-            +        </userRemoteConfigs>
-            +        <branches>
-            +          <hudson.plugins.git.BranchSpec>
-            +            <name>custom_main</name>
-            +          </hudson.plugins.git.BranchSpec>
-            +        </branches>
-            +        <extensions>
-            +          <hudson.plugins.git.extensions.impl.LocalBranch>
-            +            <localBranch>custom_main</localBranch>
-            +          </hudson.plugins.git.extensions.impl.LocalBranch>
-            +          <hudson.plugins.git.extensions.impl.CloneOption>
-            +            <noTags>true</noTags>
-            +          </hudson.plugins.git.extensions.impl.CloneOption>
-            +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
-            +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
-            +        </extensions>
-            +        <localBranch>custom_main</localBranch>
-            +      </hudson.plugins.git.GitSCM>
-            +      <hudson.plugins.git.GitSCM>
-            +        <configVersion>2</configVersion>
-            +        <relativeTargetDir>additional</relativeTargetDir>
-            +        <userRemoteConfigs>
-            +          <hudson.plugins.git.UserRemoteConfig>
-            +            <url>http://additional.git</url>
-            +          </hudson.plugins.git.UserRemoteConfig>
-            +        </userRemoteConfigs>
-            +        <branches>
-            +          <hudson.plugins.git.BranchSpec>
-            +            <name>custom_additional</name>
-            +          </hudson.plugins.git.BranchSpec>
-            +        </branches>
-            +        <extensions>
-            +          <hudson.plugins.git.extensions.impl.LocalBranch>
-            +            <localBranch>custom_additional</localBranch>
-            +          </hudson.plugins.git.extensions.impl.LocalBranch>
-            +          <hudson.plugins.git.extensions.impl.CloneOption>
-            +            <noTags>true</noTags>
-            +          </hudson.plugins.git.extensions.impl.CloneOption>
-            +          <hudson.plugins.git.extensions.impl.CleanCheckout/>
-            +          <hudson.plugins.git.extensions.impl.GitLFSPull/>
-            +        </extensions>
-            +        <localBranch>custom_additional</localBranch>
-            +      </hudson.plugins.git.GitSCM>
-            +    </scms>
-            @@ @@
-            -  <assignedNode>fake</assignedNode>"""
-        )
-
         # Test git -> additional
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 git:
@@ -1243,11 +589,12 @@ class TestJenkinsXmlJobGenerator(object):
                     branch: custom_additional
                 """
             ),
-            expected_diff=expected_diff,
+            boundary_tags="scm",
         )
 
         # Test additional -> git
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 additional_repositories:
@@ -1259,24 +606,24 @@ class TestJenkinsXmlJobGenerator(object):
                   branch: custom_main
                 """
             ),
-            expected_diff=expected_diff,
+            boundary_tags="scm",
         )
 
     def testUnknownGitOptions(self):
         with pytest.raises(RuntimeError) as e:
-            self._DoTest(
+            self._GenerateJob(
                 yaml_contents=dedent(
                     """
                     git:
                       unknown: ""
                     """
                 ),
-                expected_diff="",
             )
         assert str(e.value) == "Received unknown git options: ['unknown']"
 
-    def testGitOptions(self):
-        self._DoTest(
+    def testGitOptions(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 git:
@@ -1288,25 +635,12 @@ class TestJenkinsXmlJobGenerator(object):
                   tags: true
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                -    <relativeTargetDir>fake</relativeTargetDir>
-                +    <relativeTargetDir>main_application</relativeTargetDir>
-                @@ @@
-                -        <noTags>true</noTags>
-                +        <noTags>false</noTags>
-                +        <reference>/home/reference.git</reference>
-                +        <timeout>30</timeout>
-                @@ @@
-                +      <hudson.plugins.git.extensions.impl.SubmoduleOption>
-                +        <recursiveSubmodules>true</recursiveSubmodules>
-                +      </hudson.plugins.git.extensions.impl.SubmoduleOption>"""
-            ),
+            boundary_tags="scm",
         )
 
-    def testEmailNotificationDict(self):
-        self._DoTest(
+    def testEmailNotificationDict(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 email_notification:
@@ -1316,46 +650,28 @@ class TestJenkinsXmlJobGenerator(object):
 
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.tasks.Mailer>
-                +      <recipients>user@company.com other@company.com</recipients>
-                +      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-                +      <sendToIndividuals>true</sendToIndividuals>
-                +    </hudson.tasks.Mailer>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
-    def testEmailNotificationString(self):
-        self._DoTest(
+    def testEmailNotificationString(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 email_notification: user@company.com other@company.com
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.tasks.Mailer>
-                +      <recipients>user@company.com other@company.com</recipients>
-                +      <dontNotifyEveryUnstableBuild>true</dontNotifyEveryUnstableBuild>
-                +      <sendToIndividuals>false</sendToIndividuals>
-                +    </hudson.tasks.Mailer>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
-    def testEmailNotificationWithTests(self):
+    def testEmailNotificationWithTests(self, file_regression):
         """
         When we have both email_notification, and some test pattern, we have to make sure that the
         output jenkins job xml places the email_notification publisher AFTER the test publisher,
         otherwise builds with failed tests might be reported as successful via email
         """
-        self._DoTest(
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 email_notification:
@@ -1367,49 +683,12 @@ class TestJenkinsXmlJobGenerator(object):
                 - "jsunit*.xml"
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <xunit>
-                +      <thresholds>
-                +        <org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +          <unstableThreshold>0</unstableThreshold>
-                +          <unstableNewThreshold>0</unstableNewThreshold>
-                +        </org.jenkinsci.plugins.xunit.threshold.FailedThreshold>
-                +      </thresholds>
-                +      <thresholdMode>1</thresholdMode>
-                +      <tools>
-                +        <JSUnitPluginType>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <skipNoTestFiles>true</skipNoTestFiles>
-                +          <failIfNotNew>false</failIfNotNew>
-                +          <deleteOutputFiles>true</deleteOutputFiles>
-                +          <stopProcessingIfError>true</stopProcessingIfError>
-                +        </JSUnitPluginType>
-                +      </tools>
-                +    </xunit>
-                +    <hudson.tasks.Mailer>
-                +      <recipients>user@company.com other@company.com</recipients>
-                +      <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-                +      <sendToIndividuals>true</sendToIndividuals>
-                +    </hudson.tasks.Mailer>
-                +  </publishers>
-                +  <buildWrappers>
-                +    <hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +      <patterns>
-                +        <hudson.plugins.ws__cleanup.Pattern>
-                +          <pattern>jsunit*.xml</pattern>
-                +          <type>INCLUDE</type>
-                +        </hudson.plugins.ws__cleanup.Pattern>
-                +      </patterns>
-                +    </hudson.plugins.ws__cleanup.PreBuildCleanup>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags=("publishers", "buildWrappers"),
         )
 
-    def testNotification(self):
-        self._DoTest(
+    def testNotification(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 notification:
@@ -1418,28 +697,12 @@ class TestJenkinsXmlJobGenerator(object):
                   url: https://bravo
                 """
             ),
-            expected_diff=dedent(
-                """\
-            @@ @@
-            +  <properties>
-            +    <com.tikal.hudson.plugins.notification.HudsonNotificationProperty plugin="notification@1.9">
-            +      <endpoints>
-            +        <com.tikal.hudson.plugins.notification.Endpoint>
-            +          <protocol>ALPHA</protocol>
-            +          <format>BRAVO</format>
-            +          <url>https://bravo</url>
-            +          <event>all</event>
-            +          <timeout>30000</timeout>
-            +          <loglines>1</loglines>
-            +        </com.tikal.hudson.plugins.notification.Endpoint>
-            +      </endpoints>
-            +    </com.tikal.hudson.plugins.notification.HudsonNotificationProperty>
-            +  </properties>"""
-            ),
-        ),
+            boundary_tags="properties",
+        )
 
-    def testSlack(self):
-        self._DoTest(
+    def testSlack(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 slack:
@@ -1449,31 +712,8 @@ class TestJenkinsXmlJobGenerator(object):
                   url: https://bravo
                 """
             ),
-            expected_diff=dedent(
-                """\
-            @@ @@
-            +  <properties>
-            +    <jenkins.plugins.slack.SlackNotifier_-SlackJobProperty plugin="slack@1.2">
-            +      <room>#zulu</room>
-            +      <startNotification>true</startNotification>
-            +      <notifySuccess>true</notifySuccess>
-            +      <notifyAborted>true</notifyAborted>
-            +      <notifyNotBuilt>true</notifyNotBuilt>
-            +      <notifyUnstable>true</notifyUnstable>
-            +      <notifyFailure>true</notifyFailure>
-            +      <notifyBackToNormal>true</notifyBackToNormal>
-            +    </jenkins.plugins.slack.SlackNotifier_-SlackJobProperty>
-            +  </properties>
-            +  <publishers>
-            +    <jenkins.plugins.slack.SlackNotifier plugin="slack@1.2">
-            +      <teamDomain>esss</teamDomain>
-            +      <authToken>ALPHA</authToken>
-            +      <buildServerUrl>https://bravo</buildServerUrl>
-            +      <room>#zulu</room>
-            +    </jenkins.plugins.slack.SlackNotifier>
-            +  </publishers>"""
-            ),
-        ),
+            boundary_tags=("properties", "publishers"),
+        )
 
     @pytest.mark.parametrize(
         "conf_value, expected_name",
@@ -1483,75 +723,44 @@ class TestJenkinsXmlJobGenerator(object):
             ("vga", "vga"),
         ],
     )
-    def testAnsiColor(self, conf_value, expected_name):
-        self._DoTest(
+    def testAnsiColor(self, conf_value, expected_name, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
+                f"""
+                console_color: {conf_value}
                 """
-                console_color: %s
-                """
-            )
-            % (conf_value,),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <buildWrappers>
-                +    <hudson.plugins.ansicolor.AnsiColorBuildWrapper plugin="ansicolor@0.4.2">
-                +      <colorMapName>%s</colorMapName>
-                +    </hudson.plugins.ansicolor.AnsiColorBuildWrapper>
-                +  </buildWrappers>"""
-            )
-            % (expected_name,),
+            ),
+            boundary_tags="buildWrappers",
+            basename=f"testAnsiColor-{conf_value}-{expected_name}",
         )
 
-    def testTimestamps(self):
-        self._DoTest(
+    def testTimestamps(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 timestamps:
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <buildWrappers>
-                +    <hudson.plugins.timestamper.TimestamperBuildWrapper plugin="timestamper@1.7.4"/>
-                +  </buildWrappers>"""
-            ),
+            boundary_tags="buildWrappers",
         )
 
     @pytest.mark.parametrize("condition", ("SUCCESS", "UNSTABLE", "FAILED", "ALWAYS"))
-    def testTriggerJobNoParameters(self, condition):
-        self._DoTest(
+    def testTriggerJobNoParameters(self, condition, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
-                """
+                f"""
                 trigger_jobs:
                   names:
                     - etk-master-linux64-27
                     - etk-master-linux64-36
                   condition: {condition}
-                """.format(
-                    condition=condition
-                )
+                """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.33">
-                +      <configs>
-                +        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-                +          <configs class="empty-list"/>
-                +          <projects>etk-master-linux64-27, etk-master-linux64-36</projects>
-                +          <condition>{condition}</condition>
-                +          <triggerWithNoParameters>true</triggerWithNoParameters>
-                +          <triggerFromChildProjects>false</triggerFromChildProjects>
-                +        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-                +      </configs>
-                +    </hudson.plugins.parameterizedtrigger.BuildTrigger>
-                +  </publishers>""".format(
-                    condition=condition
-                )
-            ),
+            boundary_tags="publishers",
+            basename=f"testTriggerJobNoParameters-{condition}",
         )
 
     def testTriggerJobInvalidCondition(self):
@@ -1559,7 +768,7 @@ class TestJenkinsXmlJobGenerator(object):
             RuntimeError,
             match=r"Invalid value for condition: u?'UNKNOWN', expected one of .*",
         ):
-            self._DoTest(
+            self._GenerateJob(
                 yaml_contents=dedent(
                     """
                     trigger_jobs:
@@ -1569,11 +778,11 @@ class TestJenkinsXmlJobGenerator(object):
                       condition: UNKNOWN
                     """
                 ),
-                expected_diff="",
             )
 
-    def testTriggerJobParameters(self):
-        self._DoTest(
+    def testTriggerJobParameters(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 trigger_jobs:
@@ -1585,40 +794,19 @@ class TestJenkinsXmlJobGenerator(object):
                     - KEY2=VALUE2
                 """
             ),
-            expected_diff=dedent(
-                """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.plugins.parameterizedtrigger.BuildTrigger plugin="parameterized-trigger@2.33">
-                +      <configs>
-                +        <hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-                +          <configs>
-                +            <hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                +              <properties>KEY1=VALUE1 KEY2=VALUE2</properties>
-                +            </hudson.plugins.parameterizedtrigger.PredefinedBuildParameters>
-                +          </configs>
-                +          <projects>etk-master-linux64-27, etk-master-linux64-36</projects>
-                +          <condition>SUCCESS</condition>
-                +          <triggerWithNoParameters>false</triggerWithNoParameters>
-                +          <triggerFromChildProjects>false</triggerFromChildProjects>
-                +        </hudson.plugins.parameterizedtrigger.BuildTriggerConfig>
-                +      </configs>
-                +    </hudson.plugins.parameterizedtrigger.BuildTrigger>
-                +  </publishers>"""
-            ),
+            boundary_tags="publishers",
         )
 
     def testAnsiColorUnknowOption(self):
         with pytest.raises(
             RuntimeError, match="Received unknown console_color option."
         ):
-            self._DoTest(
+            self._GenerateJob(
                 yaml_contents=dedent(
                     """
                     console_color: unknown-value
                     """
                 ),
-                expected_diff="",
             )
 
     @pytest.mark.parametrize(
@@ -1629,20 +817,7 @@ class TestJenkinsXmlJobGenerator(object):
             "incomplete_values",
         ],
     )
-    def testCoverage(self, scenario):
-        # Expected defaults
-        healthy_method = 80
-        healthy_line = 80
-        healthy_conditional = 80
-
-        unhealthy_method = 0
-        unhealthy_line = 0
-        unhealthy_conditional = 0
-
-        failing_method = 0
-        failing_line = 0
-        failing_conditional = 0
-
+    def testCoverage(self, scenario, file_regression):
         if scenario == "complete":
             healthy_method = 100
             healthy_line = 100
@@ -1656,7 +831,7 @@ class TestJenkinsXmlJobGenerator(object):
             failing_line = 60
             failing_conditional = 50
             contents = dedent(
-                r"""
+                fr"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
@@ -1679,7 +854,7 @@ class TestJenkinsXmlJobGenerator(object):
             healthy_conditional = 90
 
             contents = dedent(
-                r"""
+                fr"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
@@ -1694,7 +869,7 @@ class TestJenkinsXmlJobGenerator(object):
             healthy_line = 100
 
             contents = dedent(
-                r"""
+                fr"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
@@ -1703,88 +878,11 @@ class TestJenkinsXmlJobGenerator(object):
                 """
             )
 
-        expected_diff = dedent(
-            """\
-                @@ @@
-                +  <publishers>
-                +    <hudson.plugins.cobertura.CoberturaPublisher plugin="cobertura@1.9.7">
-                +      <coberturaReportFile>**/build/coverage/*.xml</coberturaReportFile>
-                +      <onlyStable>false</onlyStable>
-                +      <failUnhealthy>true</failUnhealthy>
-                +      <failUnstable>true</failUnstable>
-                +      <autoUpdateHealth>false</autoUpdateHealth>
-                +      <autoUpdateStability>false</autoUpdateStability>
-                +      <zoomCoverageChart>false</zoomCoverageChart>
-                +      <maxNumberOfBuilds>0</maxNumberOfBuilds>
-                +      <sourceEncoding>UTF_8</sourceEncoding>
-                +      <healthyTarget>
-                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{healthy_method}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{healthy_line}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{healthy_conditional}</int>
-                +          </entry>
-                +        </targets>
-                +      </healthyTarget>
-                +      <unhealthyTarget>
-                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{unhealthy_method}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{unhealthy_line}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{unhealthy_conditional}</int>
-                +          </entry>
-                +        </targets>
-                +      </unhealthyTarget>
-                +      <failingTarget>
-                +        <targets class="enum-map" enum-type="hudson.plugins.cobertura.targets.CoverageMetric">
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>METHOD</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{failing_method}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>LINE</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{failing_line}</int>
-                +          </entry>
-                +          <entry>
-                +            <hudson.plugins.cobertura.targets.CoverageMetric>CONDITIONAL</hudson.plugins.cobertura.targets.CoverageMetric>
-                +            <int>{failing_conditional}</int>
-                +          </entry>
-                +        </targets>
-                +      </failingTarget>
-                +    </hudson.plugins.cobertura.CoberturaPublisher>
-                +  </publishers>"""
-        )
-
-        contents_ = contents.format(**locals())
-
-        healthy_method *= 100000
-        healthy_line *= 100000
-        healthy_conditional *= 100000
-        unhealthy_method *= 100000
-        unhealthy_line *= 100000
-        unhealthy_conditional *= 100000
-        failing_method *= 100000
-        failing_line *= 100000
-        failing_conditional *= 100000
-        expected_diff_ = expected_diff.format(**locals())
-
-        self._DoTest(
-            yaml_contents=contents_,
-            expected_diff=expected_diff_,
+        self.Check(
+            file_regression,
+            contents,
+            boundary_tags="publishers",
+            basename=f"testCoverage-{scenario}",
         )
 
     def testCoverageFailWhenMissingReportPattern(self):
@@ -1802,8 +900,9 @@ class TestJenkinsXmlJobGenerator(object):
                 )
             )
 
-    def testWarnings(self):
-        self._DoTest(
+    def testWarnings(self, file_regression):
+        self.Check(
+            file_regression,
             yaml_contents=dedent(
                 """
                 warnings:
@@ -1817,68 +916,7 @@ class TestJenkinsXmlJobGenerator(object):
                       file_pattern: "*.codeanalysis"
                 """
             ),
-            expected_diff="@@ @@\n"
-            + "\n".join(
-                "+  " + s
-                for s in dedent(
-                    """\
-            <publishers>
-              <hudson.plugins.warnings.WarningsPublisher plugin="warnings@4.59">
-                <healthy/>
-                <unHealthy/>
-                <thresholdLimit>low</thresholdLimit>
-                <pluginName>[WARNINGS]</pluginName>
-                <defaultEncoding/>
-                <canRunOnFailed>true</canRunOnFailed>
-                <usePreviousBuildAsReference>false</usePreviousBuildAsReference>
-                <useStableBuildAsReference>false</useStableBuildAsReference>
-                <useDeltaValues>false</useDeltaValues>
-                <thresholds plugin="analysis-core@1.82">
-                  <unstableTotalAll/>
-                  <unstableTotalHigh/>
-                  <unstableTotalNormal/>
-                  <unstableTotalLow/>
-                  <unstableNewAll/>
-                  <unstableNewHigh/>
-                  <unstableNewNormal/>
-                  <unstableNewLow/>
-                  <failedTotalAll/>
-                  <failedTotalHigh/>
-                  <failedTotalNormal/>
-                  <failedTotalLow/>
-                  <failedNewAll/>
-                  <failedNewHigh/>
-                  <failedNewNormal/>
-                  <failedNewLow/>
-                </thresholds>
-                <shouldDetectModules>false</shouldDetectModules>
-                <dontComputeNew>true</dontComputeNew>
-                <doNotResolveRelativePaths>false</doNotResolveRelativePaths>
-                <includePattern/>
-                <excludePattern/>
-                <messagesPattern/>
-                <parserConfigurations>
-                  <hudson.plugins.warnings.ParserConfiguration>
-                    <pattern>*.cpplint</pattern>
-                    <parserName>CppLint</parserName>
-                  </hudson.plugins.warnings.ParserConfiguration>
-                  <hudson.plugins.warnings.ParserConfiguration>
-                    <pattern>*.codeanalysis</pattern>
-                    <parserName>CodeAnalysis</parserName>
-                  </hudson.plugins.warnings.ParserConfiguration>
-                </parserConfigurations>
-                <consoleParsers>
-                  <hudson.plugins.warnings.ConsoleParser>
-                    <parserName>Clang (LLVM based)</parserName>
-                  </hudson.plugins.warnings.ConsoleParser>
-                  <hudson.plugins.warnings.ConsoleParser>
-                    <parserName>PyLint</parserName>
-                  </hudson.plugins.warnings.ConsoleParser>
-                </consoleParsers>
-              </hudson.plugins.warnings.WarningsPublisher>
-            </publishers>"""
-                ).splitlines()
-            ),
+            boundary_tags="publishers",
         )
 
     def testWarningsEmpty(self):
@@ -1912,32 +950,38 @@ class TestJenkinsXmlJobGenerator(object):
         JobGeneratorConfigurator.Configure(job_generator, jobs_done_jobs[0])
         return job_generator.GetJob()
 
-    def _DoTest(self, yaml_contents, expected_diff):
+    def Check(self, file_regression, yaml_contents, boundary_tags, *, basename=None):
         """
-        :param unicode yaml_contents:
-            Contents of JobsDoneJob used for this test
-
-        :param unicode expected_diff:
-            Expected diff from build jobs from `yaml_contents`, when compared to BASIC_EXPECTED_XML.
+        Given the yaml contents of a jobs done file, generate the corresponding XML, extracting
+        the text between the tag(s) given, and use file_regression to compare it.
         """
-        jenkins_job = self._GenerateJob(yaml_contents=yaml_contents)
-        self._AssertDiff(jenkins_job.xml, expected_diff)
+        __tracebackhide__ = True
+        jenkins_job = self._GenerateJob(yaml_contents=dedent(yaml_contents))
+        new_content = self.ExtractTagBoundaries(jenkins_job.xml, boundary_tags)
+        file_regression.check(new_content, extension=".xml", basename=basename)
 
-    def _AssertDiff(self, obtained_xml, expected_diff):
-        diff = "".join(
-            difflib.unified_diff(
-                self.BASIC_EXPECTED_XML.splitlines(1),
-                str(obtained_xml).splitlines(1),
-                n=0,
-            )
-        )
-        diff = "\n".join(diff.splitlines()[2:])
-        diff = re.sub("@@.*@@", "@@ @@", diff, flags=re.MULTILINE)
-
-        print(obtained_xml)
-
-        # print diff
-        assert expected_diff == diff
+    def ExtractTagBoundaries(
+        self, text: str, boundary_tags: Union[str, Tuple[str, ...]]
+    ) -> str:
+        """Given a XML text, extract the lines containing between the given tags (including them)."""
+        if isinstance(boundary_tags, str):
+            boundary_tags = (boundary_tags,)
+        lines = text.splitlines(True)
+        new_lines = []
+        for tag in boundary_tags:
+            start = None
+            end = None
+            for index, line in enumerate(lines):
+                line = line.strip()
+                if line == f"<{tag}>" or line.startswith(f"<{tag} "):
+                    start = index
+                elif line == f"</{tag}>":
+                    end = index
+                    break
+            assert start is not None
+            assert end is not None
+            new_lines += lines[start : end + 1]
+        return dedent("".join(new_lines))
 
 
 # ===================================================================================================

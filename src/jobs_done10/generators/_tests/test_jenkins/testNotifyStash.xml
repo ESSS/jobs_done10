@@ -1,0 +1,7 @@
+<publishers>
+  <org.jenkinsci.plugins.stashNotifier.StashNotifier>
+    <stashServerBaseUrl>stash.com</stashServerBaseUrl>
+    <stashUserName>user</stashUserName>
+    <stashUserPassword>pass</stashUserPassword>
+  </org.jenkinsci.plugins.stashNotifier.StashNotifier>
+</publishers>

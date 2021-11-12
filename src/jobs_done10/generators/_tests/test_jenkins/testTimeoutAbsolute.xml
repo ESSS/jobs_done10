@@ -1,0 +1,6 @@
+<buildWrappers>
+  <hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    <timeoutMinutes>60</timeoutMinutes>
+    <failBuild>true</failBuild>
+  </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+</buildWrappers>

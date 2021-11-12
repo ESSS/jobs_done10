@@ -1,0 +1,6 @@
+  <triggers>
+    <hudson.triggers.SCMTrigger>
+      <spec># Everyday at 22 pm
+0 22 * * *</spec>
+    </hudson.triggers.SCMTrigger>
+  </triggers>
