@@ -828,7 +828,7 @@ class TestJenkinsXmlJobGenerator:
             failing_line = 60
             failing_conditional = 50
             contents = dedent(
-                fr"""
+                rf"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
@@ -851,7 +851,7 @@ class TestJenkinsXmlJobGenerator:
             healthy_conditional = 90
 
             contents = dedent(
-                fr"""
+                rf"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
@@ -866,7 +866,7 @@ class TestJenkinsXmlJobGenerator:
             healthy_line = 100
 
             contents = dedent(
-                fr"""
+                rf"""
                 coverage:
                   report_pattern: "**/build/coverage/*.xml"
                   healthy:
