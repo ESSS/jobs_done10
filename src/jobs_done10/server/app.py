@@ -1,6 +1,11 @@
+# mypy: disallow-untyped-defs
 import os
 import pprint
 import traceback
+from typing import Any
+from typing import Dict
+from typing import Tuple
+from typing import Union
 
 import flask
 import requests
@@ -23,7 +28,7 @@ app.logger.info(f"Initializing Server App - {get_version_title()}")
 
 
 @app.route("/", methods=["GET", "POST"])
-def index():
+def index() -> Union[str, Tuple[str, int]]:
     """
     Jenkins job generation end-point
 
@@ -56,7 +61,7 @@ def index():
         return err_message, 500
 
 
-def _process_jobs_done_request(payload) -> str:
+def _process_jobs_done_request(payload: Dict[str, Any]) -> str:
     """
     Generate/update a Jenkins job from a request and returns a debug message
     """
@@ -131,7 +136,7 @@ def _process_jobs_done_request(payload) -> str:
     return message
 
 
-def _process_jobs_done_error(payload) -> str:
+def _process_jobs_done_error(payload: Dict[str, Any]) -> str:
     """
     In case of error while processing the job generation request, sent an e-mail to the user with
     the traceback.
@@ -233,7 +238,7 @@ def get_clone_url(
     )
 
 
-def send_email_with_error(data: dict, error_traceback: str) -> str:
+def send_email_with_error(data: Dict[str, Any], error_traceback: str) -> str:
     """
     Send an email to the user who committed the changes that an error has happened while processing
     their .jobs_done file.

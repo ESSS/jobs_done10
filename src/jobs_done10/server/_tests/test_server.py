@@ -1,13 +1,18 @@
+# mypy: disallow-untyped-defs
 from textwrap import dedent
+from typing import Any
+from typing import Dict
 
 import pytest
 import requests_mock
+from flask.testing import FlaskClient
+from pytest_mock import MockerFixture
 
 from jobs_done10.repository import Repository
 
 
 @pytest.fixture(name="client")
-def client_(monkeypatch, tmpdir):
+def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
     from jobs_done10.server.app import app
 
     test_env = {
@@ -30,7 +35,7 @@ def client_(monkeypatch, tmpdir):
 
 
 @pytest.fixture(name="post_json_data")
-def post_json_data_():
+def post_json_data_() -> Dict[str, Any]:
     """
     Return the json data which posted by Stash/BitBucket Server. Obtained from the webhooks page configuration:
 
@@ -85,7 +90,7 @@ def post_json_data_():
 
 
 @pytest.fixture(name="repo_info_json_data")
-def repo_info_json_data_():
+def repo_info_json_data_() -> Dict[str, Any]:
     """
     Return json data that results from a call to the project/slug endpoint.
 
@@ -131,7 +136,12 @@ def repo_info_json_data_():
     }
 
 
-def test_post(client, post_json_data, mocker, repo_info_json_data):
+def test_post(
+    client: FlaskClient,
+    post_json_data: Dict[str, Any],
+    mocker: MockerFixture,
+    repo_info_json_data: Dict[str, Any],
+) -> None:
     contents = "jobs_done yaml contents"
 
     new_jobs = ["new1-eden-master", "new2-eden-master"]
@@ -191,7 +201,7 @@ def test_post(client, post_json_data, mocker, repo_info_json_data):
     )
 
 
-def test_version(client):
+def test_version(client: FlaskClient) -> None:
     import pkg_resources
 
     version = pkg_resources.get_distribution("jobs_done10").version
@@ -199,7 +209,9 @@ def test_version(client):
     assert response.data.decode("UTF-8") == f"jobs_done10 ver. {version}"
 
 
-def test_error_handling(client, post_json_data, mocker):
+def test_error_handling(
+    client: FlaskClient, post_json_data: Dict[str, Any], mocker: MockerFixture
+) -> None:
     import mailer
 
     mocker.patch.object(mailer.Mailer, "send", autospec=True)
