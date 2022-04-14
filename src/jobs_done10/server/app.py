@@ -3,10 +3,16 @@ import os
 import pprint
 import traceback
 from typing import Any
+from typing import Callable
 from typing import Dict
+from typing import Iterable
+from typing import Iterator
+from typing import List
+from typing import Optional
 from typing import Tuple
 from typing import Union
 
+import attr
 import flask
 import requests
 from dotenv import load_dotenv
@@ -30,22 +36,19 @@ app.logger.info(f"Initializing Server App - {get_version_title()}")
 @app.route("/", methods=["GET", "POST"])
 def index() -> Union[str, Tuple[str, int]]:
     """
-    Jenkins job generation end-point
-
-    Example of a post event for a push:
-
-       {"eventKey": "repo:refs_changed", "date": "2018-06-18T16:20:06-0300",
-        "actor": {"name": "jenkins", "emailAddress": "bugreport+jenkins@esss.co", "id": 2852,
-                  "displayName": "jenkins", "active": true, "slug": "jenkins", "type": "NORMAL"},
-        "repository": {"slug": "eden", "id": 2231, "name": "eden", "scmId": "git", "state": "AVAILABLE",
-                       "statusMessage": "Available", "forkable": true,
-                       "project": {"key": "ESSS", "id": 1, "name": "ESSS", "description": "Dev projects",
-                                   "public": false, "type": "NORMAL"}, "public": false}, "changes": [
-        {"ref": {"id": "refs/heads/stable-pwda11-master", "displayId": "stable-pwda11-master", "type": "BRANCH"},
-         "refId": "refs/heads/stable-pwda11-master", "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
-         "toHash": "8522b06a7c330008814a522d0342be9a997a1460", "type": "UPDATE"}]}
+    Jenkins job creation/update/deletion end-point for stash.
     """
+    return _handle_end_point(iter_jobs_done_requests_for_stash_payload)
+
+
+def _handle_end_point(
+    iter_jobs_done_requests: Callable[
+        [Dict[str, Any], Dict[str, str]], Iterator["JobsDoneRequest"]
+    ]
+) -> Union[str, Tuple[str, int]]:
+    """Common handling for the jobs-done end-point."""
     payload = flask.request.json
+    app.logger.info(f"Received request:\n{pprint.pformat(payload)}")
     if flask.request.method == "GET" or payload is None or payload.get("test"):
         # return a 200 response also on POST, when no JSON data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
@@ -53,36 +56,108 @@ def index() -> Union[str, Tuple[str, int]]:
         app.logger.info("I'm alive")
         return get_version_title()
 
+    jobs_done_requests = []
     try:
-        message = _process_jobs_done_request(payload)
+        jobs_done_requests = list(iter_jobs_done_requests(payload, dict(os.environ)))
+        message = _process_jobs_done_request(jobs_done_requests)
+        app.logger.info(message)
         return message
     except Exception:
-        err_message = _process_jobs_done_error(payload)
+        err_message = _process_jobs_done_error(jobs_done_requests, payload)
+        app.logger.exception("Uncaught exception")
         return err_message, 500
 
 
-def _process_jobs_done_request(payload: Dict[str, Any]) -> str:
+@attr.s(auto_attribs=True, frozen=True)
+class JobsDoneRequest:
     """
-    Generate/update a Jenkins job from a request and returns a debug message
+    Information necessary to process a jobs done request to create/update/delete jobs
+    for a branch in a repository.
+    """
+
+    # Owner of the repository: "ESSS" for example.
+    owner_name: str
+    # Repository name: "etk" for example.
+    repo_name: str
+    pusher_email: str
+    commit: str
+    clone_url: str
+    branch: str
+    jobs_done_file_contents: Optional[str]
+
+
+def iter_jobs_done_requests_for_stash_payload(
+    payload: Dict[str, Any], settings: Dict[str, str]
+) -> Iterator[JobsDoneRequest]:
+    """
+    Parses a Stash payload from a push event into jobs done requests.
+
+    Example of a payload:
+
+    {
+        "eventKey": "repo:refs_changed",
+        "date": "2018-06-18T16:20:06-0300",
+        "actor": {
+            "name": "jenkins",
+            "emailAddress": "bugreport+jenkins@esss.co",
+            "id": 2852,
+            "displayName": "jenkins",
+            "active": true,
+            "slug": "jenkins",
+            "type": "NORMAL",
+        },
+        "repository": {
+            "slug": "eden",
+            "id": 2231,
+            "name": "eden",
+            "scmId": "git",
+            "state": "AVAILABLE",
+            "statusMessage": "Available",
+            "forkable": true,
+            "project": {
+                "key": "ESSS",
+                "id": 1,
+                "name": "ESSS",
+                "description": "Dev projects",
+                "public": false,
+                "type": "NORMAL",
+            },
+            "public": false,
+        },
+        "changes": [
+            {
+                "ref": {
+                    "id": "refs/heads/stable-pwda11-master",
+                    "displayId": "stable-pwda11-master",
+                    "type": "BRANCH",
+                },
+                "refId": "refs/heads/stable-pwda11-master",
+                "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
+                "toHash": "8522b06a7c330008814a522d0342be9a997a1460",
+                "type": "UPDATE",
+            }
+        ],
+    }
     """
     if not isinstance(payload, dict) or "eventKey" not in payload:
         raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
 
-    app.logger.info(f"Received request:\n{pprint.pformat(payload)}")
-
-    stash_url = os.environ["JD_STASH_URL"].rstrip()
-    stash_username = os.environ["JD_STASH_USERNAME"]
-    stash_password = os.environ["JD_STASH_PASSWORD"]
+    stash_url = settings["JD_STASH_URL"].rstrip()
+    stash_username = settings["JD_STASH_USERNAME"]
+    stash_password = settings["JD_STASH_PASSWORD"]
     project_key = payload["repository"]["project"]["key"]
     slug = payload["repository"]["slug"]
+    pusher_email = payload["actor"]["emailAddress"]
 
-    all_new_jobs = []
-    all_updated_jobs = []
-    all_deleted_jobs = []
-    lines = []
     for change in payload["changes"]:
+        branch = change["ref"]["id"]
+        prefix = "refs/heads/"
+        if not branch.startswith(prefix):
+            continue
+
+        branch = branch[len(prefix) :]
         try:
-            jobs_done_file_contents = get_file_contents(
+            jobs_done_file_contents = get_stash_file_contents(
                 stash_url=stash_url,
                 username=stash_username,
                 password=stash_password,
@@ -94,10 +169,7 @@ def _process_jobs_done_request(payload: Dict[str, Any]) -> str:
         except IOError:
             jobs_done_file_contents = None
 
-        from jobs_done10.generators import jenkins
-        from jobs_done10.repository import Repository
-
-        clone_url = get_clone_url(
+        clone_url = get_stash_clone_url(
             stash_url=stash_url,
             username=stash_username,
             password=stash_password,
@@ -105,20 +177,38 @@ def _process_jobs_done_request(payload: Dict[str, Any]) -> str:
             slug=slug,
         )
 
-        branch = change["ref"]["id"]
-        prefix = "refs/heads/"
-        if not branch.startswith(prefix):
-            lines.append(f"WARNING: ignoring branch {branch}: expected {prefix}")
-            continue
-        branch = branch[len(prefix) :]
-        repository = Repository(url=clone_url, branch=branch)
+        yield JobsDoneRequest(
+            owner_name=project_key,
+            repo_name=slug,
+            clone_url=clone_url,
+            commit=change["toHash"],
+            pusher_email=pusher_email,
+            branch=branch,
+            jobs_done_file_contents=jobs_done_file_contents,
+        )
+
+
+def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) -> str:
+    """
+    Generate/update a Jenkins job from a request and returns a message
+    informing what has been done.
+    """
+    from jobs_done10.generators import jenkins
+    from jobs_done10.repository import Repository
+
+    all_new_jobs = []
+    all_updated_jobs = []
+    all_deleted_jobs = []
+
+    for request in jobs_done_requests:
+        repository = Repository(url=request.clone_url, branch=request.branch)
         jenkins_url = os.environ["JD_JENKINS_URL"].rstrip("/")
         jenkins_username = os.environ["JD_JENKINS_USERNAME"]
         jenkins_password = os.environ["JD_JENKINS_PASSWORD"]
 
         new_jobs, updated_jobs, deleted_jobs = jenkins.UploadJobsFromFile(
             repository=repository,
-            jobs_done_file_contents=jobs_done_file_contents,
+            jobs_done_file_contents=request.jobs_done_file_contents,
             url=jenkins_url,
             username=jenkins_username,
             password=jenkins_password,
@@ -127,16 +217,18 @@ def _process_jobs_done_request(payload: Dict[str, Any]) -> str:
         all_updated_jobs.extend(updated_jobs)
         all_deleted_jobs.extend(deleted_jobs)
 
+    lines: List[str] = []
     lines.extend(f"NEW - {x}" for x in all_new_jobs)
     lines.extend(f"UPD - {x}" for x in all_updated_jobs)
     lines.extend(f"DEL - {x}" for x in all_deleted_jobs)
 
     message = "\n".join(lines)
-    app.logger.info(message)
     return message
 
 
-def _process_jobs_done_error(payload: Dict[str, Any]) -> str:
+def _process_jobs_done_error(
+    jobs_done_requests: List[JobsDoneRequest], payload: Dict[str, Any]
+) -> str:
     """
     In case of error while processing the job generation request, sent an e-mail to the user with
     the traceback.
@@ -154,7 +246,7 @@ def _process_jobs_done_error(payload: Dict[str, Any]) -> str:
         "",
     ]
     try:
-        recipient = send_email_with_error(payload, error_traceback)
+        recipient = send_email_with_error(jobs_done_requests, payload, error_traceback)
     except Exception:
         lines.append("*" * 80)
         lines.append("ERROR SENDING EMAIL:")
@@ -162,11 +254,10 @@ def _process_jobs_done_error(payload: Dict[str, Any]) -> str:
     else:
         lines.append(f"Email sent to {recipient}")
     message = "\n".join(lines)
-    app.logger.exception("Uncaught exception")
     return message
 
 
-def get_file_contents(
+def get_stash_file_contents(
     *,
     stash_url: str,
     username: str,
@@ -194,7 +285,7 @@ def get_file_contents(
     return contents
 
 
-def get_clone_url(
+def get_stash_clone_url(
     *, stash_url: str, username: str, password: str, project_key: str, slug: str
 ) -> str:
     """
@@ -238,7 +329,11 @@ def get_clone_url(
     )
 
 
-def send_email_with_error(data: Dict[str, Any], error_traceback: str) -> str:
+def send_email_with_error(
+    jobs_done_requests: List[JobsDoneRequest],
+    payload: Dict[str, Any],
+    error_traceback: str,
+) -> str:
     """
     Send an email to the user who committed the changes that an error has happened while processing
     their .jobs_done file.
@@ -248,27 +343,26 @@ def send_email_with_error(data: Dict[str, Any], error_traceback: str) -> str:
     """
     import mailer
 
-    recipient = data["actor"]["emailAddress"]
+    if not jobs_done_requests:
+        raise RuntimeError("Cannot send an email without any parsed requests")
 
-    project_key = data["repository"]["project"]["key"]
-    slug = data["repository"]["slug"]
-    changes = [(change["ref"]["id"], change["toHash"]) for change in data["changes"]]
-    changes_msg = ", ".join(
-        f'{branch.replace("refs/heads/", "")} @ {commit[:7]}'
-        for (branch, commit) in changes
+    pusher_email = jobs_done_requests[-1].pusher_email
+
+    owner_name = jobs_done_requests[-1].owner_name
+    repo_name = jobs_done_requests[-1].repo_name
+    changes_msg = ", ".join(f"{x.branch} @ {x.commit[:7]}" for x in jobs_done_requests)
+    subject = (
+        f"JobsDone failure during push to {owner_name}/{repo_name} ({changes_msg})"
     )
-    subject = f"JobsDone failure during push to {project_key}/{slug} ({changes_msg})"
 
     message = mailer.Message(
         From=os.environ["JD_EMAIL_FROM"],
-        To=[recipient],
-        # RTo=None,
-        # Cc=self.cc,
+        To=[pusher_email],
         Subject=subject,
         charset="UTF-8",
     )
 
-    pretty_json = pprint.pformat(data)
+    pretty_json = pprint.pformat(payload)
     message.Body = EMAIL_PLAINTEXT.format(
         error_traceback=error_traceback, pretty_json=pretty_json
     )
@@ -292,4 +386,4 @@ def send_email_with_error(data: Dict[str, Any], error_traceback: str) -> str:
         pwd=os.environ["JD_EMAIL_PASSWORD"],
     )
     sender.send(message)
-    return recipient
+    return pusher_email

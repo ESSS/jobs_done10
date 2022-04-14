@@ -2,6 +2,7 @@
 from textwrap import dedent
 from typing import Any
 from typing import Dict
+from typing import Iterator
 
 import pytest
 import requests_mock
@@ -34,8 +35,8 @@ def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
     return app.test_client()
 
 
-@pytest.fixture(name="post_json_data")
-def post_json_data_() -> Dict[str, Any]:
+@pytest.fixture(name="stash_post_data")
+def stash_post_data_() -> Dict[str, Any]:
     """
     Return the json data which posted by Stash/BitBucket Server. Obtained from the webhooks page configuration:
 
@@ -136,14 +137,33 @@ def repo_info_json_data_() -> Dict[str, Any]:
     }
 
 
-def test_post(
+@pytest.fixture
+def mock_stash_repo_requests(repo_info_json_data: Dict[str, Any]) -> Iterator[None]:
+    with requests_mock.Mocker() as m:
+        stash_url = "https://example.com/stash"
+        project_key = "ESSS"
+        slug = "eden"
+        path = ".jobs_done.yaml"
+        ref = "8522b06a7c330008814a522d0342be9a997a1460"
+        m.get(
+            f"{stash_url}/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}",
+            text="jobs_done yaml contents",
+        )
+
+        m.get(
+            f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}",
+            json=repo_info_json_data,
+        )
+        yield
+
+
+def test_stash_post(
     client: FlaskClient,
-    post_json_data: Dict[str, Any],
+    stash_post_data: Dict[str, Any],
     mocker: MockerFixture,
     repo_info_json_data: Dict[str, Any],
+    mock_stash_repo_requests: None,
 ) -> None:
-    contents = "jobs_done yaml contents"
-
     new_jobs = ["new1-eden-master", "new2-eden-master"]
     updated_jobs = ["upd1-eden-master", "upd2-eden-master"]
     deleted_jobs = ["del1-eden-master", "del2-eden-master"]
@@ -154,38 +174,22 @@ def test_post(
         return_value=(new_jobs, updated_jobs, deleted_jobs),
     )
 
-    with requests_mock.Mocker() as m:
-        stash_url = "https://example.com/stash"
-        project_key = "ESSS"
-        slug = "eden"
-        path = ".jobs_done.yaml"
-        ref = "8522b06a7c330008814a522d0342be9a997a1460"
-        m.get(
-            f"{stash_url}/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}",
-            text=contents,
-        )
-
-        m.get(
-            f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}",
-            json=repo_info_json_data,
-        )
-
-        response = client.post(json=post_json_data)
-        assert response.status_code == 200
-        assert response.mimetype == "text/html"
-        assert (
-            response.data.decode("UTF-8")
-            == dedent(
-                """
-            NEW - new1-eden-master
-            NEW - new2-eden-master
-            UPD - upd1-eden-master
-            UPD - upd2-eden-master
-            DEL - del1-eden-master
-            DEL - del2-eden-master
-        """
-            ).strip()
-        )
+    response = client.post(json=stash_post_data)
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    assert (
+        response.data.decode("UTF-8")
+        == dedent(
+            """
+                NEW - new1-eden-master
+                NEW - new2-eden-master
+                UPD - upd1-eden-master
+                UPD - upd2-eden-master
+                DEL - del1-eden-master
+                DEL - del2-eden-master
+            """
+        ).strip()
+    )
 
     assert upload_mock.call_count == 1
     args, kwargs = upload_mock.call_args
@@ -194,7 +198,7 @@ def test_post(
         repository=Repository(
             "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git", "stable-pwda11-master"
         ),
-        jobs_done_file_contents=contents,
+        jobs_done_file_contents="jobs_done yaml contents",
         url="https://example.com/jenkins",
         username="jenkins_user",
         password="jenkins_password",
@@ -210,15 +214,23 @@ def test_version(client: FlaskClient) -> None:
 
 
 def test_error_handling(
-    client: FlaskClient, post_json_data: Dict[str, Any], mocker: MockerFixture
+    client: FlaskClient,
+    stash_post_data: Dict[str, Any],
+    mocker: MockerFixture,
+    mock_stash_repo_requests: None,
 ) -> None:
     import mailer
 
     mocker.patch.object(mailer.Mailer, "send", autospec=True)
     mocker.spy(mailer.Mailer, "__init__")
 
-    del post_json_data["eventKey"]
-    response = client.post(json=post_json_data)
+    mocker.patch(
+        "jobs_done10.generators.jenkins.UploadJobsFromFile",
+        autospec=True,
+        side_effect=RuntimeError("Error processing JobsDone"),
+    )
+
+    response = client.post(json=stash_post_data)
     assert response.status_code == 500
     assert response.mimetype == "text/html"
     obtained_message = response.data.decode("UTF-8")

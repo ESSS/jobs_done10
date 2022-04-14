@@ -37,4 +37,4 @@ repos:
     -   id: mypy
         files: ^(src/|testing/)
         args: []
-        additional_dependencies: []
+        additional_dependencies: [attrs]
