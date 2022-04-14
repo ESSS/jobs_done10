@@ -636,7 +636,6 @@ class UnmatchableConditionError(ValueError):
 _TRUE_VALUES = ["TRUE", "YES", "1"]
 _FALSE_VALUES = ["FALSE", "NO", "0"]
 _TRUE_FALSE_VALUES = _TRUE_VALUES + _FALSE_VALUES
-_KNOWN_NUMBER_TYPES = None
 
 
 def Boolean(text):

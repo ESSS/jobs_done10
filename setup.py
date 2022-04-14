@@ -10,6 +10,7 @@ setup(
     provides=["jobs_done10"],
     use_scm_version={"write_to": "src/jobs_done10/_version.py"},
     setup_requires=["setuptools_scm"],
+    python_requires=">=3.6",
     install_requires=[
         "click",
         "flask",
