@@ -143,6 +143,40 @@ def iter_jobs_done_requests_for_stash_payload(
         )
 
 
+def iter_jobs_done_requests_for_github_payload(
+    payload: Dict[str, Any], settings: Dict[str, str]
+) -> Iterator[JobsDoneRequest]:
+    """..."""
+    owner_name = payload["repository"]["owner"]["login"]
+    repo_name = payload["repository"]["name"]
+    clone_url = payload["repository"]["ssh_url"]
+    commit = payload["head_commit"]["id"]
+    pusher_email = payload["pusher"]["email"]
+    branch = payload["ref"]
+    prefix = "refs/heads/"
+    if branch.startswith(prefix):
+        branch = branch[len(prefix) :]
+
+    username = settings["JD_GH_USERNAME"]
+    token = settings["JD_GH_TOKEN"]
+
+    url = f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{commit}/.jobs_done.yaml"
+    try:
+        jobs_done_file_contents = _fetch_file_contents(url, auth=None)
+    except IOError:
+        jobs_done_file_contents = None
+
+    yield JobsDoneRequest(
+        owner_name=owner_name,
+        repo_name=repo_name,
+        clone_url=clone_url,
+        commit=commit,
+        branch=branch,
+        pusher_email=pusher_email,
+        jobs_done_file_contents=jobs_done_file_contents,
+    )
+
+
 def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) -> str:
     """
     Generate/update a Jenkins job from a request and returns a message
@@ -228,10 +262,14 @@ def get_stash_file_contents(
     We are using a "raw" Get which returns the entire file contents as text.
     """
     file_url = stash_url + f"/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}"
-    response = requests.get(file_url, auth=(username, password))
+    return _fetch_file_contents(file_url, auth=(username, password))
 
+
+def _fetch_file_contents(file_url: str, *, auth: Optional[Tuple[str, str]]) -> str:
+    """Fetches the contents of the file given the full URL, handling responses appropriately."""
+    response = requests.get(file_url, auth=auth)
     if response.status_code == 404:
-        raise IOError('File "%s" not found. Full URL: %s' % (path, file_url))
+        raise IOError(f"File {file_url} not found in server")
     elif response.status_code != 200:
         # Raise other exceptions if unsuccessful
         response.raise_for_status()

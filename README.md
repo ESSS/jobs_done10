@@ -112,7 +112,7 @@ docs to add new libraries or update existing versions.
 
 jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/).
 
-This end point is tailored to receive the push event from a Webhook of a BitBucket Server instance. A post without any
+This end point is tailored to receive the push event from BitBucket Server or GitHub. A post without any
 json data will return the installed version, useful to check the installed version and that the end point is correct.
 
 ### Configuration ###
@@ -128,6 +128,9 @@ JD_JENKINS_PASSWORD=some password
 JD_STASH_URL=https://example.com/stash
 JD_STASH_USERNAME=stash-user
 JD_STASH_PASSWORD=some password
+
+JD_GH_USERNAME=github-user
+JD_GH_TOKEN=github-user-personal-access-token
 
 JD_EMAIL_USER=mail-sender@example.com
 JD_EMAIL_FROM=JobsDone Bot <mail-sender@example.com>

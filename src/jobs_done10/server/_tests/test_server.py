@@ -12,6 +12,7 @@ from flask.testing import FlaskClient
 from pytest_mock import MockerFixture
 
 from jobs_done10.repository import Repository
+from jobs_done10.server.app import JobsDoneRequest
 
 
 @pytest.fixture(name="client")
@@ -59,6 +60,20 @@ def repo_info_json_data_(datadir: Path) -> Dict[str, Any]:
     return json.loads(
         datadir.joinpath("stash-repo-info.json").read_text(encoding="UTF-8")
     )
+
+
+@pytest.fixture(name="github_post_data")
+def github_post_data_(datadir: Path) -> Dict[str, Any]:
+    """
+    Return the json data posted by GitHub on push events.
+
+    Docs:
+
+        https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#push
+
+    The contents were obtained by configuring the webhook in a repo to post to https://requestbin.com.
+    """
+    return json.loads(datadir.joinpath("github-post.json").read_text(encoding="UTF-8"))
 
 
 @pytest.fixture
@@ -187,3 +202,40 @@ def test_error_handling(
     )
     assert message.charset == "UTF-8"
     assert "An error happened when processing your push" in message.Body
+
+
+@pytest.mark.parametrize("file_not_found", [True, False])
+def test_iter_jobs_done_requests_for_github_payload(
+    github_post_data: Dict[str, Any], file_not_found: bool
+) -> None:
+    from jobs_done10.server.app import iter_jobs_done_requests_for_github_payload
+
+    file_contents = "jobs_done yaml contents"
+
+    with requests_mock.Mocker() as m:
+        username = "my-username"
+        token = "MY-TOKEN"
+        owner_name = "ESSS"
+        repo_name = "test-webhooks"
+        ref = "2c202379fefc2ca03c390b30050a87a87c9a4c81"
+        status_code = 404 if file_not_found else 200
+        m.get(
+            f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{ref}/.jobs_done.yaml",
+            text=file_contents,
+            status_code=status_code,
+        )
+        settings = {"JD_GH_USERNAME": username, "JD_GH_TOKEN": token}
+        (request,) = iter_jobs_done_requests_for_github_payload(
+            github_post_data, settings
+        )
+
+    expected_contents = None if file_not_found else file_contents
+    assert request == JobsDoneRequest(
+        owner_name="ESSS",
+        repo_name="test-webhooks",
+        pusher_email="nicoddemus@gmail.com",
+        commit="2c202379fefc2ca03c390b30050a87a87c9a4c81",
+        clone_url="git@github.com:ESSS/test-webhooks.git",
+        branch="fb-add-jobs-done",
+        jobs_done_file_contents=expected_contents,
+    )
