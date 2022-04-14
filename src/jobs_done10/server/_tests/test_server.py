@@ -1,4 +1,6 @@
 # mypy: disallow-untyped-defs
+import json
+from pathlib import Path
 from textwrap import dedent
 from typing import Any
 from typing import Dict
@@ -36,7 +38,7 @@ def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
 
 
 @pytest.fixture(name="stash_post_data")
-def stash_post_data_() -> Dict[str, Any]:
+def stash_post_data_(datadir: Path) -> Dict[str, Any]:
     """
     Return the json data which posted by Stash/BitBucket Server. Obtained from the webhooks page configuration:
 
@@ -44,97 +46,19 @@ def stash_post_data_() -> Dict[str, Any]:
 
     There's a "View details" link which you can inspect the body of the post.
     """
-    return {
-        "eventKey": "repo:refs_changed",
-        "date": "2018-06-18T16:20:06-0300",
-        "actor": {
-            "name": "jenkins",
-            "emailAddress": "bugreport+jenkins@esss.co",
-            "id": 2852,
-            "displayName": "jenkins",
-            "active": True,
-            "slug": "jenkins",
-            "type": "NORMAL",
-        },
-        "repository": {
-            "slug": "eden",
-            "id": 2231,
-            "name": "eden",
-            "scmId": "git",
-            "state": "AVAILABLE",
-            "statusMessage": "Available",
-            "forkable": True,
-            "project": {
-                "key": "ESSS",
-                "id": 1,
-                "name": "ESSS",
-                "description": "Dev projects",
-                "public": False,
-                "type": "NORMAL",
-            },
-            "public": False,
-        },
-        "changes": [
-            {
-                "ref": {
-                    "id": "refs/heads/stable-pwda11-master",
-                    "displayId": "stable-pwda11-master",
-                    "type": "BRANCH",
-                },
-                "refId": "refs/heads/stable-pwda11-master",
-                "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
-                "toHash": "8522b06a7c330008814a522d0342be9a997a1460",
-                "type": "UPDATE",
-            }
-        ],
-    }
+    return json.loads(datadir.joinpath("stash-post.json").read_text(encoding="UTF-8"))
 
 
 @pytest.fixture(name="repo_info_json_data")
-def repo_info_json_data_() -> Dict[str, Any]:
+def repo_info_json_data_(datadir: Path) -> Dict[str, Any]:
     """
     Return json data that results from a call to the project/slug endpoint.
 
     Taken from manually doing the query on our live server.
     """
-    return {
-        "forkable": True,
-        "id": 2231,
-        "links": {
-            "clone": [
-                {
-                    "href": "https://bruno@eden.esss.com.br/stash/scm/esss/eden.git",
-                    "name": "http",
-                },
-                {
-                    "href": "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git",
-                    "name": "ssh",
-                },
-            ],
-            "self": [
-                {
-                    "href": "https://eden.esss.com.br/stash/projects/ESSS/repos/eden/browse"
-                }
-            ],
-        },
-        "name": "eden",
-        "project": {
-            "description": "Dev projects",
-            "id": 1,
-            "key": "ESSS",
-            "links": {
-                "self": [{"href": "https://eden.esss.com.br/stash/projects/ESSS"}]
-            },
-            "name": "ESSS",
-            "public": False,
-            "type": "NORMAL",
-        },
-        "public": False,
-        "scmId": "git",
-        "slug": "eden",
-        "state": "AVAILABLE",
-        "statusMessage": "Available",
-    }
+    return json.loads(
+        datadir.joinpath("stash-repo-info.json").read_text(encoding="UTF-8")
+    )
 
 
 @pytest.fixture

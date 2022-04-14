@@ -1,0 +1,42 @@
+{
+  "forkable": true,
+  "id": 2231,
+  "links": {
+    "clone": [
+      {
+        "href": "https://bruno@eden.esss.com.br/stash/scm/esss/eden.git",
+        "name": "http"
+      },
+      {
+        "href": "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git",
+        "name": "ssh"
+      }
+    ],
+    "self": [
+      {
+        "href": "https://eden.esss.com.br/stash/projects/ESSS/repos/eden/browse"
+      }
+    ]
+  },
+  "name": "eden",
+  "project": {
+    "description": "Dev projects",
+    "id": 1,
+    "key": "ESSS",
+    "links": {
+      "self": [
+        {
+          "href": "https://eden.esss.com.br/stash/projects/ESSS"
+        }
+      ]
+    },
+    "name": "ESSS",
+    "public": false,
+    "type": "NORMAL"
+  },
+  "public": false,
+  "scmId": "git",
+  "slug": "eden",
+  "state": "AVAILABLE",
+  "statusMessage": "Available"
+}

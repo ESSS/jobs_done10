@@ -1,0 +1,44 @@
+{
+    "eventKey": "repo:refs_changed",
+    "date": "2018-06-18T16:20:06-0300",
+    "actor": {
+        "name": "jenkins",
+        "emailAddress": "bugreport+jenkins@esss.co",
+        "id": 2852,
+        "displayName": "jenkins",
+        "active": true,
+        "slug": "jenkins",
+        "type": "NORMAL"
+    },
+    "repository": {
+        "slug": "eden",
+        "id": 2231,
+        "name": "eden",
+        "scmId": "git",
+        "state": "AVAILABLE",
+        "statusMessage": "Available",
+        "forkable": true,
+        "project": {
+            "key": "ESSS",
+            "id": 1,
+            "name": "ESSS",
+            "description": "Dev projects",
+            "public": false,
+            "type": "NORMAL"
+        },
+        "public": false
+    },
+    "changes": [
+        {
+            "ref": {
+                "id": "refs/heads/stable-pwda11-master",
+                "displayId": "stable-pwda11-master",
+                "type": "BRANCH"
+            },
+            "refId": "refs/heads/stable-pwda11-master",
+            "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
+            "toHash": "8522b06a7c330008814a522d0342be9a997a1460",
+            "type": "UPDATE"
+        }
+    ]
+}

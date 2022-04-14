@@ -92,52 +92,7 @@ def iter_jobs_done_requests_for_stash_payload(
     """
     Parses a Stash payload from a push event into jobs done requests.
 
-    Example of a payload:
-
-    {
-        "eventKey": "repo:refs_changed",
-        "date": "2018-06-18T16:20:06-0300",
-        "actor": {
-            "name": "jenkins",
-            "emailAddress": "bugreport+jenkins@esss.co",
-            "id": 2852,
-            "displayName": "jenkins",
-            "active": true,
-            "slug": "jenkins",
-            "type": "NORMAL",
-        },
-        "repository": {
-            "slug": "eden",
-            "id": 2231,
-            "name": "eden",
-            "scmId": "git",
-            "state": "AVAILABLE",
-            "statusMessage": "Available",
-            "forkable": true,
-            "project": {
-                "key": "ESSS",
-                "id": 1,
-                "name": "ESSS",
-                "description": "Dev projects",
-                "public": false,
-                "type": "NORMAL",
-            },
-            "public": false,
-        },
-        "changes": [
-            {
-                "ref": {
-                    "id": "refs/heads/stable-pwda11-master",
-                    "displayId": "stable-pwda11-master",
-                    "type": "BRANCH",
-                },
-                "refId": "refs/heads/stable-pwda11-master",
-                "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
-                "toHash": "8522b06a7c330008814a522d0342be9a997a1460",
-                "type": "UPDATE",
-            }
-        ],
-    }
+    See ``_tests/test_server/stash-post.json`` for an example of a payload.
     """
     if not isinstance(payload, dict) or "eventKey" not in payload:
         raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
@@ -291,26 +246,7 @@ def get_stash_clone_url(
     """
     Get information about the repository, returning the SSH clone url.
 
-    {'forkable': True,
-     'id': 2231,
-     'links': {'clone': [{'href': 'https://bruno@eden.esss.com.br/stash/scm/esss/eden.git',
-                          'name': 'http'},
-                         {'href': 'ssh://git@eden.fln.esss.com.br:7999/esss/eden.git',
-                          'name': 'ssh'}],
-               'self': [{'href': 'https://eden.esss.com.br/stash/projects/ESSS/repos/eden/browse'}]},
-     'name': 'eden',
-     'project': {'description': 'Dev projects',
-                 'id': 1,
-                 'key': 'ESSS',
-                 'links': {'self': [{'href': 'https://eden.esss.com.br/stash/projects/ESSS'}]},
-                 'name': 'ESSS',
-                 'public': False,
-                 'type': 'NORMAL'},
-     'public': False,
-     'scmId': 'git',
-     'slug': 'eden',
-     'state': 'AVAILABLE',
-     'statusMessage': 'Available'}
+    See ``_tests/test_server/stash-repo-info.json`` for an example of a payload.
     """
     url = f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}"
     response = requests.get(url, auth=(username, password))
