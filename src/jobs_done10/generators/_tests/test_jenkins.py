@@ -1,6 +1,4 @@
-import difflib
 import os
-import re
 from subprocess import check_call
 from textwrap import dedent
 from typing import Tuple

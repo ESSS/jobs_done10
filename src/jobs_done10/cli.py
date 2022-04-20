@@ -65,7 +65,6 @@ def jobs_done():
     """
     Creates jobs for Jenkins.
     """
-    pass
 
 
 jobs_done.add_command(jenkins)
