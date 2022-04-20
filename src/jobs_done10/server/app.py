@@ -34,7 +34,8 @@ app.logger.info(f"Initializing Server App - {get_version_title()}")
 
 
 @app.route("/", methods=["GET", "POST"])
-def index() -> Union[str, Tuple[str, int]]:
+@app.route("/stash", methods=["GET", "POST"])
+def stash() -> Union[str, Tuple[str, int]]:
     """
     Jenkins job creation/update/deletion end-point for stash.
     """
@@ -44,7 +45,7 @@ def index() -> Union[str, Tuple[str, int]]:
 @app.route("/github", methods=["GET", "POST"])
 def github() -> Union[str, Tuple[str, int]]:
     """
-    Jenkins job creation/update/deletion end-point for stash.
+    Jenkins job creation/update/deletion end-point for GitHub.
     """
     return _handle_end_point(iter_jobs_done_requests_for_github_payload)
 
@@ -154,7 +155,11 @@ def iter_jobs_done_requests_for_stash_payload(
 def iter_jobs_done_requests_for_github_payload(
     payload: Dict[str, Any], settings: Dict[str, str]
 ) -> Iterator[JobsDoneRequest]:
-    """..."""
+    """
+    Parses a GitHub payload from a push event into jobs done requests.
+
+    See ``_tests/test_server/github-post.json`` for an example of a payload.
+    """
     owner_name = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
@@ -187,7 +192,7 @@ def iter_jobs_done_requests_for_github_payload(
 
 def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) -> str:
     """
-    Generate/update a Jenkins job from a request and returns a message
+    Generate/update a Jenkins jobs from parsed requests and return a message
     informing what has been done.
     """
     from jobs_done10.generators import jenkins
@@ -227,7 +232,7 @@ def _process_jobs_done_error(
     jobs_done_requests: List[JobsDoneRequest], payload: Dict[str, Any]
 ) -> str:
     """
-    In case of error while processing the job generation request, sent an e-mail to the user with
+    In case of error while processing the job generation request, send an e-mail to the user with
     the traceback.
     """
     error_traceback = traceback.format_exc()
@@ -292,7 +297,8 @@ def get_stash_clone_url(
     """
     Get information about the repository, returning the SSH clone url.
 
-    See ``_tests/test_server/stash-repo-info.json`` for an example of a payload.
+    It works by getting a request from the Stash server, see
+    ``_tests/test_server/stash-repo-info.json`` for an example of a payload.
     """
     url = f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}"
     response = requests.get(url, auth=(username, password))
@@ -317,7 +323,7 @@ def send_email_with_error(
     error_traceback: str,
 ) -> str:
     """
-    Send an email to the user who committed the changes that an error has happened while processing
+    Email the user who committed the changes that an error has happened while processing
     their .jobs_done file.
 
     Returns the recipient of the email in case of success, otherwise will raise an exception (not sure

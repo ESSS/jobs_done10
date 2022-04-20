@@ -110,10 +110,17 @@ docs to add new libraries or update existing versions.
 
 ## Server ##
 
-jobs done includes a `flask` end point in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/).
+jobs done includes a `flask` server in `jobs_done10.server` which can be deployed using [Docker](https://www.docker.com/).
 
-This end point is tailored to receive the push event from BitBucket Server or GitHub. A post without any
-json data will return the installed version, useful to check the installed version and that the end point is correct.
+It provides two end-points for `PUSH` and `GET`:
+
+* `/stash`: tailored to receive the push event from BitBucket Server (formerly known as Stash).
+* `/github`: tailored to receive the push event from GitHub.
+
+A `GET` to either ends points will return the JobsDone version, useful to check the installed version and
+that the end-point is correct.
+
+Posting to `/` is the same as posting to `/stash` for backwards compatibility (might be removed in the future).
 
 ### Configuration ###
 

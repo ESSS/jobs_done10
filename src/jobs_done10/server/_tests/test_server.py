@@ -118,11 +118,13 @@ def mock_github_repo_requests(
         yield
 
 
+@pytest.mark.parametrize("post_url", ["/", "/stash"])
 def test_stash_post(
     client: FlaskClient,
     stash_post_data: Dict[str, Any],
     mocker: MockerFixture,
     stash_repo_info_data: Dict[str, Any],
+    post_url: str,
 ) -> None:
     new_jobs = ["new1-eden-master", "new2-eden-master"]
     updated_jobs = ["upd1-eden-master", "upd2-eden-master"]
@@ -135,7 +137,7 @@ def test_stash_post(
     )
 
     with mock_stash_repo_requests(stash_repo_info_data):
-        response = client.post(json=stash_post_data)
+        response = client.post(post_url, json=stash_post_data)
     assert response.status_code == 200
     assert response.mimetype == "text/html"
     assert (
