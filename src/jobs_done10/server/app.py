@@ -41,6 +41,14 @@ def index() -> Union[str, Tuple[str, int]]:
     return _handle_end_point(iter_jobs_done_requests_for_stash_payload)
 
 
+@app.route("/github", methods=["GET", "POST"])
+def github() -> Union[str, Tuple[str, int]]:
+    """
+    Jenkins job creation/update/deletion end-point for stash.
+    """
+    return _handle_end_point(iter_jobs_done_requests_for_github_payload)
+
+
 def _handle_end_point(
     iter_jobs_done_requests: Callable[
         [Dict[str, Any], Dict[str, str]], Iterator["JobsDoneRequest"]
