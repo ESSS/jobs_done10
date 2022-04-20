@@ -69,7 +69,7 @@ def _handle_end_point(
     try:
         jobs_done_requests = list(iter_jobs_done_requests(payload, dict(os.environ)))
         message = _process_jobs_done_request(jobs_done_requests)
-        app.logger.info(message)
+        app.logger.info(f"Output:\n{message}")
         return message
     except Exception:
         err_message = _process_jobs_done_error(jobs_done_requests, payload)

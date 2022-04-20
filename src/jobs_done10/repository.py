@@ -3,7 +3,7 @@ import re
 import attr
 
 
-@attr.s(auto_attribs=True)
+@attr.s(auto_attribs=True, frozen=True)
 class Repository(object):
     """
     Represents a source control repository used in a continuous integration job.
@@ -23,5 +23,4 @@ class Repository(object):
             url = 'https://server/repo.git'
             name = 'repo'
         """
-
         return re.match(r".*/([^\./]+)(\.git/?)?$", self.url).groups()[0]
