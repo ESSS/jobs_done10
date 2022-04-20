@@ -33,20 +33,3 @@ def testNameFromURL():
 
     for url, expected_name in tests:
         assert Repository(url=url).name == expected_name, 'Failed for url "%s"' % url
-
-
-def testEquality():
-    assert Repository() == Repository()
-    assert Repository(url="http://example.com") == Repository(url="http://example.com")
-    assert Repository(url="http://example.com", branch="foo") != Repository(
-        url="http://example.com"
-    )
-    assert Repository(url="http://example.com") != Repository(url="http://other.com")
-
-    assert Repository(url="http://example.com", branch="bar") == Repository(
-        url="http://example.com", branch="bar"
-    )
-
-    assert Repository(url="http://example.com", branch="foo") != Repository(
-        url="http://example.com", branch="bar"
-    )
