@@ -1,3 +1,7 @@
+# 1.6.1 (2022-04-25)
+
+* Add dependency to `gunicorn`, which was missing for deployment.
+
 # 1.6.0 (2022-04-25)
 
 * Server now understands GitHub pushes at the `/github` end-point.

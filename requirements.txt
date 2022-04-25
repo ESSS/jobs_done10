@@ -32,6 +32,8 @@ filelock==3.3.2
     # via virtualenv
 flask==2.0.2
     # via jobs-done10 (setup.py)
+gunicorn==20.1.0
+    # via jobs-done10 (setup.py)
 identify==2.3.5
     # via pre-commit
 idna==3.3
@@ -125,3 +127,6 @@ zipp==3.6.0
     # via
     #   importlib-metadata
     #   importlib-resources
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
