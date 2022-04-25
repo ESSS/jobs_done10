@@ -1,3 +1,9 @@
+# 1.6.0 (UNRELEASED)
+
+* Server now understands GitHub pushes at the `/github` end-point.
+* Server now understands Stash pushes also at the `/stash` end-point. Posting Stash pushes at `/` still works, but
+  might be removed in the future.
+
 # 1.5.0 (2021-11-11)
 
 * New `tags` configuration added to Git, controlling if should fetch all tags or not during cloning. Default to `false`.

@@ -1,13 +1,24 @@
+# mypy: disallow-untyped-defs
+import json
+import os
+from contextlib import contextmanager
+from pathlib import Path
 from textwrap import dedent
+from typing import Any
+from typing import Dict
+from typing import Iterator
 
 import pytest
 import requests_mock
+from flask.testing import FlaskClient
+from pytest_mock import MockerFixture
 
 from jobs_done10.repository import Repository
+from jobs_done10.server.app import JobsDoneRequest
 
 
 @pytest.fixture(name="client")
-def client_(monkeypatch, tmpdir):
+def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
     from jobs_done10.server.app import app
 
     test_env = {
@@ -22,6 +33,8 @@ def client_(monkeypatch, tmpdir):
         "JD_EMAIL_PORT": "5900",
         "JD_EMAIL_USER": "email_user",
         "JD_EMAIL_PASSWORD": "email_password",
+        "JD_GH_USERNAME": "gh-username",
+        "JD_GH_TOKEN": "gh-token",
     }
     for env_var, value in test_env.items():
         monkeypatch.setenv(env_var, value)
@@ -29,8 +42,8 @@ def client_(monkeypatch, tmpdir):
     return app.test_client()
 
 
-@pytest.fixture(name="post_json_data")
-def post_json_data_():
+@pytest.fixture(name="stash_post_data")
+def stash_post_data_(datadir: Path) -> Dict[str, Any]:
     """
     Return the json data which posted by Stash/BitBucket Server. Obtained from the webhooks page configuration:
 
@@ -38,102 +51,81 @@ def post_json_data_():
 
     There's a "View details" link which you can inspect the body of the post.
     """
-    return {
-        "eventKey": "repo:refs_changed",
-        "date": "2018-06-18T16:20:06-0300",
-        "actor": {
-            "name": "jenkins",
-            "emailAddress": "bugreport+jenkins@esss.co",
-            "id": 2852,
-            "displayName": "jenkins",
-            "active": True,
-            "slug": "jenkins",
-            "type": "NORMAL",
-        },
-        "repository": {
-            "slug": "eden",
-            "id": 2231,
-            "name": "eden",
-            "scmId": "git",
-            "state": "AVAILABLE",
-            "statusMessage": "Available",
-            "forkable": True,
-            "project": {
-                "key": "ESSS",
-                "id": 1,
-                "name": "ESSS",
-                "description": "Dev projects",
-                "public": False,
-                "type": "NORMAL",
-            },
-            "public": False,
-        },
-        "changes": [
-            {
-                "ref": {
-                    "id": "refs/heads/stable-pwda11-master",
-                    "displayId": "stable-pwda11-master",
-                    "type": "BRANCH",
-                },
-                "refId": "refs/heads/stable-pwda11-master",
-                "fromHash": "cd39f701ae0a729b73c57b7848fbd1f340a36514",
-                "toHash": "8522b06a7c330008814a522d0342be9a997a1460",
-                "type": "UPDATE",
-            }
-        ],
-    }
+    return json.loads(datadir.joinpath("stash-post.json").read_text(encoding="UTF-8"))
 
 
-@pytest.fixture(name="repo_info_json_data")
-def repo_info_json_data_():
+@pytest.fixture(name="stash_repo_info_data")
+def stash_repo_info_data_(datadir: Path) -> Dict[str, Any]:
     """
     Return json data that results from a call to the project/slug endpoint.
 
     Taken from manually doing the query on our live server.
     """
-    return {
-        "forkable": True,
-        "id": 2231,
-        "links": {
-            "clone": [
-                {
-                    "href": "https://bruno@eden.esss.com.br/stash/scm/esss/eden.git",
-                    "name": "http",
-                },
-                {
-                    "href": "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git",
-                    "name": "ssh",
-                },
-            ],
-            "self": [
-                {
-                    "href": "https://eden.esss.com.br/stash/projects/ESSS/repos/eden/browse"
-                }
-            ],
-        },
-        "name": "eden",
-        "project": {
-            "description": "Dev projects",
-            "id": 1,
-            "key": "ESSS",
-            "links": {
-                "self": [{"href": "https://eden.esss.com.br/stash/projects/ESSS"}]
-            },
-            "name": "ESSS",
-            "public": False,
-            "type": "NORMAL",
-        },
-        "public": False,
-        "scmId": "git",
-        "slug": "eden",
-        "state": "AVAILABLE",
-        "statusMessage": "Available",
-    }
+    return json.loads(
+        datadir.joinpath("stash-repo-info.json").read_text(encoding="UTF-8")
+    )
 
 
-def test_post(client, post_json_data, mocker, repo_info_json_data):
-    contents = "jobs_done yaml contents"
+@pytest.fixture(name="github_post_data")
+def github_post_data_(datadir: Path) -> Dict[str, Any]:
+    """
+    Return the json data posted by GitHub on push events.
 
+    Docs:
+
+        https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#push
+
+    The contents were obtained by configuring the webhook in a repo to post to https://requestbin.com.
+    """
+    return json.loads(datadir.joinpath("github-post.json").read_text(encoding="UTF-8"))
+
+
+@contextmanager
+def mock_stash_repo_requests(stash_repo_info_data: Dict[str, Any]) -> Iterator[None]:
+    with requests_mock.Mocker() as m:
+        stash_url = "https://example.com/stash"
+        project_key = "ESSS"
+        slug = "eden"
+        path = ".jobs_done.yaml"
+        ref = "8522b06a7c330008814a522d0342be9a997a1460"
+        m.get(
+            f"{stash_url}/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}",
+            text="jobs_done yaml contents",
+        )
+
+        m.get(
+            f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}",
+            json=stash_repo_info_data,
+        )
+        yield
+
+
+@contextmanager
+def mock_github_repo_requests(
+    file_contents: str, status_code: int, settings: Dict[str, str]
+) -> Iterator[None]:
+    with requests_mock.Mocker() as m:
+        username = settings["JD_GH_USERNAME"]
+        token = settings["JD_GH_TOKEN"]
+        owner_name = "ESSS"
+        repo_name = "test-webhooks"
+        ref = "2c202379fefc2ca03c390b30050a87a87c9a4c81"
+        m.get(
+            f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{ref}/.jobs_done.yaml",
+            text=file_contents,
+            status_code=status_code,
+        )
+        yield
+
+
+@pytest.mark.parametrize("post_url", ["/", "/stash"])
+def test_stash_post(
+    client: FlaskClient,
+    stash_post_data: Dict[str, Any],
+    mocker: MockerFixture,
+    stash_repo_info_data: Dict[str, Any],
+    post_url: str,
+) -> None:
     new_jobs = ["new1-eden-master", "new2-eden-master"]
     updated_jobs = ["upd1-eden-master", "upd2-eden-master"]
     deleted_jobs = ["del1-eden-master", "del2-eden-master"]
@@ -144,38 +136,23 @@ def test_post(client, post_json_data, mocker, repo_info_json_data):
         return_value=(new_jobs, updated_jobs, deleted_jobs),
     )
 
-    with requests_mock.Mocker() as m:
-        stash_url = "https://example.com/stash"
-        project_key = "ESSS"
-        slug = "eden"
-        path = ".jobs_done.yaml"
-        ref = "8522b06a7c330008814a522d0342be9a997a1460"
-        m.get(
-            f"{stash_url}/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}",
-            text=contents,
-        )
-
-        m.get(
-            f"{stash_url}/rest/api/1.0/projects/{project_key}/repos/{slug}",
-            json=repo_info_json_data,
-        )
-
-        response = client.post(json=post_json_data)
-        assert response.status_code == 200
-        assert response.mimetype == "text/html"
-        assert (
-            response.data.decode("UTF-8")
-            == dedent(
-                """
-            NEW - new1-eden-master
-            NEW - new2-eden-master
-            UPD - upd1-eden-master
-            UPD - upd2-eden-master
-            DEL - del1-eden-master
-            DEL - del2-eden-master
-        """
-            ).strip()
-        )
+    with mock_stash_repo_requests(stash_repo_info_data):
+        response = client.post(post_url, json=stash_post_data)
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    assert (
+        response.data.decode("UTF-8")
+        == dedent(
+            """
+                NEW - new1-eden-master
+                NEW - new2-eden-master
+                UPD - upd1-eden-master
+                UPD - upd2-eden-master
+                DEL - del1-eden-master
+                DEL - del2-eden-master
+            """
+        ).strip()
+    )
 
     assert upload_mock.call_count == 1
     args, kwargs = upload_mock.call_args
@@ -184,14 +161,65 @@ def test_post(client, post_json_data, mocker, repo_info_json_data):
         repository=Repository(
             "ssh://git@eden.fln.esss.com.br:7999/esss/eden.git", "stable-pwda11-master"
         ),
-        jobs_done_file_contents=contents,
+        jobs_done_file_contents="jobs_done yaml contents",
         url="https://example.com/jenkins",
         username="jenkins_user",
         password="jenkins_password",
     )
 
 
-def test_version(client):
+def test_github_post(
+    client: FlaskClient,
+    github_post_data: Dict[str, Any],
+    mocker: MockerFixture,
+) -> None:
+    new_jobs = ["new1-eden-master", "new2-eden-master"]
+    updated_jobs = ["upd1-eden-master", "upd2-eden-master"]
+    deleted_jobs = ["del1-eden-master", "del2-eden-master"]
+
+    upload_mock = mocker.patch(
+        "jobs_done10.generators.jenkins.UploadJobsFromFile",
+        autospec=True,
+        return_value=(new_jobs, updated_jobs, deleted_jobs),
+    )
+
+    file_contents = "github jobs done contents"
+    with mock_github_repo_requests(
+        file_contents, status_code=200, settings=dict(os.environ)
+    ):
+        response = client.post("/github", json=github_post_data)
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    assert (
+        response.data.decode("UTF-8")
+        == dedent(
+            """
+                NEW - new1-eden-master
+                NEW - new2-eden-master
+                UPD - upd1-eden-master
+                UPD - upd2-eden-master
+                DEL - del1-eden-master
+                DEL - del2-eden-master
+            """
+        ).strip()
+    )
+
+    assert upload_mock.call_count == 1
+    args, kwargs = upload_mock.call_args
+    assert args == ()
+    assert kwargs == dict(
+        repository=Repository(
+            "git@github.com:ESSS/test-webhooks.git", "fb-add-jobs-done"
+        ),
+        jobs_done_file_contents=file_contents,
+        url="https://example.com/jenkins",
+        username="jenkins_user",
+        password="jenkins_password",
+    )
+
+
+def test_version(client: FlaskClient) -> None:
     import pkg_resources
 
     version = pkg_resources.get_distribution("jobs_done10").version
@@ -199,14 +227,25 @@ def test_version(client):
     assert response.data.decode("UTF-8") == f"jobs_done10 ver. {version}"
 
 
-def test_error_handling(client, post_json_data, mocker):
+def test_error_handling(
+    client: FlaskClient,
+    stash_post_data: Dict[str, Any],
+    mocker: MockerFixture,
+    stash_repo_info_data: Dict[str, Any],
+) -> None:
     import mailer
 
     mocker.patch.object(mailer.Mailer, "send", autospec=True)
     mocker.spy(mailer.Mailer, "__init__")
 
-    del post_json_data["eventKey"]
-    response = client.post(json=post_json_data)
+    mocker.patch(
+        "jobs_done10.generators.jenkins.UploadJobsFromFile",
+        autospec=True,
+        side_effect=RuntimeError("Error processing JobsDone"),
+    )
+
+    with mock_stash_repo_requests(stash_repo_info_data):
+        response = client.post(json=stash_post_data)
     assert response.status_code == 500
     assert response.mimetype == "text/html"
     obtained_message = response.data.decode("UTF-8")
@@ -239,3 +278,31 @@ def test_error_handling(client, post_json_data, mocker):
     )
     assert message.charset == "UTF-8"
     assert "An error happened when processing your push" in message.Body
+
+
+@pytest.mark.parametrize("file_not_found", [True, False])
+def test_iter_jobs_done_requests_for_github_payload(
+    github_post_data: Dict[str, Any], file_not_found: bool
+) -> None:
+    from jobs_done10.server.app import iter_jobs_done_requests_for_github_payload
+
+    file_contents = "jobs_done yaml contents"
+
+    settings = {"JD_GH_USERNAME": "gh-username", "JD_GH_TOKEN": "GH-TOKEN"}
+    with mock_github_repo_requests(
+        file_contents, status_code=404 if file_not_found else 200, settings=settings
+    ):
+        (request,) = iter_jobs_done_requests_for_github_payload(
+            github_post_data, settings
+        )
+
+    expected_contents = None if file_not_found else file_contents
+    assert request == JobsDoneRequest(
+        owner_name="ESSS",
+        repo_name="test-webhooks",
+        pusher_email="nicoddemus@gmail.com",
+        commit="2c202379fefc2ca03c390b30050a87a87c9a4c81",
+        clone_url="git@github.com:ESSS/test-webhooks.git",
+        branch="fb-add-jobs-done",
+        jobs_done_file_contents=expected_contents,
+    )
