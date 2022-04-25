@@ -14,6 +14,7 @@ setup(
     install_requires=[
         "click",
         "flask",
+        "gunicorn",
         "mailer",
         "pre-commit",
         "pygments",
