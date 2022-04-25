@@ -1,4 +1,4 @@
-# 1.6.0 (UNRELEASED)
+# 1.6.0 (2022-04-25)
 
 * Server now understands GitHub pushes at the `/github` end-point.
 * Server now understands Stash pushes also at the `/stash` end-point. Posting Stash pushes at `/` still works, but
