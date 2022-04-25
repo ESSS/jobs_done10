@@ -2,6 +2,7 @@
 import os
 import pprint
 import traceback
+from http import HTTPStatus
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -15,6 +16,8 @@ from typing import Union
 import attr
 import flask
 import requests
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hmac
 from dotenv import load_dotenv
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
@@ -33,13 +36,19 @@ if not app.debug:
 app.logger.info(f"Initializing Server App - {get_version_title()}")
 
 
+class SignatureVerificationError(Exception):
+    """
+    Raised when we could not verify the authenticity of a post request.
+    """
+
+
 @app.route("/", methods=["GET", "POST"])
 @app.route("/stash", methods=["GET", "POST"])
 def stash() -> Union[str, Tuple[str, int]]:
     """
     Jenkins job creation/update/deletion end-point for stash.
     """
-    return _handle_end_point(iter_jobs_done_requests_for_stash_payload)
+    return _handle_end_point(parse_stash_post)
 
 
 @app.route("/github", methods=["GET", "POST"])
@@ -47,18 +56,20 @@ def github() -> Union[str, Tuple[str, int]]:
     """
     Jenkins job creation/update/deletion end-point for GitHub.
     """
-    return _handle_end_point(iter_jobs_done_requests_for_github_payload)
+    return _handle_end_point(parse_github_post)
 
 
 def _handle_end_point(
-    iter_jobs_done_requests: Callable[
-        [Dict[str, Any], Dict[str, str]], Iterator["JobsDoneRequest"]
+    parse_request_callback: Callable[
+        [Dict[str, Any], Dict[str, Any], bytes, Dict[str, str]],
+        Iterator["JobsDoneRequest"],
     ]
 ) -> Union[str, Tuple[str, int]]:
     """Common handling for the jobs-done end-point."""
-    payload = flask.request.json
+    request = flask.request
+    payload = request.json
     app.logger.info(f"Received request:\n{pprint.pformat(payload)}")
-    if flask.request.method == "GET" or payload is None or payload.get("test"):
+    if request.method == "GET" or payload is None or payload.get("test"):
         # return a 200 response also on POST, when no JSON data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
@@ -67,14 +78,21 @@ def _handle_end_point(
 
     jobs_done_requests = []
     try:
-        jobs_done_requests = list(iter_jobs_done_requests(payload, dict(os.environ)))
+        jobs_done_requests = list(
+            parse_request_callback(
+                payload, request.headers, request.data, dict(os.environ)
+            )
+        )
         message = _process_jobs_done_request(jobs_done_requests)
         app.logger.info(f"Output:\n{message}")
         return message
+    except SignatureVerificationError as e:
+        app.logger.exception(f"Header signature does not match: {e}")
+        return str(e), HTTPStatus.FORBIDDEN
     except Exception:
         err_message = _process_jobs_done_error(jobs_done_requests, payload)
         app.logger.exception("Uncaught exception")
-        return err_message, 500
+        return err_message, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @attr.s(auto_attribs=True, frozen=True)
@@ -95,11 +113,14 @@ class JobsDoneRequest:
     jobs_done_file_contents: Optional[str]
 
 
-def iter_jobs_done_requests_for_stash_payload(
-    payload: Dict[str, Any], settings: Dict[str, str]
+def parse_stash_post(
+    payload: Dict[str, Any],
+    headers: Dict[str, Any],
+    data: bytes,
+    settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
     """
-    Parses a Stash payload from a push event into jobs done requests.
+    Parses a Stash post information from a push event into jobs done requests.
 
     See ``_tests/test_server/stash-post.json`` for an example of a payload.
     """
@@ -152,14 +173,18 @@ def iter_jobs_done_requests_for_stash_payload(
         )
 
 
-def iter_jobs_done_requests_for_github_payload(
-    payload: Dict[str, Any], settings: Dict[str, str]
+def parse_github_post(
+    payload: Dict[str, Any],
+    headers: Dict[str, Any],
+    data: bytes,
+    settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
     """
     Parses a GitHub payload from a push event into jobs done requests.
 
     See ``_tests/test_server/github-post.json`` for an example of a payload.
     """
+    verify_github_signature(headers, data, settings["JD_GH_SECRET"])
     owner_name = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
@@ -188,6 +213,27 @@ def iter_jobs_done_requests_for_github_payload(
         pusher_email=pusher_email,
         jobs_done_file_contents=jobs_done_file_contents,
     )
+
+
+def verify_github_signature(headers: Dict[str, Any], data: bytes, secret: str) -> None:
+    """
+    Verify the post raw data and our shared secret validate against the signature in the header.
+
+    https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#delivery-headers
+    """
+    signature_name = "x-hub-signature-256"
+    try:
+        header_signature = headers[signature_name]
+    except KeyError:
+        raise SignatureVerificationError(f'Missing "{signature_name}" entry in headers')
+    algorithm = hmac.HMAC(secret.encode("UTF-8"), hashes.SHA256())
+    algorithm.update(data)
+    hash = algorithm.finalize().hex()
+    computed_signature = f"sha256={hash}"
+    if header_signature != computed_signature:
+        raise SignatureVerificationError(
+            f"Computed signature does not match the one in the header: {computed_signature} != {header_signature}"
+        )
 
 
 def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) -> str:

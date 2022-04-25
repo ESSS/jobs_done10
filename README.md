@@ -115,7 +115,7 @@ jobs done includes a `flask` server in `jobs_done10.server` which can be deploye
 It provides two end-points for `PUSH` and `GET`:
 
 * `/stash`: tailored to receive the push event from BitBucket Server (formerly known as Stash).
-* `/github`: tailored to receive the push event from GitHub.
+* `/github`: tailored to receive the push event from GitHub. **Important**: the webhook must be configured with content-type of `application/json` and a **secret**.
 
 A `GET` to either ends points will return the JobsDone version, useful to check the installed version and
 that the end-point is correct.
@@ -138,6 +138,7 @@ JD_STASH_PASSWORD=some password
 
 JD_GH_USERNAME=github-user
 JD_GH_TOKEN=github-user-personal-access-token
+JD_GH_SECRET=webhook-secret
 
 JD_EMAIL_USER=mail-sender@example.com
 JD_EMAIL_FROM=JobsDone Bot <mail-sender@example.com>

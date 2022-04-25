@@ -2,6 +2,7 @@
 import json
 import os
 from contextlib import contextmanager
+from http import HTTPStatus
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
@@ -15,12 +16,12 @@ from pytest_mock import MockerFixture
 
 from jobs_done10.repository import Repository
 from jobs_done10.server.app import JobsDoneRequest
+from jobs_done10.server.app import SignatureVerificationError
+from jobs_done10.server.app import verify_github_signature
 
 
-@pytest.fixture(name="client")
-def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
-    from jobs_done10.server.app import app
-
+@pytest.fixture(name="configure_environment")
+def configure_environment_(monkeypatch: pytest.MonkeyPatch) -> None:
     test_env = {
         "JD_JENKINS_URL": "https://example.com/jenkins",
         "JD_JENKINS_USERNAME": "jenkins_user",
@@ -35,9 +36,15 @@ def client_(monkeypatch: pytest.MonkeyPatch) -> FlaskClient:
         "JD_EMAIL_PASSWORD": "email_password",
         "JD_GH_USERNAME": "gh-username",
         "JD_GH_TOKEN": "gh-token",
+        "JD_GH_SECRET": "MY SECRET",
     }
     for env_var, value in test_env.items():
         monkeypatch.setenv(env_var, value)
+
+
+@pytest.fixture(name="client")
+def client_(configure_environment: None) -> FlaskClient:
+    from jobs_done10.server.app import app
 
     return app.test_client()
 
@@ -67,9 +74,9 @@ def stash_repo_info_data_(datadir: Path) -> Dict[str, Any]:
 
 
 @pytest.fixture(name="github_post_data")
-def github_post_data_(datadir: Path) -> Dict[str, Any]:
+def github_post_data_(datadir: Path) -> bytes:
     """
-    Return the json data posted by GitHub on push events.
+    Return the raw data posted by GitHub on push events.
 
     Docs:
 
@@ -77,7 +84,24 @@ def github_post_data_(datadir: Path) -> Dict[str, Any]:
 
     The contents were obtained by configuring the webhook in a repo to post to https://requestbin.com.
     """
-    return json.loads(datadir.joinpath("github-post.json").read_text(encoding="UTF-8"))
+    data = datadir.joinpath("github-post.body.data").read_bytes()
+    # Remove any extra new lines from our test data file, as editors and pre-commits
+    # have the habit of adding a new-line to it.
+    if data[-1] == ord(b"\n"):
+        data = data[:-1]
+    return data
+
+
+@pytest.fixture(name="github_post_headers")
+def github_post_headers_(datadir: Path) -> Dict[str, Any]:
+    """
+    Return the headers posted by GitHub on push events.
+
+    Same docs as in github_post_payload.
+    """
+    return json.loads(
+        datadir.joinpath("github-post.headers.json").read_text(encoding="UTF-8")
+    )
 
 
 @contextmanager
@@ -109,7 +133,7 @@ def mock_github_repo_requests(
         token = settings["JD_GH_TOKEN"]
         owner_name = "ESSS"
         repo_name = "test-webhooks"
-        ref = "2c202379fefc2ca03c390b30050a87a87c9a4c81"
+        ref = "17fcbd494ea4a140a4d4816de218e761b264b1b1"
         m.get(
             f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{ref}/.jobs_done.yaml",
             text=file_contents,
@@ -170,7 +194,8 @@ def test_stash_post(
 
 def test_github_post(
     client: FlaskClient,
-    github_post_data: Dict[str, Any],
+    github_post_data: bytes,
+    github_post_headers: Dict[str, Any],
     mocker: MockerFixture,
 ) -> None:
     new_jobs = ["new1-eden-master", "new2-eden-master"]
@@ -187,7 +212,9 @@ def test_github_post(
     with mock_github_repo_requests(
         file_contents, status_code=200, settings=dict(os.environ)
     ):
-        response = client.post("/github", json=github_post_data)
+        response = client.post(
+            "/github", data=github_post_data, headers=github_post_headers
+        )
 
     assert response.status_code == 200
     assert response.mimetype == "text/html"
@@ -216,6 +243,20 @@ def test_github_post(
         url="https://example.com/jenkins",
         username="jenkins_user",
         password="jenkins_password",
+    )
+
+
+def test_github_post_signature_failed(
+    client: FlaskClient,
+    github_post_data: bytes,
+    github_post_headers: Dict[str, Any],
+) -> None:
+    tampered_data = github_post_data + b"\n"
+    response = client.post("/github", data=tampered_data, headers=github_post_headers)
+
+    assert response.status_code == HTTPStatus.FORBIDDEN
+    assert response.data.decode("UTF-8").startswith(
+        "Computed signature does not match the one in the header:"
     )
 
 
@@ -281,19 +322,28 @@ def test_error_handling(
 
 
 @pytest.mark.parametrize("file_not_found", [True, False])
-def test_iter_jobs_done_requests_for_github_payload(
-    github_post_data: Dict[str, Any], file_not_found: bool
+def test_parse_github_post(
+    github_post_data: bytes, github_post_headers: Dict[str, Any], file_not_found: bool
 ) -> None:
-    from jobs_done10.server.app import iter_jobs_done_requests_for_github_payload
+    from jobs_done10.server.app import parse_github_post
 
     file_contents = "jobs_done yaml contents"
 
-    settings = {"JD_GH_USERNAME": "gh-username", "JD_GH_TOKEN": "GH-TOKEN"}
+    settings = {
+        "JD_GH_USERNAME": "gh-username",
+        "JD_GH_TOKEN": "GH-TOKEN",
+        "JD_GH_SECRET": "MY SECRET",
+    }
     with mock_github_repo_requests(
-        file_contents, status_code=404 if file_not_found else 200, settings=settings
+        file_contents,
+        status_code=HTTPStatus.NOT_FOUND if file_not_found else HTTPStatus.OK,
+        settings=settings,
     ):
-        (request,) = iter_jobs_done_requests_for_github_payload(
-            github_post_data, settings
+        (request,) = parse_github_post(
+            json.loads(github_post_data),
+            github_post_headers,
+            github_post_data,
+            settings,
         )
 
     expected_contents = None if file_not_found else file_contents
@@ -301,8 +351,34 @@ def test_iter_jobs_done_requests_for_github_payload(
         owner_name="ESSS",
         repo_name="test-webhooks",
         pusher_email="nicoddemus@gmail.com",
-        commit="2c202379fefc2ca03c390b30050a87a87c9a4c81",
+        commit="17fcbd494ea4a140a4d4816de218e761b264b1b1",
         clone_url="git@github.com:ESSS/test-webhooks.git",
         branch="fb-add-jobs-done",
         jobs_done_file_contents=expected_contents,
     )
+
+
+def test_verify_github_signature(
+    github_post_data: bytes,
+    github_post_headers: Dict[str, Any],
+    configure_environment: None,
+) -> None:
+    verify_github_signature(
+        github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
+    )
+
+    with pytest.raises(
+        SignatureVerificationError, match="Computed signature does not match.*"
+    ):
+        verify_github_signature(
+            github_post_headers, github_post_data + b"\n", os.environ["JD_GH_SECRET"]
+        )
+
+    del github_post_headers["x-hub-signature-256"]
+    with pytest.raises(
+        SignatureVerificationError,
+        match='Missing "x-hub-signature-256" entry in header',
+    ):
+        verify_github_signature(
+            github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
+        )
