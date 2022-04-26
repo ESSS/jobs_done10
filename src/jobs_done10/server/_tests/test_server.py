@@ -9,6 +9,7 @@ from typing import Any
 from typing import Dict
 from typing import Iterator
 
+import pkg_resources
 import pytest
 import requests_mock
 from flask.testing import FlaskClient
@@ -260,12 +261,27 @@ def test_github_post_signature_failed(
     )
 
 
-def test_version(client: FlaskClient) -> None:
-    import pkg_resources
-
+@pytest.mark.parametrize("endpoint", ["/", "/stash", "/github"])
+def test_version(client: FlaskClient, endpoint: str) -> None:
     version = pkg_resources.get_distribution("jobs_done10").version
-    response = client.post(json={"test": True})
-    assert response.data.decode("UTF-8") == f"jobs_done10 ver. {version}"
+    response = client.get(endpoint)
+    expected = f"jobs_done10 ver. {version}"
+    assert response.data.decode("UTF-8") == expected
+
+    response = client.post(endpoint)
+    assert response.data.decode("UTF-8") == expected
+
+
+@pytest.mark.parametrize("endpoint", ["/", "/stash", "/github"])
+def test_post_invalid_content_type(client: FlaskClient, endpoint: str) -> None:
+    response = client.post(
+        endpoint, json="hello", headers={"content-type": "application/text"}
+    )
+    assert (
+        response.data.decode("UTF-8")
+        == f"Only 'application/json' content accepted, got: 'application/text'"
+    )
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
 def test_error_handling(
@@ -340,7 +356,6 @@ def test_parse_github_post(
         settings=settings,
     ):
         (request,) = parse_github_post(
-            json.loads(github_post_data),
             github_post_headers,
             github_post_data,
             settings,

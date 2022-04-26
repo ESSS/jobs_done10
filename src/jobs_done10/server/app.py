@@ -1,4 +1,5 @@
 # mypy: disallow-untyped-defs
+import json
 import os
 import pprint
 import traceback
@@ -61,27 +62,34 @@ def github() -> Union[str, Tuple[str, int]]:
 
 def _handle_end_point(
     parse_request_callback: Callable[
-        [Dict[str, Any], Dict[str, Any], bytes, Dict[str, str]],
+        [Dict[str, Any], bytes, Dict[str, str]],
         Iterator["JobsDoneRequest"],
     ]
 ) -> Union[str, Tuple[str, int]]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
-    payload = request.json
-    app.logger.info(f"Received request:\n{pprint.pformat(payload)}")
-    if request.method == "GET" or payload is None or payload.get("test"):
+    app.logger.info(
+        f"Received {request.method}request:\n{pprint.pformat(request.headers)}"
+    )
+    if request.method == "GET" or not request.data:
         # return a 200 response also on POST, when no JSON data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
         app.logger.info("I'm alive")
         return get_version_title()
 
+    # Only accept json payloads.
+    content_type = request.headers.get("Content-Type")
+    if content_type != "application/json":
+        return (
+            f"Only 'application/json' content accepted, got: '{content_type}'",
+            HTTPStatus.BAD_REQUEST,
+        )
+
     jobs_done_requests = []
     try:
         jobs_done_requests = list(
-            parse_request_callback(
-                payload, request.headers, request.data, dict(os.environ)
-            )
+            parse_request_callback(request.headers, request.data, dict(os.environ))
         )
         message = _process_jobs_done_request(jobs_done_requests)
         app.logger.info(f"Output:\n{message}")
@@ -90,7 +98,9 @@ def _handle_end_point(
         app.logger.exception(f"Header signature does not match: {e}")
         return str(e), HTTPStatus.FORBIDDEN
     except Exception:
-        err_message = _process_jobs_done_error(jobs_done_requests, payload)
+        err_message = _process_jobs_done_error(
+            request.headers, request.data, jobs_done_requests
+        )
         app.logger.exception("Uncaught exception")
         return err_message, HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -114,7 +124,6 @@ class JobsDoneRequest:
 
 
 def parse_stash_post(
-    payload: Dict[str, Any],
     headers: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
@@ -124,6 +133,7 @@ def parse_stash_post(
 
     See ``_tests/test_server/stash-post.json`` for an example of a payload.
     """
+    payload = json.loads(data)
     if not isinstance(payload, dict) or "eventKey" not in payload:
         raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
 
@@ -174,7 +184,6 @@ def parse_stash_post(
 
 
 def parse_github_post(
-    payload: Dict[str, Any],
     headers: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
@@ -185,6 +194,7 @@ def parse_github_post(
     See ``_tests/test_server/github-post.json`` for an example of a payload.
     """
     verify_github_signature(headers, data, settings["JD_GH_SECRET"])
+    payload = json.loads(data)
     owner_name = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
@@ -275,16 +285,20 @@ def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) ->
 
 
 def _process_jobs_done_error(
-    jobs_done_requests: List[JobsDoneRequest], payload: Dict[str, Any]
+    headers: Dict[str, Any], data: bytes, jobs_done_requests: List[JobsDoneRequest]
 ) -> str:
     """
     In case of error while processing the job generation request, send an e-mail to the user with
     the traceback.
     """
     error_traceback = traceback.format_exc()
+    payload = json.loads(data)
     lines = [
         f"ERROR processing request: {flask.request}",
         "",
+        "Headers:",
+        "",
+        pprint.pformat(headers),
         "JSON data:",
         "",
         pprint.pformat(payload),
