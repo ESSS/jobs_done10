@@ -78,10 +78,10 @@ def _handle_end_point(
         return get_version_title()
 
     # Only accept json payloads.
-    content_type = request.headers.get("Content-Type")
-    if content_type != "application/json":
+    if not request.is_json:
+        app.logger.info(f"POST body not in JSON format:\n{request.mimetype}")
         return (
-            f"Only 'application/json' content accepted, got: '{content_type}'",
+            f"Only posts in JSON format accepted",
             HTTPStatus.BAD_REQUEST,
         )
 

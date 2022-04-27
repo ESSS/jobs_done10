@@ -47,7 +47,6 @@ def configure_environment_(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(name="client")
 def client_(configure_environment: None) -> FlaskClient:
-
     return app.test_client()
 
 
@@ -273,10 +272,7 @@ def test_post_invalid_content_type(client: FlaskClient, endpoint: str) -> None:
     response = client.post(
         endpoint, json="hello", headers={"content-type": "application/text"}
     )
-    assert (
-        response.data.decode("UTF-8")
-        == f"Only 'application/json' content accepted, got: 'application/text'"
-    )
+    assert response.data.decode("UTF-8") == f"Only posts in JSON format accepted"
     assert response.status_code == HTTPStatus.BAD_REQUEST
 
 
