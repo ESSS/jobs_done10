@@ -1,4 +1,5 @@
 # mypy: disallow-untyped-defs
+import hmac
 import json
 import os
 import pprint
@@ -17,8 +18,6 @@ from typing import Union
 import attr
 import flask
 import requests
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import hmac
 from dotenv import load_dotenv
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
@@ -236,13 +235,12 @@ def verify_github_signature(headers: Dict[str, Any], data: bytes, secret: str) -
         header_signature = headers[signature_name]
     except KeyError:
         raise SignatureVerificationError(f'Missing "{signature_name}" entry in headers')
-    algorithm = hmac.HMAC(secret.encode("UTF-8"), hashes.SHA256())
-    algorithm.update(data)
-    hash = algorithm.finalize().hex()
+    algorithm = hmac.new(secret.encode("UTF-8"), data, "sha256")
+    hash = algorithm.digest().hex()
     computed_signature = f"sha256={hash}"
-    if header_signature != computed_signature:
+    if not hmac.compare_digest(header_signature, computed_signature):
         raise SignatureVerificationError(
-            f"Computed signature does not match the one in the header: {computed_signature} != {header_signature}"
+            f"Computed signature does not match the one in the header"
         )
 
 

@@ -256,8 +256,8 @@ def test_github_post_signature_failed(
     response = client.post("/github", data=tampered_data, headers=github_post_headers)
 
     assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.data.decode("UTF-8").startswith(
-        "Computed signature does not match the one in the header:"
+    assert response.data.decode("UTF-8") == (
+        "Computed signature does not match the one in the header"
     )
 
 
