@@ -31,7 +31,6 @@ setup(
     package_dir={
         "": "src",
     },
-    include_package_data=True,
     author="ESSS",
     author_email="dev@esss.com.br",
     url="https://github.com/ESSS/jobs_done10",

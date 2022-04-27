@@ -21,7 +21,7 @@ jobs:
         run: |
           touch .env
           docker build . -t jobsdone --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=0.1
-          docker run jobsdone pytest src --color=yes
+          docker run jobsdone pytest tests --color=yes
 
 
   deploy:

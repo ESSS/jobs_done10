@@ -38,6 +38,6 @@ repos:
     rev: v0.942
     hooks:
     -   id: mypy
-        files: ^(src/|testing/)
+        files: ^(src/|tests/)
         args: []
         additional_dependencies: [attrs]

@@ -18,6 +18,7 @@ COPY ./README.md /jobsdone/README.md
 COPY ./setup.py /jobsdone/setup.py
 COPY ./.env /jobsdone/.env
 COPY ./src /jobsdone/src
+COPY ./tests /jobsdone/tests
 
 RUN pip install -r requirements.txt .
 
