@@ -16,12 +16,15 @@ repos:
     rev: v4.2.0
     hooks:
     -   id: trailing-whitespace
+        exclude: \.data$
     -   id: end-of-file-fixer
+        exclude: \.data$
     -   id: debug-statements
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v3.0.1
     hooks:
     -   id: reorder-python-imports
+        name: "reorder python imports"
         args: ['--application-directories=.:src', --py36-plus]
 -   repo: https://github.com/myint/autoflake
     rev: v1.4
