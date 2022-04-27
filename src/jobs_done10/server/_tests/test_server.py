@@ -16,7 +16,9 @@ from flask.testing import FlaskClient
 from pytest_mock import MockerFixture
 
 from jobs_done10.repository import Repository
+from jobs_done10.server.app import app
 from jobs_done10.server.app import JobsDoneRequest
+from jobs_done10.server.app import parse_github_post
 from jobs_done10.server.app import SignatureVerificationError
 from jobs_done10.server.app import verify_github_signature
 
@@ -45,7 +47,6 @@ def configure_environment_(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(name="client")
 def client_(configure_environment: None) -> FlaskClient:
-    from jobs_done10.server.app import app
 
     return app.test_client()
 
@@ -336,7 +337,6 @@ def test_error_handling(
 def test_parse_github_post(
     github_post_data: bytes, github_post_headers: Dict[str, Any], file_not_found: bool
 ) -> None:
-    from jobs_done10.server.app import parse_github_post
 
     file_contents = "jobs_done yaml contents"
 
@@ -373,6 +373,7 @@ def test_verify_github_signature(
     github_post_headers: Dict[str, Any],
     configure_environment: None,
 ) -> None:
+    # The original post and secret should match without an exception.
     verify_github_signature(
         github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
     )
@@ -380,15 +381,17 @@ def test_verify_github_signature(
     with pytest.raises(
         SignatureVerificationError, match="Computed signature does not match.*"
     ):
+        tampered_data = github_post_data + b"\n"
         verify_github_signature(
-            github_post_headers, github_post_data + b"\n", os.environ["JD_GH_SECRET"]
+            github_post_headers, tampered_data, os.environ["JD_GH_SECRET"]
         )
 
-    del github_post_headers["x-hub-signature-256"]
+    # Should fail if the signature header is not present.
     with pytest.raises(
         SignatureVerificationError,
         match='Missing "x-hub-signature-256" entry in header',
     ):
+        del github_post_headers["x-hub-signature-256"]
         verify_github_signature(
             github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
         )
