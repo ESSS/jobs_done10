@@ -85,12 +85,7 @@ def github_post_data_(datadir: Path) -> bytes:
 
     The contents were obtained by configuring the webhook in a repo to post to https://requestbin.com.
     """
-    data = datadir.joinpath("github-post.body.data").read_bytes()
-    # Remove any extra new lines from our test data file, as editors and pre-commits
-    # have the habit of adding a new-line to it.
-    if data[-1] == ord(b"\n"):
-        data = data[:-1]
-    return data
+    return datadir.joinpath("github-post.body.data").read_bytes()
 
 
 @pytest.fixture(name="github_post_headers")
