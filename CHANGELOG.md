@@ -1,3 +1,7 @@
+# 1.7.1 (2022-04-27)
+
+* Properly interpret the content type/mimedata of POST events.
+
 # 1.7.0 (2022-04-26)
 
 * The `/github` end-point now **requires** the webhook to be configured with a *secret*, which is known to JobsDone via the `JD_GH_SECRET` configuration variable.
