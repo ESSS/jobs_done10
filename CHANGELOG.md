@@ -1,6 +1,7 @@
 # 1.7.0 (2022-04-26)
 
 * The `/github` end-point now **requires** the webhook to be configured with a *secret*, which is known to JobsDone via the `JD_GH_SECRET` configuration variable.
+* Tests have been moved to `tests`, outside the `src` directory. This avoids installing test-related files when using the package.
 
 # 1.6.1 (2022-04-25)
 
