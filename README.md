@@ -105,7 +105,7 @@ Below are the possible installation options.
 #### Upgrading dependencies
 
 We use [pip-tools](https://pypi.org/project/pip-tools) to pin versions, follow the instructions in the
-docs to add new libraries or update existing versions.
+docs to add new libraries or update existing versions, adding `--extra dev` to include development dependencies.
 
 
 ## Server ##

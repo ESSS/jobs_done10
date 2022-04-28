@@ -16,16 +16,19 @@ setup(
         "flask",
         "gunicorn",
         "mailer",
-        "pre-commit",
         "pygments",
-        "pytest",
-        "pytest-mock",
-        "pytest-regressions",
         "python-dotenv",
         "python-jenkins",
         "pyyaml",
-        "requests-mock",
     ],
+    extras_require={
+        "dev": [
+            "pytest-regressions",
+            "pre-commit",
+            "pytest-mock",
+            "requests-mock",
+        ]
+    },
     entry_points={"console_scripts": ["jobs_done=jobs_done10.cli:jobs_done"]},
     packages=find_packages("src"),
     package_dir={
