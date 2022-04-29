@@ -1,3 +1,7 @@
+# UNRELEASED
+
+* Split test dependencies into its own `dev` extra category (`pip install .[dev]` for example).
+
 # 1.7.1 (2022-04-27)
 
 * Properly interpret the content type/mimedata of POST events.
