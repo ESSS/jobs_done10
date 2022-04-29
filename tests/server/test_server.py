@@ -1,6 +1,7 @@
 # mypy: disallow-untyped-defs
 import json
 import os
+from base64 import b64encode
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -37,9 +38,8 @@ def configure_environment_(monkeypatch: pytest.MonkeyPatch) -> None:
         "JD_EMAIL_PORT": "5900",
         "JD_EMAIL_USER": "email_user",
         "JD_EMAIL_PASSWORD": "email_password",
-        "JD_GH_USERNAME": "gh-username",
         "JD_GH_TOKEN": "gh-token",
-        "JD_GH_SECRET": "MY SECRET",
+        "JD_GH_WEBHOOK_SECRET": "MY SECRET",
     }
     for env_var, value in test_env.items():
         monkeypatch.setenv(env_var, value)
@@ -100,6 +100,26 @@ def github_post_headers_(datadir: Path) -> Dict[str, Any]:
     )
 
 
+@pytest.fixture(name="github_post_del_branch_data")
+def github_post_del_branch_data_(datadir: Path) -> bytes:
+    """
+    Same as git_hub_post_data, but for post about a branch being deleted.
+    """
+    return datadir.joinpath("github-post-del-branch.body.data").read_bytes()
+
+
+@pytest.fixture(name="github_post_del_branch_headers")
+def github_post_del_branch_headers_(datadir: Path) -> Dict[str, Any]:
+    """
+    Same as git_hub_post_headers, but for post about a branch being deleted.
+    """
+    return json.loads(
+        datadir.joinpath("github-post-del-branch.headers.json").read_text(
+            encoding="UTF-8"
+        )
+    )
+
+
 @contextmanager
 def mock_stash_repo_requests(stash_repo_info_data: Dict[str, Any]) -> Iterator[None]:
     with requests_mock.Mocker() as m:
@@ -125,17 +145,27 @@ def mock_github_repo_requests(
     file_contents: str, status_code: int, settings: Dict[str, str]
 ) -> Iterator[None]:
     with requests_mock.Mocker() as m:
-        username = settings["JD_GH_USERNAME"]
         token = settings["JD_GH_TOKEN"]
         owner_name = "ESSS"
         repo_name = "test-webhooks"
         ref = "17fcbd494ea4a140a4d4816de218e761b264b1b1"
+        encoded_content = b64encode(file_contents.encode("UTF-8")).decode("ASCII")
         m.get(
-            f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{ref}/.jobs_done.yaml",
-            text=file_contents,
+            f"https://api.github.com/repos/{owner_name}/{repo_name}/contents/.jobs_done.yaml",
+            json={"content": encoded_content, "encoding": "base64"},
             status_code=status_code,
         )
         yield
+        history = m.request_history[0]
+        assert history.qs == {"ref": [ref]}
+        # According to requests.auth._basic_auth_str(), basic authentications
+        # is encoded as "{username}:{password}" as a base64 string.
+        username = ""
+        basic_auth = b64encode(f"{username}:{token}".encode("UTF-8"))
+        assert (
+            history.headers.get("Authorization")
+            == f"Basic {basic_auth.decode('ASCII')}"
+        )
 
 
 @pytest.mark.parametrize("post_url", ["/", "/stash"])
@@ -337,9 +367,8 @@ def test_parse_github_post(
     file_contents = "jobs_done yaml contents"
 
     settings = {
-        "JD_GH_USERNAME": "gh-username",
         "JD_GH_TOKEN": "GH-TOKEN",
-        "JD_GH_SECRET": "MY SECRET",
+        "JD_GH_WEBHOOK_SECRET": "MY SECRET",
     }
     with mock_github_repo_requests(
         file_contents,
@@ -364,6 +393,30 @@ def test_parse_github_post(
     )
 
 
+def test_parse_github_post_delete_branch(
+    github_post_del_branch_data: bytes, github_post_del_branch_headers: Dict[str, Any]
+) -> None:
+    settings = {
+        "JD_GH_TOKEN": "GH-TOKEN",
+        "JD_GH_WEBHOOK_SECRET": "MY SECRET",
+    }
+    (request,) = parse_github_post(
+        github_post_del_branch_headers,
+        github_post_del_branch_data,
+        settings,
+    )
+
+    assert request == JobsDoneRequest(
+        owner_name="ESSS",
+        repo_name="test-webhooks",
+        pusher_email="nicoddemus@gmail.com",
+        commit=None,
+        clone_url="git@github.com:ESSS/test-webhooks.git",
+        branch="fb-add-jobs-done2",
+        jobs_done_file_contents=None,
+    )
+
+
 def test_verify_github_signature(
     github_post_data: bytes,
     github_post_headers: Dict[str, Any],
@@ -371,7 +424,7 @@ def test_verify_github_signature(
 ) -> None:
     # The original post and secret should match without an exception.
     verify_github_signature(
-        github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
+        github_post_headers, github_post_data, os.environ["JD_GH_WEBHOOK_SECRET"]
     )
 
     with pytest.raises(
@@ -379,7 +432,7 @@ def test_verify_github_signature(
     ):
         tampered_data = github_post_data + b"\n"
         verify_github_signature(
-            github_post_headers, tampered_data, os.environ["JD_GH_SECRET"]
+            github_post_headers, tampered_data, os.environ["JD_GH_WEBHOOK_SECRET"]
         )
 
     # Should fail if the signature header is not present.
@@ -389,5 +442,5 @@ def test_verify_github_signature(
     ):
         del github_post_headers["x-hub-signature-256"]
         verify_github_signature(
-            github_post_headers, github_post_data, os.environ["JD_GH_SECRET"]
+            github_post_headers, github_post_data, os.environ["JD_GH_WEBHOOK_SECRET"]
         )

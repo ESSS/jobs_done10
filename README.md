@@ -136,9 +136,8 @@ JD_STASH_URL=https://example.com/stash
 JD_STASH_USERNAME=stash-user
 JD_STASH_PASSWORD=some password
 
-JD_GH_USERNAME=github-user
 JD_GH_TOKEN=github-user-personal-access-token
-JD_GH_SECRET=webhook-secret
+JD_GH_WEBHOOK_SECRET=webhook-secret
 
 JD_EMAIL_USER=mail-sender@example.com
 JD_EMAIL_FROM=JobsDone Bot <mail-sender@example.com>

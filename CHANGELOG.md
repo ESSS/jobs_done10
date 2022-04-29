@@ -1,6 +1,9 @@
 # UNRELEASED
 
 * Split test dependencies into its own `dev` extra category (`pip install .[dev]` for example).
+* Fixed handling of branch deletions and job updates in `/github`.
+* The `GH_SECRET` has been renamed to `GH_WEBHOOK_SECRET` to make its purpose clearer.
+* The `GH_USERNAME` setting is no longer used/needed.
 
 # 1.7.1 (2022-04-27)
 
