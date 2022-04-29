@@ -377,6 +377,7 @@ def test_parse_github_post(
     ):
         (request,) = parse_github_post(
             github_post_headers,
+            json.loads(github_post_data),
             github_post_data,
             settings,
         )
@@ -402,6 +403,7 @@ def test_parse_github_post_delete_branch(
     }
     (request,) = parse_github_post(
         github_post_del_branch_headers,
+        json.loads(github_post_del_branch_data),
         github_post_del_branch_data,
         settings,
     )

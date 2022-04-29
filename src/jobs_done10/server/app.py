@@ -62,12 +62,18 @@ def github() -> Union[str, Tuple[str, int]]:
 
 def _handle_end_point(
     parse_request_callback: Callable[
-        [Dict[str, Any], bytes, Dict[str, str]],
+        [Dict[str, Any], Dict[str, Any], bytes, Dict[str, str]],
         Iterator["JobsDoneRequest"],
     ]
 ) -> Union[str, Tuple[str, int]]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
+    payload = request.json
+    json_payload_dump = (
+        json.dumps(dict(payload), indent=2, sort_keys=True)
+        if payload is not None
+        else "None"
+    )
     app.logger.info(
         "\n"
         + f"Received {request}\n"
@@ -75,19 +81,17 @@ def _handle_end_point(
         + json.dumps(dict(request.headers), indent=2, sort_keys=True)
         + "\n"
         + f"Payload (JSON):\n"
-        + json.dumps(dict(request.json), indent=2, sort_keys=True)
-        if request.json is not None
-        else "None"
+        + json_payload_dump
     )
     if request.method == "GET" or not request.data:
-        # return a 200 response also on POST, when no JSON data is posted; this is useful
+        # return a 200 response also on POST, when no data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
         app.logger.info("I'm alive")
         return get_version_title()
 
-    # Only accept json payloads.
-    if not request.is_json:
+    # Only accept JSON payloads.
+    if payload is None:
         app.logger.info(f"POST body not in JSON format:\n{request.mimetype}")
         return (
             f"Only posts in JSON format accepted",
@@ -97,7 +101,9 @@ def _handle_end_point(
     jobs_done_requests = []
     try:
         jobs_done_requests = list(
-            parse_request_callback(request.headers, request.data, dict(os.environ))
+            parse_request_callback(
+                request.headers, payload, request.data, dict(os.environ)
+            )
         )
         app.logger.info(f"Parsed {len(jobs_done_requests)} jobs done requests:")
         for jdr in jobs_done_requests:
@@ -137,6 +143,7 @@ class JobsDoneRequest:
 
 def parse_stash_post(
     headers: Dict[str, Any],
+    payload: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
@@ -145,7 +152,6 @@ def parse_stash_post(
 
     See ``_tests/test_server/stash-post.json`` for an example of a payload.
     """
-    payload = json.loads(data)
     if not isinstance(payload, dict) or "eventKey" not in payload:
         raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
 
@@ -195,6 +201,7 @@ def parse_stash_post(
 
 def parse_github_post(
     headers: Dict[str, Any],
+    payload: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
@@ -204,7 +211,6 @@ def parse_github_post(
     See ``_tests/test_server/github-post.json`` for an example of a payload.
     """
     verify_github_signature(headers, data, settings["JD_GH_WEBHOOK_SECRET"])
-    payload = json.loads(data)
     owner_name = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
