@@ -4,6 +4,7 @@ import json
 import os
 import pprint
 import traceback
+from base64 import b64decode
 from http import HTTPStatus
 from typing import Any
 from typing import Callable
@@ -61,24 +62,36 @@ def github() -> Union[str, Tuple[str, int]]:
 
 def _handle_end_point(
     parse_request_callback: Callable[
-        [Dict[str, Any], bytes, Dict[str, str]],
+        [Dict[str, Any], Dict[str, Any], bytes, Dict[str, str]],
         Iterator["JobsDoneRequest"],
     ]
 ) -> Union[str, Tuple[str, int]]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
+    payload = request.json
+    json_payload_dump = (
+        json.dumps(dict(payload), indent=2, sort_keys=True)
+        if payload is not None
+        else "None"
+    )
     app.logger.info(
-        f"Received {request.method}request:\n{pprint.pformat(request.headers)}"
+        "\n"
+        + f"Received {request}\n"
+        + f"Headers:\n"
+        + json.dumps(dict(request.headers), indent=2, sort_keys=True)
+        + "\n"
+        + f"Payload (JSON):\n"
+        + json_payload_dump
     )
     if request.method == "GET" or not request.data:
-        # return a 200 response also on POST, when no JSON data is posted; this is useful
+        # return a 200 response also on POST, when no data is posted; this is useful
         # because the "Test Connection" in BitBucket does just that, making it easy to verify
         # we have the correct version up.
         app.logger.info("I'm alive")
         return get_version_title()
 
-    # Only accept json payloads.
-    if not request.is_json:
+    # Only accept JSON payloads.
+    if payload is None:
         app.logger.info(f"POST body not in JSON format:\n{request.mimetype}")
         return (
             f"Only posts in JSON format accepted",
@@ -88,8 +101,13 @@ def _handle_end_point(
     jobs_done_requests = []
     try:
         jobs_done_requests = list(
-            parse_request_callback(request.headers, request.data, dict(os.environ))
+            parse_request_callback(
+                request.headers, payload, request.data, dict(os.environ)
+            )
         )
+        app.logger.info(f"Parsed {len(jobs_done_requests)} jobs done requests:")
+        for jdr in jobs_done_requests:
+            app.logger.info("  - " + str(jdr) + "\n")
         message = _process_jobs_done_request(jobs_done_requests)
         app.logger.info(f"Output:\n{message}")
         return message
@@ -100,7 +118,7 @@ def _handle_end_point(
         err_message = _process_jobs_done_error(
             request.headers, request.data, jobs_done_requests
         )
-        app.logger.exception("Uncaught exception")
+        app.logger.exception("Unexpected exception")
         return err_message, HTTPStatus.INTERNAL_SERVER_ERROR
 
 
@@ -116,14 +134,16 @@ class JobsDoneRequest:
     # Repository name: "etk" for example.
     repo_name: str
     pusher_email: str
-    commit: str
     clone_url: str
     branch: str
-    jobs_done_file_contents: Optional[str]
+    # A commit with None means a branch has been deleted.
+    commit: Optional[str]
+    jobs_done_file_contents: Optional[str] = attr.ib(repr=False)
 
 
 def parse_stash_post(
     headers: Dict[str, Any],
+    payload: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
@@ -132,7 +152,6 @@ def parse_stash_post(
 
     See ``_tests/test_server/stash-post.json`` for an example of a payload.
     """
-    payload = json.loads(data)
     if not isinstance(payload, dict) or "eventKey" not in payload:
         raise RuntimeError(f"Invalid request json data: {pprint.pformat(payload)}")
 
@@ -150,18 +169,16 @@ def parse_stash_post(
             continue
 
         branch = branch[len(prefix) :]
-        try:
-            jobs_done_file_contents = get_stash_file_contents(
-                stash_url=stash_url,
-                username=stash_username,
-                password=stash_password,
-                project_key=project_key,
-                slug=slug,
-                path=".jobs_done.yaml",
-                ref=change["toHash"],
-            )
-        except IOError:
-            jobs_done_file_contents = None
+
+        jobs_done_file_contents = get_stash_file_contents(
+            stash_url=stash_url,
+            username=stash_username,
+            password=stash_password,
+            project_key=project_key,
+            slug=slug,
+            path=".jobs_done.yaml",
+            ref=change["toHash"],
+        )
 
         clone_url = get_stash_clone_url(
             stash_url=stash_url,
@@ -184,6 +201,7 @@ def parse_stash_post(
 
 def parse_github_post(
     headers: Dict[str, Any],
+    payload: Dict[str, Any],
     data: bytes,
     settings: Dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
@@ -192,26 +210,39 @@ def parse_github_post(
 
     See ``_tests/test_server/github-post.json`` for an example of a payload.
     """
-    verify_github_signature(headers, data, settings["JD_GH_SECRET"])
-    payload = json.loads(data)
+    verify_github_signature(headers, data, settings["JD_GH_WEBHOOK_SECRET"])
     owner_name = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
-    commit = payload["head_commit"]["id"]
+    head_commit = payload["head_commit"]
+    commit: Optional[str]
+    if head_commit is not None:
+        commit = head_commit["id"]
+    else:
+        commit = None
     pusher_email = payload["pusher"]["email"]
     branch = payload["ref"]
     prefix = "refs/heads/"
     if branch.startswith(prefix):
         branch = branch[len(prefix) :]
 
-    username = settings["JD_GH_USERNAME"]
-    token = settings["JD_GH_TOKEN"]
-
-    url = f"https://{username}:{token}@raw.githubusercontent.com/{owner_name}/{repo_name}/{commit}/.jobs_done.yaml"
-    try:
-        jobs_done_file_contents = _fetch_file_contents(url, auth=None)
-    except IOError:
+    if commit is None:
         jobs_done_file_contents = None
+    else:
+        token = settings["JD_GH_TOKEN"]
+        url = f"https://api.github.com/repos/{owner_name}/{repo_name}/contents/.jobs_done.yaml"
+        response = requests.get(url, auth=("", token), params={"ref": commit})
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            jobs_done_file_contents = None
+        else:
+            response.raise_for_status()
+            payload = response.json()
+            content = payload["content"]
+            if payload["encoding"] != "base64":
+                raise RuntimeError(
+                    f"Unknown encoding when getting .jobs_done.yaml file: {payload['encoding']}"
+                )
+            jobs_done_file_contents = b64decode(content).decode("UTF-8")
 
     yield JobsDoneRequest(
         owner_name=owner_name,
@@ -296,10 +327,10 @@ def _process_jobs_done_error(
         "",
         "Headers:",
         "",
-        pprint.pformat(headers),
+        json.dumps(dict(headers), indent=2, sort_keys=True),
         "JSON data:",
         "",
-        pprint.pformat(payload),
+        json.dumps(payload, indent=2, sort_keys=True),
         "",
         "",
         error_traceback,
@@ -326,25 +357,17 @@ def get_stash_file_contents(
     slug: str,
     path: str,
     ref: str,
-) -> str:
+) -> Optional[str]:
     """
     Get the file contents from the stash server.
 
     We are using a "raw" Get which returns the entire file contents as text.
     """
     file_url = stash_url + f"/projects/{project_key}/repos/{slug}/raw/{path}?at={ref}"
-    return _fetch_file_contents(file_url, auth=(username, password))
-
-
-def _fetch_file_contents(file_url: str, *, auth: Optional[Tuple[str, str]]) -> str:
-    """Fetches the contents of the file given the full URL, handling responses appropriately."""
-    response = requests.get(file_url, auth=auth)
-    if response.status_code == 404:
-        raise IOError(f"File {file_url} not found in server")
-    elif response.status_code != 200:
-        # Raise other exceptions if unsuccessful
-        response.raise_for_status()
-
+    response = requests.get(file_url, auth=(username, password))
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        return None
+    response.raise_for_status()
     contents = response.text
     return contents
 
@@ -396,7 +419,13 @@ def send_email_with_error(
 
     owner_name = jobs_done_requests[-1].owner_name
     repo_name = jobs_done_requests[-1].repo_name
-    changes_msg = ", ".join(f"{x.branch} @ {x.commit[:7]}" for x in jobs_done_requests)
+
+    def abbrev_commit(c: Optional[str]) -> str:
+        return c[:7] if c is not None else "(no commit)"
+
+    changes_msg = ", ".join(
+        f"{x.branch} @ {abbrev_commit(x.commit)}" for x in jobs_done_requests
+    )
     subject = (
         f"JobsDone failure during push to {owner_name}/{repo_name} ({changes_msg})"
     )
