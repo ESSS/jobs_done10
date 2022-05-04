@@ -1,4 +1,4 @@
-# UNRELEASED
+# 1.8.0 (2022-05-04)
 
 * Split test dependencies into its own `dev` extra category (`pip install .[dev]` for example).
 * Fixed handling of branch deletions and job updates in `/github`.
