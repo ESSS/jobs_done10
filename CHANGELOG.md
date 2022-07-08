@@ -1,3 +1,7 @@
+# 1.9.0 (2022-07-08)
+
+* Add support for GitHub build status notification with the `notify_github` option.
+
 # 1.8.0 (2022-05-04)
 
 * Split test dependencies into its own `dev` extra category (`pip install .[dev]` for example).

@@ -317,6 +317,27 @@ class JenkinsXmlJobGenerator(object):
 
             self._CheckUnknownOptions("notify_stash", args)
 
+    def SetNotifyGithub(self, args):
+        notifier = self.xml[
+            "publishers/org.jenkinsci.plugins.github.status.GitHubCommitStatusSetter"
+        ]
+        notifier[
+            "commitShaSource@class"
+        ] = "org.jenkinsci.plugins.github.status.sources.BuildDataRevisionShaSource"
+        notifier[
+            "reposSource@class"
+        ] = "org.jenkinsci.plugins.github.status.sources.AnyDefinedRepositorySource"
+        notifier[
+            "contextSource@class"
+        ] = "org.jenkinsci.plugins.github.status.sources.DefaultCommitContextSource"
+        notifier[
+            "statusResultSource@class"
+        ] = "org.jenkinsci.plugins.github.status.sources.DefaultStatusResultSource"
+        notifier[
+            "statusBackrefSource@class"
+        ] = "org.jenkinsci.plugins.github.status.sources.BuildRefBackrefSource"
+        notifier["errorHandlers"] = ""
+
     def SetParameters(self, parameters):
         parameters_xml = self.xml[
             "properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions"

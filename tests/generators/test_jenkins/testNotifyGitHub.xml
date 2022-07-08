@@ -1,0 +1,10 @@
+<publishers>
+  <org.jenkinsci.plugins.github.status.GitHubCommitStatusSetter>
+    <commitShaSource class="org.jenkinsci.plugins.github.status.sources.BuildDataRevisionShaSource"/>
+    <reposSource class="org.jenkinsci.plugins.github.status.sources.AnyDefinedRepositorySource"/>
+    <contextSource class="org.jenkinsci.plugins.github.status.sources.DefaultCommitContextSource"/>
+    <statusResultSource class="org.jenkinsci.plugins.github.status.sources.DefaultStatusResultSource"/>
+    <statusBackrefSource class="org.jenkinsci.plugins.github.status.sources.BuildRefBackrefSource"/>
+    <errorHandlers></errorHandlers>
+  </org.jenkinsci.plugins.github.status.GitHubCommitStatusSetter>
+</publishers>

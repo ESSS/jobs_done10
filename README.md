@@ -659,9 +659,21 @@ matrix:
   - "36"
 ```
 
+### notify_github ###
+
+Notifies GitHub of job build status.
+
+Currently it does not support any parameters, using default values.
+
+Requires [GitHub Plugin](https://plugins.jenkins.io/github).
+
+```yaml
+notify_github:
+```
+
 ### notify_stash ###
 
-Notifies a Stash instance when the build passes.
+Notifies a Stash instance of job build status.
 
 When no parameters are given, uses configurations set in the Jenkins instance.
 
