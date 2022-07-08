@@ -83,7 +83,13 @@ class JobsDoneJob(object):
         # * format: JSON (optional)
         # * url: https://requestb.in/12345678
         "notification": dict,
-        # Notifies Stash when a build passes
+        # Notifies GitHub of build status
+        # Requires https://plugins.jenkins.io/github
+        # Currently no configuration is supported:
+        # e.g.
+        #    notify_github:
+        "notify_github": str,
+        # Notifies Stash of build status
         # Requires https://wiki.jenkins-ci.org/display/JENKINS/StashNotifier+Plugin
         # e.g.
         #    notify_stash = {'url' : 'stash.com', 'username' : 'user', 'password' : 'pass'}

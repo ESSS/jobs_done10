@@ -404,6 +404,17 @@ class TestJenkinsXmlJobGenerator:
             boundary_tags="publishers",
         )
 
+    def testNotifyGitHub(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=dedent(
+                r"""
+                notify_github:
+                """
+            ),
+            boundary_tags="publishers",
+        )
+
     def testNotifyStashServerDefault(self, file_regression):
         """
         When given no parameters, use the default Stash configurations set in the Jenkins server
