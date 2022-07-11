@@ -21,7 +21,7 @@ repos:
         exclude: \.data$
     -   id: debug-statements
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.3.0
+    rev: v3.8.1
     hooks:
     -   id: reorder-python-imports
         name: "reorder python imports"
