@@ -1,3 +1,7 @@
+# 1.9.1 (2022-07-13)
+
+* Fix bug where options for the ``git:`` setting were not being honored when set to ``false``.
+
 # 1.9.0 (2022-07-08)
 
 * Add support for GitHub build status notification with the `notify_github` option.

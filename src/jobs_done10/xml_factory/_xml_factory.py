@@ -78,6 +78,21 @@ class XmlFactory(object):
         result = self._ObtainElement(name)
         return XmlFactory(result)
 
+    def __delitem__(self, name: str) -> None:
+        parent = self.root
+        parts = name.split("/")
+        last_child = None
+        last_parent = None
+        for part in parts:
+            child = parent.find(part)
+            if child is None:
+                raise ValueError(f"Could not find element {name!r} in {self.root}")
+            last_child = child
+            last_parent = parent
+            parent = child
+        if last_child is not None and last_parent is not None:
+            last_parent.remove(last_child)
+
     def _ObtainElement(self, name):
         """
         Create and returns a xml element with the given name.

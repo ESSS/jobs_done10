@@ -20,7 +20,6 @@
       <reference>/home/reference.git</reference>
       <timeout>30</timeout>
     </hudson.plugins.git.extensions.impl.CloneOption>
-    <hudson.plugins.git.extensions.impl.CleanCheckout/>
     <hudson.plugins.git.extensions.impl.GitLFSPull/>
     <hudson.plugins.git.extensions.impl.SubmoduleOption>
       <recursiveSubmodules>true</recursiveSubmodules>

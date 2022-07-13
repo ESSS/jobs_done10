@@ -5,6 +5,7 @@ This includes a generator, job publishers, constants and command line interface 
 """
 import io
 from collections import namedtuple
+from contextlib import suppress
 
 from jobs_done10.common import AsList
 
@@ -289,6 +290,9 @@ class JenkinsXmlJobGenerator(object):
             if value == "true":
                 # noinspection PyStatementEffect
                 git_xml[tag_path]
+            else:
+                with suppress(ValueError):
+                    del git_xml[tag_path]
 
         self._CheckUnknownOptions("git", git_options)
 
