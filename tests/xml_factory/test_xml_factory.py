@@ -10,36 +10,38 @@ from jobs_done10.xml_factory import XmlFactory
 
 
 class Test(object):
-    def testSimplest(self):
-        """\
-        <?xml version="1.0" ?>
-        <user>
-          <name>Alpha</name>
-          <login>Bravo</login>
-        </user>"""
+    def testSimplest(self) -> None:
         factory = XmlFactory("user")
         factory["name"] = "Alpha"
         factory["login"] = "Bravo"
 
-        assert factory.GetContents(xml_header=True) == dedent(self.testSimplest.__doc__)
+        assert factory.GetContents(xml_header=True) == dedent(
+            """\
+            <?xml version="1.0" ?>
+            <user>
+              <name>Alpha</name>
+              <login>Bravo</login>
+            </user>"""
+        )
         assert factory.AsDict() == {"login": "Bravo", "name": "Alpha"}
         assert factory.AsJson() == '{"name": "Alpha", "login": "Bravo"}'
 
-    def testSimple(self):
-        """\
-        <user>
-          <name>Alpha</name>
-          <login>Bravo</login>
-          <location>
-            <city>Charlie</city>
-          </location>
-        </user>"""
+    def testSimple(self) -> None:
         factory = XmlFactory("user")
         factory["name"] = "Alpha"
         factory["login"] = "Bravo"
         factory["location/city"] = "Charlie"
 
-        assert factory.GetContents() == dedent(self.testSimple.__doc__)
+        assert factory.GetContents() == dedent(
+            """\
+            <user>
+              <name>Alpha</name>
+              <login>Bravo</login>
+              <location>
+                <city>Charlie</city>
+              </location>
+            </user>"""
+        )
         assert factory.AsDict() == {
             "login": "Bravo",
             "name": "Alpha",
@@ -50,45 +52,58 @@ class Test(object):
             == '{"name": "Alpha", "login": "Bravo", "location": {"city": "Charlie"}}'
         )
 
-    def testAttributes(self):
-        """\
-        <root>
-          <alpha one="1" two="2">Alpha</alpha>
-          <bravo>
-            <charlie three="3"/>
-          </bravo>
-        </root>"""
+    def testDel(self) -> None:
+        factory = XmlFactory("user")
+        factory["name"] = "Alpha"
+        factory["login"] = "Bravo"
+        factory["location/city"] = "Charlie"
+        factory["location/state"] = "State"
+
+        assert factory.AsDict() == {
+            "login": "Bravo",
+            "name": "Alpha",
+            "location": {"city": "Charlie", "state": "State"},
+        }
+
+        del factory["name"]
+        del factory["location/city"]
+
+        assert factory.AsDict() == {
+            "login": "Bravo",
+            "location": {"state": "State"},
+        }
+
+        with pytest.raises(ValueError):
+            del factory["unknown"]
+        with pytest.raises(ValueError):
+            del factory["login/unknown"]
+
+        assert factory.AsDict() == {
+            "login": "Bravo",
+            "location": {"state": "State"},
+        }
+
+    def testAttributes(self) -> None:
         factory = XmlFactory("root")
         factory["alpha"] = "Alpha"
         factory["alpha@one"] = "1"
         factory["alpha@two"] = "2"
         factory["bravo/charlie@three"] = "3"
 
-        assert factory.GetContents() == dedent(self.testAttributes.__doc__)
+        assert factory.GetContents() == dedent(
+            """\
+            <root>
+              <alpha one="1" two="2">Alpha</alpha>
+              <bravo>
+                <charlie three="3"/>
+              </bravo>
+            </root>"""
+        )
         # We're ignoring attributes and empty tags for now.
         assert factory.AsDict() == {"alpha": "Alpha", "bravo": {"charlie": None}}
         assert factory.AsJson() == '{"alpha": "Alpha", "bravo": {"charlie": null}}'
 
-    def testRepeatingTags(self):
-        """\
-        <root>
-          <elements>
-            <name>Alpha</name>
-            <name>Bravo</name>
-            <name>Charlie</name>
-          </elements>
-          <components>
-            <component>
-              <name>Alpha</name>
-            </component>
-            <component>
-              <name>Bravo</name>
-            </component>
-            <component>
-              <name>Charlie</name>
-            </component>
-          </components>
-        </root>"""
+    def testRepeatingTags(self) -> None:
         factory = XmlFactory("root")
         factory["elements/name"] = "Alpha"
         factory["elements/name+"] = "Bravo"
@@ -98,7 +113,27 @@ class Test(object):
         factory["components/component+/name"] = "Bravo"
         factory["components/component+/name"] = "Charlie"
 
-        assert factory.GetContents() == dedent(self.testRepeatingTags.__doc__)
+        assert factory.GetContents() == dedent(
+            """\
+            <root>
+              <elements>
+                <name>Alpha</name>
+                <name>Bravo</name>
+                <name>Charlie</name>
+              </elements>
+              <components>
+                <component>
+                  <name>Alpha</name>
+                </component>
+                <component>
+                  <name>Bravo</name>
+                </component>
+                <component>
+                  <name>Charlie</name>
+                </component>
+              </components>
+            </root>"""
+        )
         assert factory.AsDict() == {
             "elements": {"name": ["Alpha", "Bravo", "Charlie"]},
             "components": {
@@ -110,31 +145,7 @@ class Test(object):
             == '{"elements": {"name": ["Alpha", "Bravo", "Charlie"]}, "components": {"component": [{"name": "Alpha"}, {"name": "Bravo"}, {"name": "Charlie"}]}}'
         )
 
-    def testHudsonJob(self):
-        """\
-        <project>
-          <actions/>
-          <description/>
-          <logRotator>
-            <daysToKeep>7</daysToKeep>
-            <numToKeep>7</numToKeep>
-          </logRotator>
-          <keepDependencies>false</keepDependencies>
-          <properties/>
-          <scm class="hudson.scm.SubversionSCM">
-            <useUpdate>true</useUpdate>
-            <excludedRegions/>
-            <excludedUsers/>
-            <excludedRevprop/>
-          </scm>
-          <assignedNode>KATARN</assignedNode>
-          <canRoam>false</canRoam>
-          <disabled>false</disabled>
-          <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
-          <concurrentBuild>false</concurrentBuild>
-          <buildWrappers/>
-          <customWorkspace>WORKSPACE</customWorkspace>
-        </project>"""
+    def testHudsonJob(self) -> None:
         factory = XmlFactory("project")
         factory["actions"]
         factory["description"]
@@ -155,42 +166,69 @@ class Test(object):
         factory["buildWrappers"]
         factory["customWorkspace"] = "WORKSPACE"
 
-        assert factory.GetContents() == dedent(self.testHudsonJob.__doc__)
+        assert factory.GetContents() == dedent(
+            """\
+            <project>
+              <actions/>
+              <description/>
+              <logRotator>
+                <daysToKeep>7</daysToKeep>
+                <numToKeep>7</numToKeep>
+              </logRotator>
+              <keepDependencies>false</keepDependencies>
+              <properties/>
+              <scm class="hudson.scm.SubversionSCM">
+                <useUpdate>true</useUpdate>
+                <excludedRegions/>
+                <excludedUsers/>
+                <excludedRevprop/>
+              </scm>
+              <assignedNode>KATARN</assignedNode>
+              <canRoam>false</canRoam>
+              <disabled>false</disabled>
+              <blockBuildWhenUpstreamBuilding>true</blockBuildWhenUpstreamBuilding>
+              <concurrentBuild>false</concurrentBuild>
+              <buildWrappers/>
+              <customWorkspace>WORKSPACE</customWorkspace>
+            </project>"""
+        )
 
-    def testTriggerClass(self):
-        """\
-        <root>
-          <triggers class="vector"/>
-        </root>"""
+    def testTriggerClass(self) -> None:
         # Simulating the use for HudsonJobGenerator._CreateTriggers
         factory = XmlFactory("root")
         triggers = factory["triggers"]
         triggers["@class"] = "vector"
 
-        assert factory.GetContents() == dedent(self.testTriggerClass.__doc__)
+        assert factory.GetContents() == dedent(
+            """\
+            <root>
+              <triggers class="vector"/>
+            </root>"""
+        )
 
-    def testTypeError(self):
+    def testTypeError(self) -> None:
         with pytest.raises(TypeError):
             XmlFactory(9)
 
-    def testPrettyXMLToStream(self, input_xml):
-        """\
-        <root>
-          <alpha enabled="true">
-            <bravo>
-              <charlie/>
-            </bravo>
-            <bravo.one/>
-            <delta>XXX</delta>
-          </alpha>
-        </root>"""
+    def testPrettyXMLToStream(self, input_xml) -> None:
         iss = StringIO(input_xml)
         oss = StringIO()
 
         WritePrettyXML(iss, oss)
-        assert oss.getvalue() == dedent(self.testPrettyXMLToStream.__doc__)
+        assert oss.getvalue() == dedent(
+            """\
+            <root>
+              <alpha enabled="true">
+                <bravo>
+                  <charlie/>
+                </bravo>
+                <bravo.one/>
+                <delta>XXX</delta>
+              </alpha>
+            </root>"""
+        )
 
-    def testPrettyXMLToFile(self, input_xml, tmpdir):
+    def testPrettyXMLToFile(self, input_xml, tmpdir) -> None:
         iss = StringIO(input_xml)
         obtained_filename = tmpdir / "pretty.obtained.xml"
 
@@ -209,7 +247,7 @@ class Test(object):
             </root>"""
         )
 
-    def testEscape(self):
+    def testEscape(self) -> None:
         element = ElementTree.Element("root")
         element.attrib["name"] = "<no>"
         element.text = "> 3"

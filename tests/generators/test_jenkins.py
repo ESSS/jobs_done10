@@ -639,6 +639,26 @@ class TestJenkinsXmlJobGenerator:
                   timeout: 30
                   clean_checkout: false
                   tags: true
+                  lfs: true
+                """
+            ),
+            boundary_tags="scm",
+        )
+
+    def testGitLFSDisabled(self, file_regression):
+        self.Check(
+            file_regression,
+            yaml_contents=dedent(
+                """
+                git:
+                  branch: custom_main
+                  lfs: false
+
+                additional_repositories:
+                - git:
+                    url: http://additional.git
+                    branch: custom_additional
+                    lfs: false
                 """
             ),
             boundary_tags="scm",
