@@ -1,3 +1,7 @@
+# 1.10.1 (2022-07-26)
+
+* Fix error in Dockerfile: do not copy dummy `.env` file anymore, it needs to be supplied by the service running the container.
+
 # 1.10.0 (2022-07-26)
 
 * Changed the ``git/lfs`` option default to ``false``. Many hosting providers (GitHub included) charge LFS bandwidth
