@@ -645,11 +645,12 @@ class TestJenkinsXmlJobGenerator:
             boundary_tags="scm",
         )
 
-    def testGitLFSDisabled(self, file_regression):
+    @pytest.mark.parametrize("enabled", ["true", "false"])
+    def testGitLFS(self, file_regression, enabled: str):
         self.Check(
             file_regression,
             yaml_contents=dedent(
-                """
+                f"""
                 git:
                   branch: custom_main
                   lfs: false
@@ -658,7 +659,7 @@ class TestJenkinsXmlJobGenerator:
                 - git:
                     url: http://additional.git
                     branch: custom_additional
-                    lfs: false
+                    lfs: {enabled}
                 """
             ),
             boundary_tags="scm",

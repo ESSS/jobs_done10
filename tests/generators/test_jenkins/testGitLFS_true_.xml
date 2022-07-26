@@ -10,43 +10,44 @@
       </userRemoteConfigs>
       <branches>
         <hudson.plugins.git.BranchSpec>
-          <name>not_master</name>
+          <name>custom_main</name>
         </hudson.plugins.git.BranchSpec>
       </branches>
       <extensions>
         <hudson.plugins.git.extensions.impl.LocalBranch>
-          <localBranch>not_master</localBranch>
+          <localBranch>custom_main</localBranch>
         </hudson.plugins.git.extensions.impl.LocalBranch>
         <hudson.plugins.git.extensions.impl.CloneOption>
           <noTags>true</noTags>
         </hudson.plugins.git.extensions.impl.CloneOption>
         <hudson.plugins.git.extensions.impl.CleanCheckout/>
       </extensions>
-      <localBranch>not_master</localBranch>
+      <localBranch>custom_main</localBranch>
     </hudson.plugins.git.GitSCM>
     <hudson.plugins.git.GitSCM>
       <configVersion>2</configVersion>
-      <relativeTargetDir>some_url</relativeTargetDir>
+      <relativeTargetDir>additional</relativeTargetDir>
       <userRemoteConfigs>
         <hudson.plugins.git.UserRemoteConfig>
-          <url>http://some_url.git</url>
+          <url>http://additional.git</url>
         </hudson.plugins.git.UserRemoteConfig>
       </userRemoteConfigs>
       <branches>
         <hudson.plugins.git.BranchSpec>
-          <name>my_branch</name>
+          <name>custom_additional</name>
         </hudson.plugins.git.BranchSpec>
       </branches>
       <extensions>
         <hudson.plugins.git.extensions.impl.LocalBranch>
-          <localBranch>my_branch</localBranch>
+          <localBranch>custom_additional</localBranch>
         </hudson.plugins.git.extensions.impl.LocalBranch>
         <hudson.plugins.git.extensions.impl.CloneOption>
           <noTags>true</noTags>
         </hudson.plugins.git.extensions.impl.CloneOption>
         <hudson.plugins.git.extensions.impl.CleanCheckout/>
+        <hudson.plugins.git.extensions.impl.GitLFSPull/>
       </extensions>
-      <localBranch>my_branch</localBranch>
+      <localBranch>custom_additional</localBranch>
     </hudson.plugins.git.GitSCM>
   </scms>
 </scm>

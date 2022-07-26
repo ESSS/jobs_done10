@@ -283,7 +283,11 @@ class JenkinsXmlJobGenerator(object):
                 "extensions/hudson.plugins.git.extensions.impl.CleanCheckout",
                 "true",
             ),
-            ("lfs", "extensions/hudson.plugins.git.extensions.impl.GitLFSPull", "true"),
+            (
+                "lfs",
+                "extensions/hudson.plugins.git.extensions.impl.GitLFSPull",
+                "false",
+            ),
         ]
         for option_name, tag_path, default_value in bool_options:
             value = git_options.pop(option_name, default_value)

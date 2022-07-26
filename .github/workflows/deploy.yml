@@ -1,0 +1,38 @@
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Which ref to build image and deploy"
+        required: true
+      push:
+        description: "Push the image to the registry?"
+        required: true
+        type: boolean
+        default: false
+
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ secrets.docker_registry_push_url }}/jobs_done10:${{ inputs.version }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ inputs.version }}
+
+    - name: Build image
+      run: docker build . --tag "$IMAGE_NAME" --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ inputs.version }}
+
+    - name: Push
+      if: ${{ inputs.push }}
+      run: |
+        docker login ${{ secrets.docker_registry }} -u ${{ secrets.docker_push_user }} -p ${{ secrets.docker_push_password }}
+        docker image push "$IMAGE_NAME"
