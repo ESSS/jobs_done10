@@ -395,9 +395,23 @@ $ pytest src
 Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
 Travis will see the tag and publish the package to PyPI automatically.
 
-## Deploy at ESSS ##
+## Deploy to a Docker Registry ##
 
-There's a job in Jenkins: `jobs_done10-deploy-main`. It takes the tag version to be deployed.
+Use the `deploy` [manual workflow](https://github.com/ESSS/jobs_done10/actions/workflows/deploy.yml) that can be triggered to build and publish
+a image to a docker registry.
+
+The inputs are:
+
+* `version`: the ref version to push, usually a tag.
+* `push`: if we should push the build image to the configured docker registry or not.
+
+This workflow uses these organization/repository secrets:
+
+* `docker_registry`: the URL of the docker registry used to login.
+* `docker_registry_push_url`: the URL where we should push images to.
+* `docker_push_user`: user name with has push access to the registry.
+* `docker_push_password`: password of the user.
+
 
 # All options #
 
