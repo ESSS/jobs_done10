@@ -1,3 +1,9 @@
+# 1.10.0 (2022-07-26)
+
+* Changed the ``git/lfs`` option default to ``false``. Many hosting providers (GitHub included) charge LFS bandwidth
+  usage, so it is common to use some kind of proxy to cache LFS files. Another reason is that ``false`` is the
+  plugin default.
+
 # 1.9.1 (2022-07-13)
 
 * Fix bug where options for the ``git:`` setting were not being honored when set to ``false``.

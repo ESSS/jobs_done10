@@ -21,7 +21,6 @@
           <noTags>true</noTags>
         </hudson.plugins.git.extensions.impl.CloneOption>
         <hudson.plugins.git.extensions.impl.CleanCheckout/>
-        <hudson.plugins.git.extensions.impl.GitLFSPull/>
       </extensions>
       <localBranch>custom_main</localBranch>
     </hudson.plugins.git.GitSCM>
@@ -46,7 +45,6 @@
           <noTags>true</noTags>
         </hudson.plugins.git.extensions.impl.CloneOption>
         <hudson.plugins.git.extensions.impl.CleanCheckout/>
-        <hudson.plugins.git.extensions.impl.GitLFSPull/>
       </extensions>
       <localBranch>custom_additional</localBranch>
     </hudson.plugins.git.GitSCM>
