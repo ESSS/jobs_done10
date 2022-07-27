@@ -1,3 +1,8 @@
+# 1.10.2 (2022-07-27)
+
+* Drop dependency to ``mailer``: this library no longer seems to be maintained, and is not installable in recent
+  setuptools because it still uses the ``use_2to3`` option, which no longer exists in recent setuptools.
+
 # 1.10.1 (2022-07-26)
 
 * Fix error in Dockerfile: do not copy dummy `.env` file anymore, it needs to be supplied by the service running the container.

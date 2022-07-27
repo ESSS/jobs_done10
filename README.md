@@ -88,14 +88,7 @@ Below are the possible installation options.
    $ source .env/bin/activate  # Linux
    ```
 
-3. We need to downgrade `setuptools` because the `mailer` package won't install in
-   the latest `setuptools` versions (it uses the removed `use_2to3` argument to `setup`):
-
-   ```console
-   $ pip install "setuptools<58"
-   ```
-
-4. Install dependencies and the project in editable mode:
+3. Install dependencies and the project in editable mode:
 
    ```console
    $ pip install -r requirements.txt -e .

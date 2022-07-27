@@ -3,8 +3,12 @@ import hmac
 import json
 import os
 import pprint
+import smtplib
+import ssl
 import traceback
 from base64 import b64decode
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from http import HTTPStatus
 from typing import Any
 from typing import Callable
@@ -410,8 +414,6 @@ def send_email_with_error(
     Returns the recipient of the email in case of success, otherwise will raise an exception (not sure
     which exceptions are raised by the underlying library).
     """
-    import mailer
-
     if not jobs_done_requests:
         raise RuntimeError("Cannot send an email without any parsed requests")
 
@@ -430,15 +432,8 @@ def send_email_with_error(
         f"JobsDone failure during push to {owner_name}/{repo_name} ({changes_msg})"
     )
 
-    message = mailer.Message(
-        From=os.environ["JD_EMAIL_FROM"],
-        To=[pusher_email],
-        Subject=subject,
-        charset="UTF-8",
-    )
-
     pretty_json = pprint.pformat(payload)
-    message.Body = EMAIL_PLAINTEXT.format(
+    plain = EMAIL_PLAINTEXT.format(
         error_traceback=error_traceback, pretty_json=pretty_json
     )
     style = "colorful"
@@ -451,14 +446,18 @@ def send_email_with_error(
         ),
     )
 
-    message.Html = html
+    msg = MIMEMultipart()
+    msg["Subject"] = subject
+    msg["From"] = os.environ["JD_EMAIL_USER"]
+    msg["To"] = pusher_email
+    msg.attach(MIMEText(plain, "plain"))
+    msg.attach(MIMEText(html, "html"))
 
-    sender = mailer.Mailer(
-        host=os.environ["JD_EMAIL_SERVER"],
-        port=int(os.environ["JD_EMAIL_PORT"]),
-        use_tls=True,
-        usr=os.environ["JD_EMAIL_USER"],
-        pwd=os.environ["JD_EMAIL_PASSWORD"],
-    )
-    sender.send(message)
+    context = ssl.create_default_context()
+    with smtplib.SMTP(
+        os.environ["JD_EMAIL_SERVER"], int(os.environ["JD_EMAIL_PORT"])
+    ) as server:
+        server.starttls(context=context)
+        server.login(os.environ["JD_EMAIL_USER"], os.environ["JD_EMAIL_PASSWORD"])
+        server.sendmail(os.environ["JD_EMAIL_USER"], pusher_email, msg=msg.as_string())
     return pusher_email
