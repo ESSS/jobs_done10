@@ -1,6 +1,7 @@
 # mypy: disallow-untyped-defs
 import json
 import os
+import ssl
 from base64 import b64encode
 from contextlib import contextmanager
 from http import HTTPStatus
@@ -312,11 +313,7 @@ def test_error_handling(
     mocker: MockerFixture,
     stash_repo_info_data: Dict[str, Any],
 ) -> None:
-    import mailer
-
-    mocker.patch.object(mailer.Mailer, "send", autospec=True)
-    mocker.spy(mailer.Mailer, "__init__")
-
+    smtplib_mock = mocker.patch("jobs_done10.server.app.smtplib", autospec=True)
     mocker.patch(
         "jobs_done10.generators.jenkins.UploadJobsFromFile",
         autospec=True,
@@ -325,6 +322,8 @@ def test_error_handling(
 
     with mock_stash_repo_requests(stash_repo_info_data):
         response = client.post(json=stash_post_data)
+
+    # Check response contains the HTML error.
     assert response.status_code == 500
     assert response.mimetype == "text/html"
     obtained_message = response.data.decode("UTF-8")
@@ -336,27 +335,28 @@ def test_error_handling(
     assert "Traceback (most recent call last):" in obtained_message
     assert "Email sent to bugreport+jenkins@esss.co" in obtained_message
 
-    assert mailer.Mailer.__init__.call_count == 1
-    assert mailer.Mailer.send.call_count == 1
-    args, kwargs = mailer.Mailer.__init__.call_args
-    assert kwargs == dict(
-        host="smtp.example.com",
-        port=5900,
-        use_tls=True,
-        usr="email_user",
-        pwd="email_password",
-    )
-    args, kwargs = mailer.Mailer.send.call_args
-    assert len(args) == 2  # (self, message)
-    message = args[-1]
-    assert message.To == ["bugreport+jenkins@esss.co"]
-    assert message.From == "JobsDone Bot <jobsdone@example.com>"
-    assert (
-        message.Subject
-        == "JobsDone failure during push to ESSS/eden (stable-pwda11-master @ 8522b06)"
-    )
-    assert message.charset == "UTF-8"
-    assert "An error happened when processing your push" in message.Body
+    # Check message was sent.
+    assert smtplib_mock.SMTP.call_args == mocker.call("smtp.example.com", 5900)
+    server_mock = smtplib_mock.SMTP().__enter__()
+    assert server_mock.method_calls == [
+        mocker.call.starttls(context=mocker.ANY),
+        mocker.call.login("email_user", "email_password"),
+        mocker.call.sendmail("email_user", "bugreport+jenkins@esss.co", msg=mocker.ANY),
+    ]
+    starttls_call, login_call, sendmail_call = server_mock.method_calls
+    _, _, startttls_kwargs = starttls_call
+    assert isinstance(startttls_kwargs["context"], ssl.SSLContext)
+
+    # Check email contents.
+    _, _, sendmail_kwargs = sendmail_call
+    contents = sendmail_kwargs["msg"]
+
+    subject = "Subject: JobsDone failure during push to ESSS/eden (stable-pwda11-master @ 8522b06)"
+    assert subject in contents
+    assert "From: email_user" in contents
+    assert "To: bugreport+jenkins@esss.co" in contents
+    assert "Content-Type: text/plain;" in contents
+    assert "Content-Type: text/html;" in contents
 
 
 @pytest.mark.parametrize("file_not_found", [True, False])

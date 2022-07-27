@@ -4,12 +4,10 @@
 #
 #    pip-compile --extra=dev
 #
-atomicwrites==1.4.0
+atomicwrites==1.4.1
     # via pytest
-attrs==21.2.0
+attrs==21.4.0
     # via pytest
-backports.entry-points-selectable==1.1.1
-    # via virtualenv
 certifi==2021.10.8
     # via requests
 cfgv==3.3.1
@@ -26,27 +24,26 @@ colorama==0.4.4
     #   pytest
 dataclasses==0.8
     # via werkzeug
-distlib==0.3.3
+distlib==0.3.5
     # via virtualenv
-filelock==3.3.2
+filelock==3.4.1
     # via virtualenv
 flask==2.0.2
     # via jobs-done10 (setup.py)
 gunicorn==20.1.0
     # via jobs-done10 (setup.py)
-identify==2.3.5
+identify==2.4.4
     # via pre-commit
 idna==3.3
     # via requests
 importlib-metadata==4.8.2
     # via
-    #   backports.entry-points-selectable
     #   click
     #   pluggy
     #   pre-commit
     #   pytest
     #   virtualenv
-importlib-resources==5.4.0
+importlib-resources==5.2.3
     # via
     #   pre-commit
     #   virtualenv
@@ -56,15 +53,13 @@ itsdangerous==2.0.1
     # via flask
 jinja2==3.0.3
     # via flask
-mailer==0.8.1
-    # via jobs-done10 (setup.py)
 markupsafe==2.0.1
     # via jinja2
 multi-key-dict==2.0.3
     # via python-jenkins
 nodeenv==1.6.0
     # via pre-commit
-packaging==21.2
+packaging==21.3
     # via pytest
 pbr==5.7.0
     # via python-jenkins
@@ -72,15 +67,15 @@ platformdirs==2.4.0
     # via virtualenv
 pluggy==1.0.0
     # via pytest
-pre-commit==2.15.0
+pre-commit==2.17.0
     # via jobs-done10 (setup.py)
 py==1.11.0
     # via pytest
 pygments==2.10.0
     # via jobs-done10 (setup.py)
-pyparsing==2.4.7
+pyparsing==3.0.9
     # via packaging
-pytest==6.2.5
+pytest==7.0.1
     # via
     #   pytest-datadir
     #   pytest-mock
@@ -89,7 +84,7 @@ pytest-datadir==1.3.1
     # via pytest-regressions
 pytest-mock==3.6.1
     # via jobs-done10 (setup.py)
-pytest-regressions==2.2.0
+pytest-regressions==2.3.1
     # via jobs-done10 (setup.py)
 python-dotenv==0.19.2
     # via jobs-done10 (setup.py)
@@ -110,16 +105,15 @@ six==1.16.0
     # via
     #   python-jenkins
     #   requests-mock
-    #   virtualenv
 toml==0.10.2
-    # via
-    #   pre-commit
-    #   pytest
+    # via pre-commit
+tomli==1.2.3
+    # via pytest
 typing-extensions==3.10.0.2
     # via importlib-metadata
 urllib3==1.26.7
     # via requests
-virtualenv==20.10.0
+virtualenv==20.16.1
     # via pre-commit
 werkzeug==2.0.2
     # via flask

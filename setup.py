@@ -15,7 +15,6 @@ setup(
         "click",
         "flask",
         "gunicorn",
-        "mailer",
         "pygments",
         "python-dotenv",
         "python-jenkins",
