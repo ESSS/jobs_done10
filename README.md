@@ -3,9 +3,8 @@ Job's Done
 
 [![link](https://img.shields.io/pypi/v/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
 [![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
-[![link](https://github.com/ESSS/jobs_done10/workflows/tests/badge.svg)](https://github.com/ESSS/jobs_done10/actions)
+[![tests](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml/badge.svg)](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml)
 [![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
-
 # About #
 
 Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way
@@ -383,27 +382,11 @@ Run tests:
 $ pytest src
 ```
 
-## Deploy to PyPI ##
+## Deploy ##
 
-Jobs done can be deployed to PyPI. Open a PR updating the CHANGELOG and after it passes, push a tag to the repository;
-Travis will see the tag and publish the package to PyPI automatically.
+Open a PR updating the CHANGELOG and after it passes, push a tag to the repository.
 
-## Deploy to a Docker Registry ##
-
-Use the `deploy` [manual workflow](https://github.com/ESSS/jobs_done10/actions/workflows/deploy.yml) that can be triggered to build and publish
-a image to a docker registry.
-
-The inputs are:
-
-* `version`: the ref version to push, usually a tag.
-* `push`: if we should push the build image to the configured docker registry or not.
-
-This workflow uses these organization/repository secrets:
-
-* `docker_registry`: the URL of the docker registry used to login.
-* `docker_registry_push_url`: the URL where we should push images to.
-* `docker_push_user`: user name with has push access to the registry.
-* `docker_push_password`: password of the user.
+This will automatically publish it to PyPI and to the configured Docker Registry in the organization.
 
 
 # All options #
