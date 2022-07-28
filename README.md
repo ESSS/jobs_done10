@@ -56,7 +56,7 @@ Below are the possible installation options.
 
 ### PyPI ###
 
-1. Create a virtual environment using Python 3 and activate it:
+1. Create a virtual environment using Python 3.10 and activate it:
 
    ```console
    $ python -m venv .env
@@ -79,7 +79,7 @@ Below are the possible installation options.
    cd jobs_done10
    ```
 
-2. Create a virtual environment using Python 3 and activate it:
+2. Create a virtual environment using Python 3.10 and activate it:
 
    ```console
    $ python -m venv .env

@@ -10,7 +10,7 @@ setup(
     provides=["jobs_done10"],
     use_scm_version={"write_to": "src/jobs_done10/_version.py"},
     setup_requires=["setuptools_scm"],
-    python_requires=">=3.6",
+    python_requires=">=3.10",
     install_requires=[
         "click",
         "flask",
@@ -46,7 +46,7 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Software Development",
     ],
 )

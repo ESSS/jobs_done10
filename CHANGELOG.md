@@ -1,3 +1,7 @@
+# 1.11.0 (2022-07-28)
+
+* The code has been updated to Python 3.10, including the Docker image.
+
 # 1.10.2 (2022-07-27)
 
 * Drop dependency to ``mailer``: this library no longer seems to be maintained, and is not installable in recent
