@@ -1,0 +1,27 @@
+name: docker-deploy
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  docker-deploy:
+
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ${{ secrets.docker_registry_push_url }}/jobs_done10:${{ github.ref_name }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build image
+      run: docker build . --tag "$IMAGE_NAME" --build-arg SETUPTOOLS_SCM_PRETEND_VERSION=${{ github.ref_name }}
+
+    - name: Push
+      run: |
+        docker login ${{ secrets.docker_registry }} -u ${{ secrets.docker_push_user }} -p ${{ secrets.docker_push_password }}
+        docker image push "$IMAGE_NAME"
