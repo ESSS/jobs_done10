@@ -1,5 +1,3 @@
-import io
-
 import yaml
 
 
@@ -8,7 +6,7 @@ import yaml
 JOBS_DONE_FILENAME = ".jobs_done.yaml"
 
 
-class JobsDoneJob(object):
+class JobsDoneJob:
     """
     Represents a jobs_done job, parsed from a jobs_done file.
 
@@ -378,7 +376,7 @@ class JobsDoneJob(object):
                 for k, v in yaml_data.items()
             }
         else:
-            raise ValueError("Invalid yaml data type: {}".format(yaml_data.__class__))
+            raise ValueError(f"Invalid yaml data type: {yaml_data.__class__}")
 
     @classmethod
     def _CheckAmbiguousConditions(
@@ -441,7 +439,7 @@ class JobsDoneJob(object):
         :param repository:
             .. seealso:: CreateFromYAML
         """
-        with io.open(filename, encoding="utf-8") as f:
+        with open(filename, encoding="utf-8") as f:
             contents = f.read()
         return cls.CreateFromYAML(contents, repository)
 
@@ -498,7 +496,7 @@ class JobsDoneJob(object):
 
         return all(map(_Match, conditions))
 
-    class _MatrixRow(object):
+    class _MatrixRow:
         """
         Holds a combination of matrix values.
 
@@ -523,7 +521,7 @@ class JobsDoneJob(object):
             """
             values = tuple(i.split(",") for i in values)
             self.full_dict = dict(zip(names, values))
-            self.simple_dict = dict((i, j[0]) for (i, j) in self.full_dict.items())
+            self.simple_dict = {i: j[0] for (i, j) in self.full_dict.items()}
 
         @classmethod
         def CreateFromDict(self, matrix_dict):
@@ -558,13 +556,11 @@ class JobsDoneJob(object):
             yield obj
 
             for sub_obj in obj.values():
-                for x in cls._IterDicts(sub_obj):
-                    yield x
+                yield from cls._IterDicts(sub_obj)
 
         if isinstance(obj, list):
             for sub_obj in obj:
-                for x in cls._IterDicts(sub_obj):
-                    yield x
+                yield from cls._IterDicts(sub_obj)
 
 
 class UnknownJobsDoneFileOption(RuntimeError):

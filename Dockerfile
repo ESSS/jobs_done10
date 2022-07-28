@@ -1,7 +1,7 @@
-FROM python:3.6.10-slim
+FROM python:3.10.5-slim
 
+# We need git for the tests.
 ADD ./source.list /etc/apt/source.list
-
 RUN apt-get update &&\
     apt-get install --yes git
 
@@ -11,8 +11,6 @@ ARG SETUPTOOLS_SCM_PRETEND_VERSION=dev
 COPY ./requirements.txt /jobsdone/requirements.txt
 
 WORKDIR /jobsdone
-
-RUN pip install pip==21.2.4 setuptools==57.5.0
 
 COPY ./README.md /jobsdone/README.md
 COPY ./setup.py /jobsdone/setup.py

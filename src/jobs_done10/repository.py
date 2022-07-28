@@ -4,7 +4,7 @@ import attr
 
 
 @attr.s(auto_attribs=True, frozen=True)
-class Repository(object):
+class Repository:
     """
     Represents a source control repository used in a continuous integration job.
     """

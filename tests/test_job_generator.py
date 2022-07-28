@@ -9,7 +9,7 @@ from jobs_done10.repository import Repository
 
 
 def testJobGeneratorConfigurator():
-    class MyGenerator(object):
+    class MyGenerator:
         def SetRepository(self, repository):
             assert repository.url == "http://repo.git"
 

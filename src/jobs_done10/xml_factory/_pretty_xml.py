@@ -48,7 +48,7 @@ def WritePrettyXMLElement(oss, element, indent=0):
     # Start tag
     oss.write(INDENT * indent + "<%s" % element.tag)
     for i_name, i_value in sorted(element.attrib.items()):
-        oss.write(' %s="%s"' % (i_name, escape(i_value)))
+        oss.write(' {}="{}"'.format(i_name, escape(i_value)))
 
     if len(element) == 0 and element.text is None:
         oss.write("/>")
