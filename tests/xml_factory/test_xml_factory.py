@@ -9,7 +9,7 @@ from jobs_done10.xml_factory import WritePrettyXMLElement
 from jobs_done10.xml_factory import XmlFactory
 
 
-class Test(object):
+class Test:
     def testSimplest(self) -> None:
         factory = XmlFactory("user")
         factory["name"] = "Alpha"

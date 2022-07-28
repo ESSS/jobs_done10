@@ -1,4 +1,4 @@
-class IJobGenerator(object):
+class IJobGenerator:
     """
     Interface for job generators.
 
@@ -46,7 +46,7 @@ class IJobGenerator(object):
         """
 
 
-class JobGeneratorConfigurator(object):
+class JobGeneratorConfigurator:
     """
     Class used to configure `IJobGenerator`s using `JobsDoneJob`.
 

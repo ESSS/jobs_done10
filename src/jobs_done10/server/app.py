@@ -7,18 +7,13 @@ import smtplib
 import ssl
 import traceback
 from base64 import b64decode
+from collections.abc import Callable
+from collections.abc import Iterable
+from collections.abc import Iterator
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from http import HTTPStatus
 from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Iterable
-from typing import Iterator
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 
 import attr
 import flask
@@ -49,7 +44,7 @@ class SignatureVerificationError(Exception):
 
 @app.route("/", methods=["GET", "POST"])
 @app.route("/stash", methods=["GET", "POST"])
-def stash() -> Union[str, Tuple[str, int]]:
+def stash() -> str | tuple[str, int]:
     """
     Jenkins job creation/update/deletion end-point for stash.
     """
@@ -57,7 +52,7 @@ def stash() -> Union[str, Tuple[str, int]]:
 
 
 @app.route("/github", methods=["GET", "POST"])
-def github() -> Union[str, Tuple[str, int]]:
+def github() -> str | tuple[str, int]:
     """
     Jenkins job creation/update/deletion end-point for GitHub.
     """
@@ -66,10 +61,10 @@ def github() -> Union[str, Tuple[str, int]]:
 
 def _handle_end_point(
     parse_request_callback: Callable[
-        [Dict[str, Any], Dict[str, Any], bytes, Dict[str, str]],
+        [dict[str, Any], dict[str, Any], bytes, dict[str, str]],
         Iterator["JobsDoneRequest"],
     ]
-) -> Union[str, Tuple[str, int]]:
+) -> str | tuple[str, int]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
     payload = request.json
@@ -141,15 +136,15 @@ class JobsDoneRequest:
     clone_url: str
     branch: str
     # A commit with None means a branch has been deleted.
-    commit: Optional[str]
-    jobs_done_file_contents: Optional[str] = attr.ib(repr=False)
+    commit: str | None
+    jobs_done_file_contents: str | None = attr.ib(repr=False)
 
 
 def parse_stash_post(
-    headers: Dict[str, Any],
-    payload: Dict[str, Any],
+    headers: dict[str, Any],
+    payload: dict[str, Any],
     data: bytes,
-    settings: Dict[str, str],
+    settings: dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
     """
     Parses a Stash post information from a push event into jobs done requests.
@@ -204,10 +199,10 @@ def parse_stash_post(
 
 
 def parse_github_post(
-    headers: Dict[str, Any],
-    payload: Dict[str, Any],
+    headers: dict[str, Any],
+    payload: dict[str, Any],
     data: bytes,
-    settings: Dict[str, str],
+    settings: dict[str, str],
 ) -> Iterator[JobsDoneRequest]:
     """
     Parses a GitHub payload from a push event into jobs done requests.
@@ -219,7 +214,7 @@ def parse_github_post(
     repo_name = payload["repository"]["name"]
     clone_url = payload["repository"]["ssh_url"]
     head_commit = payload["head_commit"]
-    commit: Optional[str]
+    commit: str | None
     if head_commit is not None:
         commit = head_commit["id"]
     else:
@@ -259,7 +254,7 @@ def parse_github_post(
     )
 
 
-def verify_github_signature(headers: Dict[str, Any], data: bytes, secret: str) -> None:
+def verify_github_signature(headers: dict[str, Any], data: bytes, secret: str) -> None:
     """
     Verify the post raw data and our shared secret validate against the signature in the header.
 
@@ -308,7 +303,7 @@ def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) ->
         all_updated_jobs.extend(updated_jobs)
         all_deleted_jobs.extend(deleted_jobs)
 
-    lines: List[str] = []
+    lines: list[str] = []
     lines.extend(f"NEW - {x}" for x in all_new_jobs)
     lines.extend(f"UPD - {x}" for x in all_updated_jobs)
     lines.extend(f"DEL - {x}" for x in all_deleted_jobs)
@@ -318,7 +313,7 @@ def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) ->
 
 
 def _process_jobs_done_error(
-    headers: Dict[str, Any], data: bytes, jobs_done_requests: List[JobsDoneRequest]
+    headers: dict[str, Any], data: bytes, jobs_done_requests: list[JobsDoneRequest]
 ) -> str:
     """
     In case of error while processing the job generation request, send an e-mail to the user with
@@ -361,7 +356,7 @@ def get_stash_file_contents(
     slug: str,
     path: str,
     ref: str,
-) -> Optional[str]:
+) -> str | None:
     """
     Get the file contents from the stash server.
 
@@ -403,8 +398,8 @@ def get_stash_clone_url(
 
 
 def send_email_with_error(
-    jobs_done_requests: List[JobsDoneRequest],
-    payload: Dict[str, Any],
+    jobs_done_requests: list[JobsDoneRequest],
+    payload: dict[str, Any],
     error_traceback: str,
 ) -> str:
     """
@@ -422,7 +417,7 @@ def send_email_with_error(
     owner_name = jobs_done_requests[-1].owner_name
     repo_name = jobs_done_requests[-1].repo_name
 
-    def abbrev_commit(c: Optional[str]) -> str:
+    def abbrev_commit(c: str | None) -> str:
         return c[:7] if c is not None else "(no commit)"
 
     changes_msg = ", ".join(

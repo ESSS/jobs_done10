@@ -3,13 +3,12 @@ import json
 import os
 import ssl
 from base64 import b64encode
+from collections.abc import Iterator
 from contextlib import contextmanager
 from http import HTTPStatus
 from pathlib import Path
 from textwrap import dedent
 from typing import Any
-from typing import Dict
-from typing import Iterator
 
 import pkg_resources
 import pytest
@@ -52,7 +51,7 @@ def client_(configure_environment: None) -> FlaskClient:
 
 
 @pytest.fixture(name="stash_post_data")
-def stash_post_data_(datadir: Path) -> Dict[str, Any]:
+def stash_post_data_(datadir: Path) -> dict[str, Any]:
     """
     Return the json data which posted by Stash/BitBucket Server. Obtained from the webhooks page configuration:
 
@@ -64,7 +63,7 @@ def stash_post_data_(datadir: Path) -> Dict[str, Any]:
 
 
 @pytest.fixture(name="stash_repo_info_data")
-def stash_repo_info_data_(datadir: Path) -> Dict[str, Any]:
+def stash_repo_info_data_(datadir: Path) -> dict[str, Any]:
     """
     Return json data that results from a call to the project/slug endpoint.
 
@@ -90,7 +89,7 @@ def github_post_data_(datadir: Path) -> bytes:
 
 
 @pytest.fixture(name="github_post_headers")
-def github_post_headers_(datadir: Path) -> Dict[str, Any]:
+def github_post_headers_(datadir: Path) -> dict[str, Any]:
     """
     Return the headers posted by GitHub on push events.
 
@@ -110,7 +109,7 @@ def github_post_del_branch_data_(datadir: Path) -> bytes:
 
 
 @pytest.fixture(name="github_post_del_branch_headers")
-def github_post_del_branch_headers_(datadir: Path) -> Dict[str, Any]:
+def github_post_del_branch_headers_(datadir: Path) -> dict[str, Any]:
     """
     Same as git_hub_post_headers, but for post about a branch being deleted.
     """
@@ -122,7 +121,7 @@ def github_post_del_branch_headers_(datadir: Path) -> Dict[str, Any]:
 
 
 @contextmanager
-def mock_stash_repo_requests(stash_repo_info_data: Dict[str, Any]) -> Iterator[None]:
+def mock_stash_repo_requests(stash_repo_info_data: dict[str, Any]) -> Iterator[None]:
     with requests_mock.Mocker() as m:
         stash_url = "https://example.com/stash"
         project_key = "ESSS"
@@ -143,7 +142,7 @@ def mock_stash_repo_requests(stash_repo_info_data: Dict[str, Any]) -> Iterator[N
 
 @contextmanager
 def mock_github_repo_requests(
-    file_contents: str, status_code: int, settings: Dict[str, str]
+    file_contents: str, status_code: int, settings: dict[str, str]
 ) -> Iterator[None]:
     with requests_mock.Mocker() as m:
         token = settings["JD_GH_TOKEN"]
@@ -162,7 +161,7 @@ def mock_github_repo_requests(
         # According to requests.auth._basic_auth_str(), basic authentications
         # is encoded as "{username}:{password}" as a base64 string.
         username = ""
-        basic_auth = b64encode(f"{username}:{token}".encode("UTF-8"))
+        basic_auth = b64encode(f"{username}:{token}".encode())
         assert (
             history.headers.get("Authorization")
             == f"Basic {basic_auth.decode('ASCII')}"
@@ -172,9 +171,9 @@ def mock_github_repo_requests(
 @pytest.mark.parametrize("post_url", ["/", "/stash"])
 def test_stash_post(
     client: FlaskClient,
-    stash_post_data: Dict[str, Any],
+    stash_post_data: dict[str, Any],
     mocker: MockerFixture,
-    stash_repo_info_data: Dict[str, Any],
+    stash_repo_info_data: dict[str, Any],
     post_url: str,
 ) -> None:
     new_jobs = ["new1-eden-master", "new2-eden-master"]
@@ -222,7 +221,7 @@ def test_stash_post(
 def test_github_post(
     client: FlaskClient,
     github_post_data: bytes,
-    github_post_headers: Dict[str, Any],
+    github_post_headers: dict[str, Any],
     mocker: MockerFixture,
 ) -> None:
     new_jobs = ["new1-eden-master", "new2-eden-master"]
@@ -276,7 +275,7 @@ def test_github_post(
 def test_github_post_signature_failed(
     client: FlaskClient,
     github_post_data: bytes,
-    github_post_headers: Dict[str, Any],
+    github_post_headers: dict[str, Any],
 ) -> None:
     tampered_data = github_post_data + b"\n"
     response = client.post("/github", data=tampered_data, headers=github_post_headers)
@@ -309,9 +308,9 @@ def test_post_invalid_content_type(client: FlaskClient, endpoint: str) -> None:
 
 def test_error_handling(
     client: FlaskClient,
-    stash_post_data: Dict[str, Any],
+    stash_post_data: dict[str, Any],
     mocker: MockerFixture,
-    stash_repo_info_data: Dict[str, Any],
+    stash_repo_info_data: dict[str, Any],
 ) -> None:
     smtplib_mock = mocker.patch("jobs_done10.server.app.smtplib", autospec=True)
     mocker.patch(
@@ -361,7 +360,7 @@ def test_error_handling(
 
 @pytest.mark.parametrize("file_not_found", [True, False])
 def test_parse_github_post(
-    github_post_data: bytes, github_post_headers: Dict[str, Any], file_not_found: bool
+    github_post_data: bytes, github_post_headers: dict[str, Any], file_not_found: bool
 ) -> None:
 
     file_contents = "jobs_done yaml contents"
@@ -395,7 +394,7 @@ def test_parse_github_post(
 
 
 def test_parse_github_post_delete_branch(
-    github_post_del_branch_data: bytes, github_post_del_branch_headers: Dict[str, Any]
+    github_post_del_branch_data: bytes, github_post_del_branch_headers: dict[str, Any]
 ) -> None:
     settings = {
         "JD_GH_TOKEN": "GH-TOKEN",
@@ -421,7 +420,7 @@ def test_parse_github_post_delete_branch(
 
 def test_verify_github_signature(
     github_post_data: bytes,
-    github_post_headers: Dict[str, Any],
+    github_post_headers: dict[str, Any],
     configure_environment: None,
 ) -> None:
     # The original post and secret should match without an exception.

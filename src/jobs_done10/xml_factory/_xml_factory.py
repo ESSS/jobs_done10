@@ -5,7 +5,7 @@ from xml.etree import ElementTree
 from ._pretty_xml import WritePrettyXMLElement
 
 
-class XmlFactory(object):
+class XmlFactory:
     """
     Fast and easy XML creation class.
 

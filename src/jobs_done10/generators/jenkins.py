@@ -3,7 +3,6 @@ Module containing everything related to Jenkins in jobs_done10.
 
 This includes a generator, job publishers, constants and command line interface commands.
 """
-import io
 from collections import namedtuple
 from contextlib import suppress
 
@@ -24,7 +23,7 @@ from jobs_done10.common import AsList
 JenkinsJob = namedtuple("JenkinsJob", "name repository xml")
 
 
-class JenkinsXmlJobGenerator(object):
+class JenkinsXmlJobGenerator:
     """
     Generates Jenkins jobs.
     """
@@ -503,7 +502,7 @@ class JenkinsXmlJobGenerator(object):
             return str(int(metric) * 100000)
 
         def WriteMetrics(target_name, metrics_options, default):
-            metrics = cobertura_publisher["{}".format(target_name)]
+            metrics = cobertura_publisher[f"{target_name}"]
             targets = metrics["targets"]
             targets["@class"] = "enum-map"
             targets["@enum-type"] = "hudson.plugins.cobertura.targets.CoverageMetric"
@@ -672,7 +671,7 @@ def _AsXmlString(boolean):
 xmls = _AsXmlString
 
 
-class JenkinsJobPublisher(object):
+class JenkinsJobPublisher:
     """
     Publishes `JenkinsJob`s
     """
@@ -698,7 +697,7 @@ class JenkinsJobPublisher(object):
             ), +"All published jobs must belong to the given `repository`"
 
         self.repository = repository
-        self.jobs = dict((job.name, job) for job in jobs)
+        self.jobs = {job.name: job for job in jobs}
 
     def PublishToUrl(self, url, username=None, password=None):
         """
@@ -775,7 +774,7 @@ class JenkinsJobPublisher(object):
         import os
 
         for job in self.jobs.values():
-            with io.open(
+            with open(
                 os.path.join(output_directory, job.name), "w", encoding="utf-8"
             ) as f:
                 f.write(job.xml)
@@ -869,10 +868,10 @@ class JenkinsJobPublisher(object):
         error_msg = [
             'Could not find SCM for repository "%s" in job "%s"'
             % (self.repository.url, jenkins_job),
-            'The local repository origin is set to "%s".' % (self.repository.url,),
+            'The local repository origin is set to "{}".'.format(self.repository.url),
             "And the possible matches are:",
         ]
-        error_msg.extend([" - %s" % (url,) for url in checked_urls])
+        error_msg.extend([" - {}".format(url) for url in checked_urls])
         error_msg.extend(
             [
                 "",
@@ -949,11 +948,9 @@ def GetJobsFromDirectory(directory="."):
 
     repository = Repository(url=url, branch=branch)
     try:
-        with io.open(
-            os.path.join(directory, JOBS_DONE_FILENAME), encoding="utf-8"
-        ) as f:
+        with open(os.path.join(directory, JOBS_DONE_FILENAME), encoding="utf-8") as f:
             jobs_done_file_contents = f.read()
-    except IOError:
+    except OSError:
         jobs_done_file_contents = None
 
     return repository, GetJobsFromFile(repository, jobs_done_file_contents)

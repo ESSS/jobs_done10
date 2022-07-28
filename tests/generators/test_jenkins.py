@@ -1,8 +1,6 @@
 import os
 from subprocess import check_call
 from textwrap import dedent
-from typing import Tuple
-from typing import Union
 
 import jenkins
 import pytest
@@ -988,7 +986,7 @@ class TestJenkinsXmlJobGenerator:
         file_regression.check(new_content, extension=".xml", basename=basename)
 
     def ExtractTagBoundaries(
-        self, text: str, boundary_tags: Union[str, Tuple[str, ...]]
+        self, text: str, boundary_tags: str | tuple[str, ...]
     ) -> str:
         """Given a XML text, extract the lines containing between the given tags (including them)."""
         if isinstance(boundary_tags, str):
@@ -1011,7 +1009,7 @@ class TestJenkinsXmlJobGenerator:
         return dedent("".join(new_lines))
 
 
-class TestJenkinsActions(object):
+class TestJenkinsActions:
     """
     Integration tests for Jenkins actions
     """
@@ -1107,11 +1105,11 @@ class TestJenkinsActions(object):
         assert result == "mock publish result"
 
 
-class TestJenkinsPublisher(object):
+class TestJenkinsPublisher:
     def testPublishToDirectory(self, tmpdir):
         self._GetPublisher().PublishToDirectory(str(tmpdir))
 
-        assert set(os.path.basename(str(x)) for x in tmpdir.listdir()) == {
+        assert {os.path.basename(str(x)) for x in tmpdir.listdir()} == {
             "space-milky_way-jupiter",
             "space-milky_way-mercury",
             "space-milky_way-venus",
@@ -1221,7 +1219,7 @@ class TestJenkinsPublisher(object):
         return JenkinsJobPublisher(repository, jobs)
 
     def _MockJenkinsAPI(self, monkeypatch, proxy_errors=0):
-        class MockJenkins(object):
+        class MockJenkins:
             NEW_JOBS = set()
             UPDATED_JOBS = set()
             DELETED_JOBS = set()
