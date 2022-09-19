@@ -15,8 +15,8 @@ repos:
     -   id: reorder-python-imports
         name: "reorder python imports"
         args: ['--application-directories=.:src', --py36-plus]
--   repo: https://github.com/myint/autoflake
-    rev: v1.5.3
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v1.6.0
     hooks:
     -   id: autoflake
         name: autoflake
