@@ -10,13 +10,13 @@ repos:
         exclude: \.data$
     -   id: debug-statements
 -   repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.8.3
+    rev: v3.8.5
     hooks:
     -   id: reorder-python-imports
         name: "reorder python imports"
         args: ['--application-directories=.:src', --py36-plus]
 -   repo: https://github.com/PyCQA/autoflake
-    rev: v1.7.1
+    rev: v1.7.6
     hooks:
     -   id: autoflake
         name: autoflake
