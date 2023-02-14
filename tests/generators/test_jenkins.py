@@ -19,7 +19,6 @@ from jobs_done10.repository import Repository
 
 
 class TestJenkinsXmlJobGenerator:
-
     # ===============================================================================================
     # Tests
     # ===============================================================================================
@@ -230,7 +229,6 @@ class TestJenkinsXmlJobGenerator:
     def testBuildCommandsExpandNestedLists(
         self, file_regression, job_done_key, xml_key
     ):
-
         # sanity: no ref
         self.Check(
             file_regression,

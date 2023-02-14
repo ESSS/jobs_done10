@@ -362,7 +362,6 @@ def test_error_handling(
 def test_parse_github_post(
     github_post_data: bytes, github_post_headers: dict[str, Any], file_not_found: bool
 ) -> None:
-
     file_contents = "jobs_done yaml contents"
 
     settings = {
