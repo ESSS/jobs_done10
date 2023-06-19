@@ -10,7 +10,7 @@ repos:
         exclude: \.data$
     -   id: debug-statements
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.9.0
+    rev: v3.10.0
     hooks:
     -   id: reorder-python-imports
         name: "reorder python imports"
@@ -30,7 +30,7 @@ repos:
         args: [--safe, --quiet]
         language_version: python3
 -   repo: https://github.com/asottile/blacken-docs
-    rev: 1.13.0
+    rev: 1.14.0
     hooks:
     -   id: blacken-docs
         additional_dependencies: [black==23.1.0]
