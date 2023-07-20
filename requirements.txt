@@ -58,7 +58,7 @@ pre-commit==2.20.0
     # via jobs-done10 (setup.py)
 py==1.11.0
     # via pytest
-pygments==2.10.0
+pygments==2.15.0
     # via jobs-done10 (setup.py)
 pyparsing==3.0.9
     # via packaging
