@@ -82,7 +82,7 @@ pyyaml==6.0
     #   jobs-done10 (setup.py)
     #   pre-commit
     #   pytest-regressions
-requests==2.26.0
+requests==2.31.0
     # via
     #   python-jenkins
     #   requests-mock
