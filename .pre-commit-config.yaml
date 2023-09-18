@@ -10,7 +10,7 @@ repos:
         exclude: \.data$
     -   id: debug-statements
 -   repo: https://github.com/asottile/reorder-python-imports
-    rev: v3.10.0
+    rev: v3.11.0
     hooks:
     -   id: reorder-python-imports
         name: "reorder python imports"
