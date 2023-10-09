@@ -94,10 +94,15 @@ Below are the possible installation options.
    ```
 
 
-#### Upgrading dependencies
+### Upgrading dependencies
 
-We use [pip-tools](https://pypi.org/project/pip-tools) to pin versions, follow the instructions in the
-docs to add new libraries or update existing versions, adding `--extra dev` to include development dependencies.
+The dependencies are declared in [setup.py](/setup.py), and we use [pip-tools](https://pypi.org/project/pip-tools) to manage versions.
+
+Use this command to upgrade all dependencies to the latest versions in `requirements.txt`:
+
+```
+python -m piptools compile --extra=dev --upgrade
+```
 
 
 ## Server ##

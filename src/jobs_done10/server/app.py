@@ -67,6 +67,13 @@ def _handle_end_point(
 ) -> str | tuple[str, int]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
+    if request.method == "GET" or not request.data:
+        # return a 200 response also on POST, when no data is posted; this is useful
+        # because the "Test Connection" in BitBucket does just that, making it easy to verify
+        # we have the correct version up.
+        app.logger.info("I'm alive")
+        return get_version_title()
+
     payload = request.json
     json_payload_dump = (
         json.dumps(dict(payload), indent=2, sort_keys=True)
@@ -82,21 +89,6 @@ def _handle_end_point(
         + f"Payload (JSON):\n"
         + json_payload_dump
     )
-    if request.method == "GET" or not request.data:
-        # return a 200 response also on POST, when no data is posted; this is useful
-        # because the "Test Connection" in BitBucket does just that, making it easy to verify
-        # we have the correct version up.
-        app.logger.info("I'm alive")
-        return get_version_title()
-
-    # Only accept JSON payloads.
-    if payload is None:
-        app.logger.info(f"POST body not in JSON format:\n{request.mimetype}")
-        return (
-            f"Only posts in JSON format accepted",
-            HTTPStatus.BAD_REQUEST,
-        )
-
     jobs_done_requests = []
     try:
         jobs_done_requests = list(
