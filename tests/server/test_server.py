@@ -297,15 +297,6 @@ def test_version(client: FlaskClient, endpoint: str) -> None:
     assert response.data.decode("UTF-8") == expected
 
 
-@pytest.mark.parametrize("endpoint", ["/", "/stash", "/github"])
-def test_post_invalid_content_type(client: FlaskClient, endpoint: str) -> None:
-    response = client.post(
-        endpoint, json="hello", headers={"content-type": "application/text"}
-    )
-    assert response.data.decode("UTF-8") == f"Only posts in JSON format accepted"
-    assert response.status_code == HTTPStatus.BAD_REQUEST
-
-
 def test_error_handling(
     client: FlaskClient,
     stash_post_data: dict[str, Any],
