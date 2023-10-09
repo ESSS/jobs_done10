@@ -96,7 +96,7 @@ toml==0.10.2
     # via pre-commit
 tomli==2.0.1
     # via pytest
-urllib3==1.26.7
+urllib3==1.26.17
     # via requests
 virtualenv==20.16.2
     # via pre-commit
