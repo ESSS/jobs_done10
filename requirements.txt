@@ -26,7 +26,7 @@ distlib==0.3.5
     # via virtualenv
 filelock==3.7.1
     # via virtualenv
-flask==2.0.2
+flask==2.2.5
     # via jobs-done10 (setup.py)
 gunicorn==20.1.0
     # via jobs-done10 (setup.py)
