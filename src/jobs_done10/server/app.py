@@ -67,7 +67,7 @@ def _handle_end_point(
 ) -> str | tuple[str, int]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
-    payload = request.json
+    payload = request.json if request.is_json else None
     json_payload_dump = (
         json.dumps(dict(payload), indent=2, sort_keys=True)
         if payload is not None
