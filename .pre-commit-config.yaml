@@ -16,7 +16,7 @@ repos:
         name: "reorder python imports"
         args: ['--application-directories=.:src', --py36-plus]
 -   repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.1
+    rev: v2.3.0
     hooks:
     -   id: autoflake
         name: autoflake
@@ -24,7 +24,7 @@ repos:
         language: python
         files: \.py$
 -   repo: https://github.com/psf/black
-    rev: 23.12.1
+    rev: 24.2.0
     hooks:
     -   id: black
         args: [--safe, --quiet]
