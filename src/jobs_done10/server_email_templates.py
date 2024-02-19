@@ -2,7 +2,6 @@
 Email templates used by the flaks server to send an error when jobs_done fails.
 """
 
-
 EMAIL_PLAINTEXT = """
 An error happened when processing your push!
 
