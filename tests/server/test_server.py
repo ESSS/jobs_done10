@@ -69,9 +69,7 @@ def stash_repo_info_data_(datadir: Path) -> dict[str, Any]:
 
     Taken from manually doing the query on our live server.
     """
-    return json.loads(
-        datadir.joinpath("stash-repo-info.json").read_text(encoding="UTF-8")
-    )
+    return json.loads(datadir.joinpath("stash-repo-info.json").read_text(encoding="UTF-8"))
 
 
 @pytest.fixture(name="github_post_data")
@@ -95,9 +93,7 @@ def github_post_headers_(datadir: Path) -> dict[str, Any]:
 
     Same docs as in github_post_payload.
     """
-    return json.loads(
-        datadir.joinpath("github-post.headers.json").read_text(encoding="UTF-8")
-    )
+    return json.loads(datadir.joinpath("github-post.headers.json").read_text(encoding="UTF-8"))
 
 
 @pytest.fixture(name="github_post_del_branch_data")
@@ -114,9 +110,7 @@ def github_post_del_branch_headers_(datadir: Path) -> dict[str, Any]:
     Same as git_hub_post_headers, but for post about a branch being deleted.
     """
     return json.loads(
-        datadir.joinpath("github-post-del-branch.headers.json").read_text(
-            encoding="UTF-8"
-        )
+        datadir.joinpath("github-post-del-branch.headers.json").read_text(encoding="UTF-8")
     )
 
 
@@ -162,10 +156,7 @@ def mock_github_repo_requests(
         # is encoded as "{username}:{password}" as a base64 string.
         username = ""
         basic_auth = b64encode(f"{username}:{token}".encode())
-        assert (
-            history.headers.get("Authorization")
-            == f"Basic {basic_auth.decode('ASCII')}"
-        )
+        assert history.headers.get("Authorization") == f"Basic {basic_auth.decode('ASCII')}"
 
 
 @pytest.mark.parametrize("post_url", ["/", "/stash"])
@@ -235,12 +226,8 @@ def test_github_post(
     )
 
     file_contents = "github jobs done contents"
-    with mock_github_repo_requests(
-        file_contents, status_code=200, settings=dict(os.environ)
-    ):
-        response = client.post(
-            "/github", data=github_post_data, headers=github_post_headers
-        )
+    with mock_github_repo_requests(file_contents, status_code=200, settings=dict(os.environ)):
+        response = client.post("/github", data=github_post_data, headers=github_post_headers)
 
     assert response.status_code == 200
     assert response.mimetype == "text/html"
@@ -262,9 +249,7 @@ def test_github_post(
     args, kwargs = upload_mock.call_args
     assert args == ()
     assert kwargs == dict(
-        repository=Repository(
-            "git@github.com:ESSS/test-webhooks.git", "fb-add-jobs-done"
-        ),
+        repository=Repository("git@github.com:ESSS/test-webhooks.git", "fb-add-jobs-done"),
         jobs_done_file_contents=file_contents,
         url="https://example.com/jenkins",
         username="jenkins_user",
@@ -317,10 +302,7 @@ def test_error_handling(
     assert response.status_code == 500
     assert response.mimetype == "text/html"
     obtained_message = response.data.decode("UTF-8")
-    assert (
-        "ERROR processing request: <Request 'http://localhost/' [POST]>"
-        in obtained_message
-    )
+    assert "ERROR processing request: <Request 'http://localhost/' [POST]>" in obtained_message
     assert "JSON data:" in obtained_message
     assert "Traceback (most recent call last):" in obtained_message
     assert "Email sent to bugreport+jenkins@esss.co" in obtained_message
@@ -418,9 +400,7 @@ def test_verify_github_signature(
         github_post_headers, github_post_data, os.environ["JD_GH_WEBHOOK_SECRET"]
     )
 
-    with pytest.raises(
-        SignatureVerificationError, match="Computed signature does not match.*"
-    ):
+    with pytest.raises(SignatureVerificationError, match="Computed signature does not match.*"):
         tampered_data = github_post_data + b"\n"
         verify_github_signature(
             github_post_headers, tampered_data, os.environ["JD_GH_WEBHOOK_SECRET"]

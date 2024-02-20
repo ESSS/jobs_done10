@@ -158,15 +158,17 @@ class TestJenkinsXmlJobGenerator:
         )
 
     def testCustomWorkspace(self, file_regression):
-        self.Check(
-            file_regression,
-            yaml_contents=dedent(
-                """
+        (
+            self.Check(
+                file_regression,
+                yaml_contents=dedent(
+                    """
                 custom_workspace: workspace/WS
                 """
+                ),
+                boundary_tags="project",
             ),
-            boundary_tags="project",
-        ),
+        )
 
     def testAuthToken(self, file_regression):
         self.Check(
@@ -226,9 +228,7 @@ class TestJenkinsXmlJobGenerator:
             ("build_python_commands", "hudson.plugins.python.Python"),
         ],
     )
-    def testBuildCommandsExpandNestedLists(
-        self, file_regression, job_done_key, xml_key
-    ):
+    def testBuildCommandsExpandNestedLists(self, file_regression, job_done_key, xml_key):
         # sanity: no ref
         self.Check(
             file_regression,
@@ -821,9 +821,7 @@ class TestJenkinsXmlJobGenerator:
         )
 
     def testAnsiColorUnknowOption(self):
-        with pytest.raises(
-            RuntimeError, match="Received unknown console_color option."
-        ):
+        with pytest.raises(RuntimeError, match="Received unknown console_color option."):
             self._GenerateJob(
                 yaml_contents=dedent(
                     """
@@ -909,9 +907,7 @@ class TestJenkinsXmlJobGenerator:
         )
 
     def testCoverageFailWhenMissingReportPattern(self):
-        with pytest.raises(
-            ValueError, match="Report pattern is required by coverage"
-        ) as e:
+        with pytest.raises(ValueError, match="Report pattern is required by coverage") as e:
             self._GenerateJob(
                 yaml_contents=dedent(
                     r"""
@@ -949,9 +945,7 @@ class TestJenkinsXmlJobGenerator:
             self._GenerateJob(yaml_contents="warnings: {}")
 
     def testWarningsWrongOption(self):
-        with pytest.raises(
-            ValueError, match="Received unknown 'warnings' options: zucchini."
-        ):
+        with pytest.raises(ValueError, match="Received unknown 'warnings' options: zucchini."):
             self._GenerateJob(
                 yaml_contents=dedent(
                     """\
@@ -983,9 +977,7 @@ class TestJenkinsXmlJobGenerator:
         new_content = self.ExtractTagBoundaries(jenkins_job.xml, boundary_tags)
         file_regression.check(new_content, extension=".xml", basename=basename)
 
-    def ExtractTagBoundaries(
-        self, text: str, boundary_tags: str | tuple[str, ...]
-    ) -> str:
+    def ExtractTagBoundaries(self, text: str, boundary_tags: str | tuple[str, ...]) -> str:
         """Given a XML text, extract the lines containing between the given tags (including them)."""
         if isinstance(boundary_tags, str):
             boundary_tags = (boundary_tags,)
@@ -1130,14 +1122,8 @@ class TestJenkinsPublisher:
             == mock_jenkins.NEW_JOBS
             == {"space-milky_way-venus", "space-milky_way-jupiter"}
         )
-        assert (
-            set(updated_jobs)
-            == mock_jenkins.UPDATED_JOBS
-            == {"space-milky_way-mercury"}
-        )
-        assert (
-            set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {"space-milky_way-saturn"}
-        )
+        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == {"space-milky_way-mercury"}
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {"space-milky_way-saturn"}
 
     def testPublishToUrlProxyErrorOnce(self, monkeypatch):
         # Do not actually sleep during tests
@@ -1155,14 +1141,8 @@ class TestJenkinsPublisher:
             == mock_jenkins.NEW_JOBS
             == {"space-milky_way-venus", "space-milky_way-jupiter"}
         )
-        assert (
-            set(updated_jobs)
-            == mock_jenkins.UPDATED_JOBS
-            == {"space-milky_way-mercury"}
-        )
-        assert (
-            set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {"space-milky_way-saturn"}
-        )
+        assert set(updated_jobs) == mock_jenkins.UPDATED_JOBS == {"space-milky_way-mercury"}
+        assert set(deleted_jobs) == mock_jenkins.DELETED_JOBS == {"space-milky_way-saturn"}
 
     def testPublishToUrlProxyErrorTooManyTimes(self, monkeypatch):
         # Do not actually sleep during tests
@@ -1203,15 +1183,9 @@ class TestJenkinsPublisher:
     def _GetPublisher(self):
         repository = Repository(url="http://server/space.git", branch="milky_way")
         jobs = [
-            JenkinsJob(
-                name="space-milky_way-jupiter", xml="jupiter", repository=repository
-            ),
-            JenkinsJob(
-                name="space-milky_way-mercury", xml="mercury", repository=repository
-            ),
-            JenkinsJob(
-                name="space-milky_way-venus", xml="venus", repository=repository
-            ),
+            JenkinsJob(name="space-milky_way-jupiter", xml="jupiter", repository=repository),
+            JenkinsJob(name="space-milky_way-mercury", xml="mercury", repository=repository),
+            JenkinsJob(name="space-milky_way-venus", xml="venus", repository=repository),
         ]
 
         return JenkinsJobPublisher(repository, jobs)

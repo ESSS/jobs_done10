@@ -355,9 +355,7 @@ class JobsDoneJob:
 
             # Do not create a job if there is no match for this branch
             branch_patterns = jobs_done_job.branch_patterns or [".*"]
-            if not any(
-                [re.match(pattern, repository.branch) for pattern in branch_patterns]
-            ):
+            if not any([re.match(pattern, repository.branch) for pattern in branch_patterns]):
                 continue
 
             jobs_done_jobs.append(jobs_done_job)
@@ -397,9 +395,9 @@ class JobsDoneJob:
         conditions = set(conditions)
 
         def _IsAmbiguous():
-            return not previous_conditions.issubset(
-                conditions
-            ) and not conditions.issubset(previous_conditions)
+            return not previous_conditions.issubset(conditions) and not conditions.issubset(
+                previous_conditions
+            )
 
         if _IsAmbiguous():
             import textwrap
@@ -630,8 +628,7 @@ class UnmatchableConditionError(ValueError):
 
         ValueError.__init__(
             self,
-            'Condition "%s" can never be matched based on possible matrix rows.'
-            % option,
+            'Condition "%s" can never be matched based on possible matrix rows.' % option,
         )
 
 
