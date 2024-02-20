@@ -32,9 +32,7 @@ class XmlFactory:
         elif isinstance(root_element, ElementTree.Element):
             self.root = root_element
         else:
-            raise TypeError(
-                "Unknown root_element parameter type: %s" % type(root_element)
-            )
+            raise TypeError("Unknown root_element parameter type: %s" % type(root_element))
 
     def __setitem__(self, name, value):
         """
@@ -169,22 +167,18 @@ class XmlFactory:
                 # create meaningful lists
                 scalar = False
                 try:
-                    if (
-                        elem[0].tag != elem[1].tag
-                    ):  # [{a: 1}, {b: 2}, {c: 3}] => {a: 1, b: 2, c: 3}
+                    if elem[0].tag != elem[1].tag:  # [{a: 1}, {b: 2}, {c: 3}] => {a: 1, b: 2, c: 3}
                         cur = dict(chain(*(d.items() for d in cur)))
                     else:
                         scalar = True
-                except Exception as e:  # [{a: 1}, {a: 2}, {a: 3}] => {a: [1, 2, 3]}
+                except Exception:  # [{a: 1}, {a: 2}, {a: 3}] => {a: [1, 2, 3]}
                     scalar = True
 
                 if scalar:
                     if len(cur) > 1:
                         cur = {
                             elem[0].tag: [
-                                list(e.values())[0]
-                                for e in cur
-                                if list(e.values())[0] is not None
+                                list(e.values())[0] for e in cur if list(e.values())[0] is not None
                             ]
                         }
                     else:

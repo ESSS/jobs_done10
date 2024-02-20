@@ -107,9 +107,7 @@ def testCreateJobsDoneJobFromYAML():
 
 
 def testExclude():
-    key = lambda job: ":".join(
-        j + "-" + job.matrix_row[j] for j in sorted(job.matrix_row.keys())
-    )
+    key = lambda job: ":".join(j + "-" + job.matrix_row[j] for j in sorted(job.matrix_row.keys()))
     # Base case ------------------------------------------------------------------------------------
     yaml_contents = dedent(
         """
@@ -409,10 +407,7 @@ def testIgnoreAmbiguousConditionsWithEqualValues():
         """
     )
     for jd_file in JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY):
-        if (
-            jd_file.matrix_row["platform"] == "linux"
-            or jd_file.matrix_row["slave"] == "slave2"
-        ):
+        if jd_file.matrix_row["platform"] == "linux" or jd_file.matrix_row["slave"] == "slave2":
             assert jd_file.display_name == "Foo job"
         else:
             assert jd_file.display_name is None
@@ -541,9 +536,7 @@ def testTypeChecking():
         JobsDoneJob.CreateFromYAML(yaml_contents, repository=_REPOSITORY)
 
     assert e.value.option_name == "build_batch_commands"
-    assert e.value.accepted_types == [
-        JobsDoneJob.PARSEABLE_OPTIONS["build_batch_commands"]
-    ]
+    assert e.value.accepted_types == [JobsDoneJob.PARSEABLE_OPTIONS["build_batch_commands"]]
     assert e.value.obtained_type == str
     assert e.value.option_value == "string item"
 

@@ -3,6 +3,7 @@ Module containing everything related to Jenkins in jobs_done10.
 
 This includes a generator, job publishers, constants and command line interface commands.
 """
+
 from collections import namedtuple
 from contextlib import suppress
 
@@ -143,9 +144,7 @@ class JenkinsXmlJobGenerator:
 
         # Add additional repositories
         for repo in repositories:
-            self.SetGit(
-                repo["git"], git_xml=multi_scm["scms/hudson.plugins.git.GitSCM+"]
-            )
+            self.SetGit(repo["git"], git_xml=multi_scm["scms/hudson.plugins.git.GitSCM+"])
 
     def SetAuthToken(self, auth_token):
         self.xml["authToken"] = auth_token
@@ -159,9 +158,7 @@ class JenkinsXmlJobGenerator:
                 self.SetBuildBatchCommands(command)
             else:
                 # batch files must have \r\n as EOL or weird bugs happen (jenkins web ui add \r).
-                self.xml["builders/hudson.tasks.BatchFile+/command"] = command.replace(
-                    "\n", "\r\n"
-                )
+                self.xml["builders/hudson.tasks.BatchFile+/command"] = command.replace("\n", "\r\n")
 
     def SetBuildShellCommands(self, build_shell_commands):
         for command in build_shell_commands:
@@ -205,9 +202,7 @@ class JenkinsXmlJobGenerator:
             mailer["dontNotifyEveryUnstableBuild"] = xmls(True)
         else:
             mailer["dontNotifyEveryUnstableBuild"] = xmls(False)
-        mailer["sendToIndividuals"] = xmls(
-            notification_info.pop("notify_individuals", xmls(False))
-        )
+        mailer["sendToIndividuals"] = xmls(notification_info.pop("notify_individuals", xmls(False)))
 
         self._CheckUnknownOptions("email_notification", notification_info)
 
@@ -309,9 +304,7 @@ class JenkinsXmlJobGenerator:
         self.xml["assignedNode"] = label_expression
 
     def SetNotifyStash(self, args):
-        notifier = self.xml[
-            "publishers/org.jenkinsci.plugins.stashNotifier.StashNotifier"
-        ]
+        notifier = self.xml["publishers/org.jenkinsci.plugins.stashNotifier.StashNotifier"]
 
         if isinstance(args, str):
             # Happens when no parameter is given, we just set the URL and assume that
@@ -371,23 +364,17 @@ class JenkinsXmlJobGenerator:
         self.xml["triggers/hudson.triggers.SCMTrigger/spec"] = schedule
 
     def SetTimeout(self, timeout):
-        timeout_xml = self.xml[
-            "buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper"
-        ]
+        timeout_xml = self.xml["buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper"]
         timeout_xml["timeoutMinutes"] = str(timeout)
         timeout_xml["failBuild"] = xmls(True)
 
     def SetTimeoutNoActivity(self, timeout):
-        timeout_xml = self.xml[
-            "buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper"
-        ]
+        timeout_xml = self.xml["buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper"]
         timeout_xml[
             "strategy@class"
         ] = "hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy"
         timeout_xml["strategy/timeoutSecondsString"] = timeout
-        timeout_xml[
-            "operationList/hudson.plugins.build__timeout.operations.FailOperation"
-        ]
+        timeout_xml["operationList/hudson.plugins.build__timeout.operations.FailOperation"]
 
     def SetCustomWorkspace(self, custom_workspace):
         self.xml["customWorkspace"] = custom_workspace
@@ -395,9 +382,7 @@ class JenkinsXmlJobGenerator:
     def SetSlack(self, options):
         room = options.get("room", "general")
 
-        properties = self.xml[
-            "properties/jenkins.plugins.slack.SlackNotifier_-SlackJobProperty"
-        ]
+        properties = self.xml["properties/jenkins.plugins.slack.SlackNotifier_-SlackJobProperty"]
         properties["@plugin"] = "slack@1.2"
         properties["room"] = "#" + room
         properties["startNotification"] = "true"
@@ -420,9 +405,7 @@ class JenkinsXmlJobGenerator:
             "properties/com.tikal.hudson.plugins.notification.HudsonNotificationProperty"
         ]
         properties["@plugin"] = "notification@1.9"
-        endpoint = properties[
-            "endpoints/com.tikal.hudson.plugins.notification.Endpoint"
-        ]
+        endpoint = properties["endpoints/com.tikal.hudson.plugins.notification.Endpoint"]
         endpoint["protocol"] = options.get("protocol", "HTTP")
         endpoint["format"] = options.get("format", "JSON")
         endpoint["url"] = options["url"]
@@ -449,9 +432,7 @@ class JenkinsXmlJobGenerator:
         ansi_color_wrapper["colorMapName"] = option
 
     def SetTimestamps(self, ignored):
-        wrapper_xpath = (
-            "buildWrappers/hudson.plugins.timestamper.TimestamperBuildWrapper"
-        )
+        wrapper_xpath = "buildWrappers/hudson.plugins.timestamper.TimestamperBuildWrapper"
         wrapper = self.xml[wrapper_xpath]
         wrapper["@plugin"] = "timestamper@1.7.4"
 
@@ -460,9 +441,7 @@ class JenkinsXmlJobGenerator:
         if not report_pattern:
             raise ValueError("Report pattern is required by coverage")
 
-        cobertura_publisher = self.xml[
-            "publishers/hudson.plugins.cobertura.CoberturaPublisher"
-        ]
+        cobertura_publisher = self.xml["publishers/hudson.plugins.cobertura.CoberturaPublisher"]
         cobertura_publisher["@plugin"] = "cobertura@1.9.7"
         # This is a file name pattern that can be used to locate the cobertura xml report files
         # (for example with Maven2 use **/target/site/cobertura/coverage.xml). The path is relative
@@ -477,12 +456,8 @@ class JenkinsXmlJobGenerator:
         cobertura_publisher[
             "failUnhealthy"
         ] = "true"  # fail builds if No coverage reports are found.
-        cobertura_publisher[
-            "failUnstable"
-        ] = "true"  # Unhealthy projects will be failed.
-        cobertura_publisher[
-            "autoUpdateHealth"
-        ] = "false"  # Unstable projects will be failed.
+        cobertura_publisher["failUnstable"] = "true"  # Unhealthy projects will be failed.
+        cobertura_publisher["autoUpdateHealth"] = "false"  # Unstable projects will be failed.
         cobertura_publisher[
             "autoUpdateStability"
         ] = "false"  # Auto update threshold for health on successful build.
@@ -516,9 +491,7 @@ class JenkinsXmlJobGenerator:
 
             entry = targets["entry+"]
             entry["hudson.plugins.cobertura.targets.CoverageMetric"] = "CONDITIONAL"
-            entry["int"] = FormatMetricValue(
-                metrics_options.get("conditional", default)
-            )
+            entry["int"] = FormatMetricValue(metrics_options.get("conditional", default))
 
         healthy_options = options.get("healthy", {})
         WriteMetrics("healthyTarget", healthy_options, default=80)
@@ -584,9 +557,7 @@ class JenkinsXmlJobGenerator:
 
         file_parsers_xml = warnings_xml["parserConfigurations"]
         for parser_options in options.get("file", []):
-            parser_xml = file_parsers_xml[
-                "hudson.plugins.warnings.ParserConfiguration+"
-            ]
+            parser_xml = file_parsers_xml["hudson.plugins.warnings.ParserConfiguration+"]
             parser_xml["pattern"] = parser_options.get("file_pattern")
             parser_xml["parserName"] = parser_options.get("parser")
 
@@ -601,13 +572,9 @@ class JenkinsXmlJobGenerator:
         if condition not in valid_conditions:
             msg = "Invalid value for condition: {!r}, expected one of {!r}"
             raise RuntimeError(msg.format(condition, valid_conditions))
-        xml_trigger = self.xml[
-            "publishers/hudson.plugins.parameterizedtrigger.BuildTrigger"
-        ]
+        xml_trigger = self.xml["publishers/hudson.plugins.parameterizedtrigger.BuildTrigger"]
         xml_trigger["@plugin"] = "parameterized-trigger@2.33"
-        xml_config = xml_trigger[
-            "configs/hudson.plugins.parameterizedtrigger.BuildTriggerConfig"
-        ]
+        xml_config = xml_trigger["configs/hudson.plugins.parameterizedtrigger.BuildTriggerConfig"]
         parameters = options.get("parameters", [])
         xml_configs = xml_config["configs"]
         if parameters:
@@ -652,8 +619,7 @@ class JenkinsXmlJobGenerator:
     def _CheckUnknownOptions(self, configuration_name, options_dict):
         if len(options_dict) > 0:
             raise RuntimeError(
-                "Received unknown %s options: %s"
-                % (configuration_name, list(options_dict.keys()))
+                "Received unknown %s options: %s" % (configuration_name, list(options_dict.keys()))
             )
 
 
@@ -774,9 +740,7 @@ class JenkinsJobPublisher:
         import os
 
         for job in self.jobs.values():
-            with open(
-                os.path.join(output_directory, job.name), "w", encoding="utf-8"
-            ) as f:
+            with open(os.path.join(output_directory, job.name), "w", encoding="utf-8") as f:
                 f.write(job.xml)
 
     def _GetMatchingJobs(self, jenkins_api):
@@ -850,9 +814,7 @@ class JenkinsJobPublisher:
 
         # Process them all until we find the SCM for the correct repository
         for scm in scms:
-            url = scm.find(
-                "userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url"
-            ).text.strip()
+            url = scm.find("userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url").text.strip()
             checked_urls.append(url)
 
             urls = [url.lower()]
@@ -861,9 +823,7 @@ class JenkinsJobPublisher:
                 urls.append(url.lower() + ".git")
 
             if any(url in repo_urls for url in urls):
-                return scm.find(
-                    "branches/hudson.plugins.git.BranchSpec/name"
-                ).text.strip()
+                return scm.find("branches/hudson.plugins.git.BranchSpec/name").text.strip()
 
         error_msg = [
             'Could not find SCM for repository "%s" in job "%s"'
@@ -881,9 +841,7 @@ class JenkinsJobPublisher:
         raise RuntimeError("\n".join(error_msg))
 
 
-def UploadJobsFromFile(
-    repository, jobs_done_file_contents, url, username=None, password=None
-):
+def UploadJobsFromFile(repository, jobs_done_file_contents, url, username=None, password=None):
     """
     :param repository:
         .. seealso:: GetJobsFromFile
@@ -929,15 +887,11 @@ def GetJobsFromDirectory(directory="."):
     from subprocess import check_output
 
     url = (
-        check_output(
-            "git config --local --get remote.origin.url", shell=True, cwd=directory
-        )
+        check_output("git config --local --get remote.origin.url", shell=True, cwd=directory)
         .strip()
         .decode("UTF-8")
     )
-    branches = (
-        check_output("git branch", shell=True, cwd=directory).strip().decode("UTF-8")
-    )
+    branches = check_output("git branch", shell=True, cwd=directory).strip().decode("UTF-8")
     for branch in branches.splitlines():
         branch = branch.strip()
         if "*" in branch:  # Current branch

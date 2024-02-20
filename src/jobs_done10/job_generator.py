@@ -82,9 +82,7 @@ class JobGeneratorConfigurator:
             try:
                 generator_function = getattr(generator, generator_function_name)
             except AttributeError:
-                raise JobGeneratorAttributeError(
-                    generator, generator_function_name, option
-                )
+                raise JobGeneratorAttributeError(generator, generator_function_name, option)
 
             generator_function(option_value)
 
@@ -97,14 +95,11 @@ class JobGeneratorAttributeError(AttributeError):
     """
 
     def __init__(self, generator, attribute, jobs_done_job_option):
-        message = (
-            '%s "%s" cannot handle option "%s" (could not find function "%s").'
-            % (
-                IJobGenerator.__name__,
-                generator.__class__.__name__,
-                jobs_done_job_option,
-                attribute,
-            )
+        message = '%s "%s" cannot handle option "%s" (could not find function "%s").' % (
+            IJobGenerator.__name__,
+            generator.__class__.__name__,
+            jobs_done_job_option,
+            attribute,
         )
 
         AttributeError.__init__(self, message)

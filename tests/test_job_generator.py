@@ -31,16 +31,12 @@ def testJobGeneratorConfigurator():
     generator = MyGenerator()
 
     # Test basic calls
-    with ExpectedCalls(
-        generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=0
-    ):
+    with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=0):
         JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
     # Set some more values to jobs_done_job, and make sure it is called
     jobs_done_job.build_batch_commands = ["command"]
-    with ExpectedCalls(
-        generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=1
-    ):
+    with ExpectedCalls(generator, Reset=1, SetRepository=1, SetMatrix=1, SetBuildBatchCommands=1):
         JobGeneratorConfigurator.Configure(generator, jobs_done_job)
 
     # Try calling a missing option
@@ -80,9 +76,7 @@ def ExpectedCalls(obj, **function_expected_calls):
     # __exit__
     try:
         for (_, function_name), (obtained, expected, _) in list(calls.items()):
-            assert (
-                obtained == expected
-            ), 'Expected "%d" calls for function "%s", but got "%d"' % (
+            assert obtained == expected, 'Expected "%d" calls for function "%s", but got "%d"' % (
                 expected,
                 function_name,
                 obtained,

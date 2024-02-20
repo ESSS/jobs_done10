@@ -63,7 +63,7 @@ def _handle_end_point(
     parse_request_callback: Callable[
         [dict[str, Any], dict[str, Any], bytes, dict[str, str]],
         Iterator["JobsDoneRequest"],
-    ]
+    ],
 ) -> str | tuple[str, int]:
     """Common handling for the jobs-done end-point."""
     request = flask.request
@@ -76,25 +76,21 @@ def _handle_end_point(
 
     payload = request.json
     json_payload_dump = (
-        json.dumps(dict(payload), indent=2, sort_keys=True)
-        if payload is not None
-        else "None"
+        json.dumps(dict(payload), indent=2, sort_keys=True) if payload is not None else "None"
     )
     app.logger.info(
         "\n"
         + f"Received {request}\n"
-        + f"Headers:\n"
+        + "Headers:\n"
         + json.dumps(dict(request.headers), indent=2, sort_keys=True)
         + "\n"
-        + f"Payload (JSON):\n"
+        + "Payload (JSON):\n"
         + json_payload_dump
     )
     jobs_done_requests = []
     try:
         jobs_done_requests = list(
-            parse_request_callback(
-                request.headers, payload, request.data, dict(os.environ)
-            )
+            parse_request_callback(request.headers, payload, request.data, dict(os.environ))
         )
         app.logger.info(f"Parsed {len(jobs_done_requests)} jobs done requests:")
         for jdr in jobs_done_requests:
@@ -106,9 +102,7 @@ def _handle_end_point(
         app.logger.exception(f"Header signature does not match: {e}")
         return str(e), HTTPStatus.FORBIDDEN
     except Exception:
-        err_message = _process_jobs_done_error(
-            request.headers, request.data, jobs_done_requests
-        )
+        err_message = _process_jobs_done_error(request.headers, request.data, jobs_done_requests)
         app.logger.exception("Unexpected exception")
         return err_message, HTTPStatus.INTERNAL_SERVER_ERROR
 
@@ -261,9 +255,7 @@ def verify_github_signature(headers: dict[str, Any], data: bytes, secret: str) -
     hash = algorithm.digest().hex()
     computed_signature = f"sha256={hash}"
     if not hmac.compare_digest(header_signature, computed_signature):
-        raise SignatureVerificationError(
-            f"Computed signature does not match the one in the header"
-        )
+        raise SignatureVerificationError("Computed signature does not match the one in the header")
 
 
 def _process_jobs_done_request(jobs_done_requests: Iterable[JobsDoneRequest]) -> str:
@@ -412,25 +404,17 @@ def send_email_with_error(
     def abbrev_commit(c: str | None) -> str:
         return c[:7] if c is not None else "(no commit)"
 
-    changes_msg = ", ".join(
-        f"{x.branch} @ {abbrev_commit(x.commit)}" for x in jobs_done_requests
-    )
-    subject = (
-        f"JobsDone failure during push to {owner_name}/{repo_name} ({changes_msg})"
-    )
+    changes_msg = ", ".join(f"{x.branch} @ {abbrev_commit(x.commit)}" for x in jobs_done_requests)
+    subject = f"JobsDone failure during push to {owner_name}/{repo_name} ({changes_msg})"
 
     pretty_json = pprint.pformat(payload)
-    plain = EMAIL_PLAINTEXT.format(
-        error_traceback=error_traceback, pretty_json=pretty_json
-    )
+    plain = EMAIL_PLAINTEXT.format(error_traceback=error_traceback, pretty_json=pretty_json)
     style = "colorful"
     html = EMAIL_HTML.format(
         error_traceback_html=highlight(
             error_traceback, PythonTracebackLexer(), HtmlFormatter(style=style)
         ),
-        pretty_json_html=highlight(
-            pretty_json, JsonLexer(), HtmlFormatter(style=style)
-        ),
+        pretty_json_html=highlight(pretty_json, JsonLexer(), HtmlFormatter(style=style)),
     )
 
     msg = MIMEMultipart()
@@ -441,9 +425,7 @@ def send_email_with_error(
     msg.attach(MIMEText(html, "html"))
 
     context = ssl.create_default_context()
-    with smtplib.SMTP(
-        os.environ["JD_EMAIL_SERVER"], int(os.environ["JD_EMAIL_PORT"])
-    ) as server:
+    with smtplib.SMTP(os.environ["JD_EMAIL_SERVER"], int(os.environ["JD_EMAIL_PORT"])) as server:
         server.starttls(context=context)
         server.login(os.environ["JD_EMAIL_USER"], os.environ["JD_EMAIL_PASSWORD"])
         server.sendmail(os.environ["JD_EMAIL_USER"], pusher_email, msg=msg.as_string())

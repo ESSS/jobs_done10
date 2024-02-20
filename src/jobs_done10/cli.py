@@ -18,9 +18,7 @@ def jenkins(url, username=None, password=None):
 
     repository, jobs = GetJobsFromDirectory()
     publisher = JenkinsJobPublisher(repository, jobs)
-    new_jobs, updated_jobs, deleted_jobs = publisher.PublishToUrl(
-        url, username, password
-    )
+    new_jobs, updated_jobs, deleted_jobs = publisher.PublishToUrl(url, username, password)
 
     for job in new_jobs:
         click.secho("NEW", fg="green", nl=False)
