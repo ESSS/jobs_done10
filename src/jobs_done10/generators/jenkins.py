@@ -321,21 +321,21 @@ class JenkinsXmlJobGenerator:
         notifier = self.xml[
             "publishers/org.jenkinsci.plugins.github.status.GitHubCommitStatusSetter"
         ]
-        notifier[
-            "commitShaSource@class"
-        ] = "org.jenkinsci.plugins.github.status.sources.BuildDataRevisionShaSource"
-        notifier[
-            "reposSource@class"
-        ] = "org.jenkinsci.plugins.github.status.sources.AnyDefinedRepositorySource"
-        notifier[
-            "contextSource@class"
-        ] = "org.jenkinsci.plugins.github.status.sources.DefaultCommitContextSource"
-        notifier[
-            "statusResultSource@class"
-        ] = "org.jenkinsci.plugins.github.status.sources.DefaultStatusResultSource"
-        notifier[
-            "statusBackrefSource@class"
-        ] = "org.jenkinsci.plugins.github.status.sources.BuildRefBackrefSource"
+        notifier["commitShaSource@class"] = (
+            "org.jenkinsci.plugins.github.status.sources.BuildDataRevisionShaSource"
+        )
+        notifier["reposSource@class"] = (
+            "org.jenkinsci.plugins.github.status.sources.AnyDefinedRepositorySource"
+        )
+        notifier["contextSource@class"] = (
+            "org.jenkinsci.plugins.github.status.sources.DefaultCommitContextSource"
+        )
+        notifier["statusResultSource@class"] = (
+            "org.jenkinsci.plugins.github.status.sources.DefaultStatusResultSource"
+        )
+        notifier["statusBackrefSource@class"] = (
+            "org.jenkinsci.plugins.github.status.sources.BuildRefBackrefSource"
+        )
         notifier["errorHandlers"] = ""
 
     def SetParameters(self, parameters):
@@ -370,9 +370,9 @@ class JenkinsXmlJobGenerator:
 
     def SetTimeoutNoActivity(self, timeout):
         timeout_xml = self.xml["buildWrappers/hudson.plugins.build__timeout.BuildTimeoutWrapper"]
-        timeout_xml[
-            "strategy@class"
-        ] = "hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy"
+        timeout_xml["strategy@class"] = (
+            "hudson.plugins.build_timeout.impl.NoActivityTimeOutStrategy"
+        )
         timeout_xml["strategy/timeoutSecondsString"] = timeout
         timeout_xml["operationList/hudson.plugins.build__timeout.operations.FailOperation"]
 
@@ -450,26 +450,26 @@ class JenkinsXmlJobGenerator:
         # and may not be the same as the workspace root. Cobertura must be configured to generate
         # XML reports for this plugin to function.
         cobertura_publisher["coberturaReportFile"] = report_pattern
-        cobertura_publisher[
-            "onlyStable"
-        ] = "false"  # Include only stable builds, i.e. exclude unstable and failed ones.
-        cobertura_publisher[
-            "failUnhealthy"
-        ] = "true"  # fail builds if No coverage reports are found.
+        cobertura_publisher["onlyStable"] = (
+            "false"  # Include only stable builds, i.e. exclude unstable and failed ones.
+        )
+        cobertura_publisher["failUnhealthy"] = (
+            "true"  # fail builds if No coverage reports are found.
+        )
         cobertura_publisher["failUnstable"] = "true"  # Unhealthy projects will be failed.
         cobertura_publisher["autoUpdateHealth"] = "false"  # Unstable projects will be failed.
-        cobertura_publisher[
-            "autoUpdateStability"
-        ] = "false"  # Auto update threshold for health on successful build.
-        cobertura_publisher[
-            "autoUpdateStability"
-        ] = "false"  # Auto update threshold for stability on successful build.
-        cobertura_publisher[
-            "zoomCoverageChart"
-        ] = "false"  # Zoom the coverage chart and crop area below the minimum and above the maximum coverage of the past reports.
-        cobertura_publisher[
-            "maxNumberOfBuilds"
-        ] = "0"  # Only graph the most recent N builds in the coverage chart, 0 disables the limit.
+        cobertura_publisher["autoUpdateStability"] = (
+            "false"  # Auto update threshold for health on successful build.
+        )
+        cobertura_publisher["autoUpdateStability"] = (
+            "false"  # Auto update threshold for stability on successful build.
+        )
+        cobertura_publisher["zoomCoverageChart"] = (
+            "false"  # Zoom the coverage chart and crop area below the minimum and above the maximum coverage of the past reports.
+        )
+        cobertura_publisher["maxNumberOfBuilds"] = (
+            "0"  # Only graph the most recent N builds in the coverage chart, 0 disables the limit.
+        )
         cobertura_publisher["sourceEncoding"] = "UTF_8"  # Encoding when showing files.
 
         def FormatMetricValue(metric):
