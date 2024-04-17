@@ -30,7 +30,7 @@ filelock==3.12.4
     # via virtualenv
 flask==3.0.0
     # via jobs-done10 (setup.py)
-gunicorn==21.2.0
+gunicorn==22.0.0
     # via jobs-done10 (setup.py)
 identify==2.5.30
     # via pre-commit
