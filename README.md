@@ -5,6 +5,11 @@ Job's Done
 [![link](https://img.shields.io/pypi/pyversions/jobs_done10.svg)](https://pypi.org/project/jobs_done10)
 [![tests](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml/badge.svg)](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml)
 [![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
+
+# IMPORTANT #
+
+This repository is no longer maintained.
+
 # About #
 
 Job's Done is a tool heavily inspired by [Travis](https://travis-ci.org/), and works in the same way
