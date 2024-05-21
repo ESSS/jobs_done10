@@ -6,9 +6,8 @@ Job's Done
 [![tests](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml/badge.svg)](https://github.com/ESSS/jobs_done10/actions/workflows/tests.yml)
 [![link](https://img.shields.io/github/license/ESSS/jobs_done10.svg)](https://img.shields.io/github/license/ESSS/jobs_done10.svg)
 
-# IMPORTANT #
-
-This repository is no longer maintained.
+> [!IMPORTANT]
+> This repository is no longer maintained.
 
 # About #
 
